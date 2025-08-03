@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../home_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 //==============================================================
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,8 +20,10 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 40.0,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,8 +61,10 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: InputDecoration(
                     labelText: 'Email',
                     labelStyle: const TextStyle(color: Colors.white70),
-                    prefixIcon:
-                        const Icon(Icons.email_outlined, color: Colors.white70),
+                    prefixIcon: const Icon(
+                      Icons.email_outlined,
+                      color: Colors.white70,
+                    ),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.1),
                     border: OutlineInputBorder(
@@ -75,8 +80,10 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     labelStyle: const TextStyle(color: Colors.white70),
-                    prefixIcon:
-                        const Icon(Icons.lock_outline, color: Colors.white70),
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                      color: Colors.white70,
+                    ),
                     suffixIcon: IconButton(
                       icon: Icon(
                         _isPasswordVisible
@@ -99,16 +106,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {},
-                    child: const Text(
-                      'Forgot Password?',
-                      style: TextStyle(color: Colors.lightBlueAccent),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: () {
@@ -126,9 +123,10 @@ class _LoginPageState extends State<LoginPage> {
                   child: const Text(
                     'Login',
                     style: TextStyle(
-                        fontSize: 18,
-                        color: Color(0xff1a202c),
-                        fontWeight: FontWeight.bold),
+                      fontSize: 18,
+                      color: Color(0xff1a202c),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
