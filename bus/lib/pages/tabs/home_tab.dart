@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../widgets/wave_clipper.dart';
+
 //======================================================================
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -17,11 +18,7 @@ class HomeTab extends StatelessWidget {
             child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    const _MyBusesSectionHome(),
-                  ],
-                ),
+                child: Column(children: [const _MyBusesSectionHome()]),
               ),
             ),
           ),
@@ -44,39 +41,63 @@ class _HomeTabHeader extends StatelessWidget {
       child: Container(
         height: 290,
         width: double.infinity,
-        color: const Color.fromARGB(255,61,65,38),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.black, Color.fromARGB(255, 61, 65, 38)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: SafeArea(
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 16.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                Text('Vahan Mitra',
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Vahan Mitra',
+                      style: GoogleFonts.montserrat(
+                        color: Color.fromARGB(255, 246, 237, 222),
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'CHINMAYA VISHWA VIDYAPEETH',
+                      style: GoogleFonts.montserrat(
+                        color: Color.fromARGB(255, 246, 237, 222),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 70), // Added space between rows and time
+                Text(
+                  timeFormat.format(now),
                   style: GoogleFonts.montserrat(
-                    color: Color.fromARGB(255,246,237,222),
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold)),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                Text('CHINMAYA VISHWA VIDYAPEETH',
-                  style: GoogleFonts.montserrat(color: Color.fromARGB(255,246,237,222), fontSize: 16)),
-                ],
-              ),
-              const SizedBox(height: 70), // Added space between rows and time
-              Text(timeFormat.format(now),
-                style: GoogleFonts.montserrat(
-                  color: Color.fromARGB(255,246,237,222),
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold)),
-              Text(dateFormat.format(now),
-                style: GoogleFonts.montserrat(color: Color.fromARGB(255,246,237,222), fontSize: 18)),
+                    color: Color.fromARGB(255, 246, 237, 222),
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  dateFormat.format(now),
+                  style: GoogleFonts.montserrat(
+                    color: Color.fromARGB(255, 246, 237, 222),
+                    fontSize: 18,
+                  ),
+                ),
               ],
             ),
           ),
@@ -90,27 +111,41 @@ class _MyBusesSectionHome extends StatelessWidget {
   const _MyBusesSectionHome();
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text('My Buses',
-            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold,color: Color.fromARGB(255,61,65,38))),
-        TextButton(
-            onPressed: () {
-              // Navigate to buses page
-              Navigator.pushNamed(context, '/buses');
-            },
-            child: Text('View All',
-                style: TextStyle(color: Color.fromARGB(255,61,65,38))))
-      ]),
-      const SizedBox(height: 8),
-      GestureDetector(
-        onTap: () {
-          // Navigate to buses page when card is tapped
-          Navigator.pushNamed(context, '/buses');
-        },
-        child: const _MyBusCardHome(),
-      ),
-    ]);
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'My Buses',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color.fromARGB(255, 61, 65, 38),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                // Navigate to buses page
+                Navigator.pushNamed(context, '/buses');
+              },
+              child: Text(
+                'View All',
+                style: TextStyle(color: Color.fromARGB(255, 61, 65, 38)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () {
+            // Navigate to buses page when card is tapped
+            Navigator.pushNamed(context, '/buses');
+          },
+          child: const _MyBusCardHome(),
+        ),
+      ],
+    );
   }
 }
 
@@ -120,40 +155,57 @@ class _MyBusCardHome extends StatelessWidget {
   Widget build(BuildContext context) {
     // Replace below with user's alloted/default bus details as needed
     return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                  color: Colors.grey,
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3))
-            ]),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            const Icon(Icons.directions_bus, color: Colors.grey),
-            const SizedBox(width: 8),
-            const Text('Bus 101', style: TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(255,61,65,38))),
-            const Spacer(),
-            Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-              color: Color.fromARGB(255,246,237,222),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: Color.fromARGB(255,61,65,38), // Border color
-                width: 2, // Border width
-              ),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey,
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
           ),
-          child: Text('Alloted',
-              style: TextStyle(
-            color: Color.fromARGB(255,61,65,38),
-            fontWeight: FontWeight.bold,
-            fontSize: 12)))
-          ]),
-        ]));
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.directions_bus, color: Colors.grey),
+              const SizedBox(width: 8),
+              const Text(
+                'Bus 101',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 61, 65, 38),
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 246, 237, 222),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: Color.fromARGB(255, 61, 65, 38), // Border color
+                    width: 2, // Border width
+                  ),
+                ),
+                child: Text(
+                  'Alloted',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 61, 65, 38),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -131,7 +131,7 @@ class _BusesPageState extends State<BusesPage> {
               fontWeight: FontWeight.bold,
             ),
             backgroundColor: Colors.grey[200],
-            selectedColor: Colors.blue[600],
+            selectedColor: Color.fromARGB(255, 61, 65, 38),
             showCheckmark: false,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
@@ -156,7 +156,7 @@ class _BusesPageHeader extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade600, Colors.blue.shade400],
+            colors: [Colors.black, Color.fromARGB(255, 61, 65, 38)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
