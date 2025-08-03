@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.light,
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.grey[100],
+        scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Roboto',
       ),
       home: const SplashScreen(),
