@@ -182,26 +182,6 @@ class _MyBusCardHome extends StatelessWidget {
                   color: Color.fromARGB(255, 61, 65, 38),
                 ),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 246, 237, 222),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: Color.fromARGB(255, 61, 65, 38), // Border color
-                    width: 2, // Border width
-                  ),
-                ),
-                child: Text(
-                  'Alloted',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 61, 65, 38),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
             ],
           ),
         ],

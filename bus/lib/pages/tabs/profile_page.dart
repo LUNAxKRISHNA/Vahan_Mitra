@@ -24,13 +24,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   const _TransitStatsSection(),
                   const SizedBox(height: 24),
                   const _QuickActionsSectionProfile(),
-                  const SizedBox(height: 32), // Spacing above the button
-                  // 2. ADD THIS LOGOUT BUTTON WIDGET
+                  const SizedBox(height: 32), 
                   ElevatedButton.icon(
                     icon: const Icon(Icons.logout),
                     label: const Text('Logout'),
-                    onPressed: () {
-                      // Navigate to LoginPage and remove all previous screens
+                    onPressed:(){
                       Navigator.of(context).pushAndRemoveUntil(
                         MaterialPageRoute(
                           builder: (context) => const LoginPage(),
@@ -59,7 +57,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-
 // --- ALL OTHER PROFILE PAGE WIDGETS GO HERE ---
 // (No changes needed for _ProfilePageHeader, _TransitStatsSection, etc.)
 
@@ -104,7 +101,7 @@ class _ProfilePageHeader extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          'Alex Johnson',
+                          'Person @Chinmaya',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 22,
@@ -113,7 +110,7 @@ class _ProfilePageHeader extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         const Text(
-                          'alex.johnson@college.edu',
+                          'person.1@cvv.ac.in',
                           style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                         const SizedBox(height: 6),
@@ -123,11 +120,11 @@ class _ProfilePageHeader extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(
-                            'Student ID: STU123456',
+                            'Student ID: 29114567',
                             style: TextStyle(color: Colors.white, fontSize: 12),
                           ),
                         ),
@@ -160,20 +157,13 @@ class _TransitStatsSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.directions_bus, color: Colors.blue.shade700),
+                Icon(Icons.directions_bus, color: Color.fromARGB(255, 61, 65, 38)),
                 const SizedBox(width: 8),
                 const Text(
                   'Transit Stats',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 61, 65, 38), fontWeight: FontWeight.bold),
+                  
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Row(
-              children: [
-                Expanded(child: _StatCard(value: '247', label: 'Total Rides')),
-                SizedBox(width: 16),
-                Expanded(child: _StatCard(value: '127 kg', label: 'CO2 Saved')),
               ],
             ),
             const SizedBox(height: 16),
@@ -250,7 +240,7 @@ class _QuickActionsSectionProfile extends StatelessWidget {
       children: [
         const Text(
           'Quick Actions',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 61, 65, 38), fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         GridView.count(
@@ -310,7 +300,7 @@ class _ActionCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: Colors.blue.shade700, size: 28),
+            Icon(icon, color: Colors.black, size: 28),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
