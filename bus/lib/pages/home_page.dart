@@ -34,10 +34,7 @@ class _HomePageState extends State<HomePage> {
       body: Stack(
         children: [
           // Your main page content
-          IndexedStack(
-            index: _selectedIndex,
-            children: _widgetOptions,
-          ),
+          IndexedStack(index: _selectedIndex, children: _widgetOptions),
           // The custom navigation bar positioned at the bottom
           Positioned(
             bottom: 0,
@@ -75,8 +72,10 @@ class GlassmorphicNavBar extends StatelessWidget {
     const double highlightSize = 55;
 
     // Calculate the position for the moving highlight
-    final double highlightLeftPosition = (size.width / 3) * selectedIndex +
-        (size.width / 6) -
+    final double navBarWidth = size.width - 60; // 30 padding on both sides
+    final double highlightLeftPosition =
+        (navBarWidth / 3) * selectedIndex +
+        (navBarWidth / 6) -
         (highlightSize / 2);
 
     final navBarIcons = [
@@ -87,7 +86,9 @@ class GlassmorphicNavBar extends StatelessWidget {
 
     // This is the main floating container
     return Padding(
-      padding: const EdgeInsets.all(20.0), // Creates the space from the bottom/sides
+      padding: const EdgeInsets.all(
+        30.0,
+      ), // Creates the space from the bottom/sides
       child: ClipRRect(
         borderRadius: BorderRadius.circular(25.0),
         child: BackdropFilter(
@@ -97,7 +98,10 @@ class GlassmorphicNavBar extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(25.0),
-              border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1.5,
+              ),
             ),
             child: Stack(
               children: [
@@ -106,7 +110,7 @@ class GlassmorphicNavBar extends StatelessWidget {
                   duration: const Duration(milliseconds: 250),
                   curve: Curves.easeInOut,
                   left: highlightLeftPosition,
-                  top: (navBarHeight - highlightSize),
+                  top: (navBarHeight - highlightSize) / 2,
                   child: Container(
                     width: highlightSize,
                     height: highlightSize,
@@ -117,21 +121,24 @@ class GlassmorphicNavBar extends StatelessWidget {
                   ),
                 ),
                 // The row of icons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(navBarIcons.length, (index) {
-                    return IconButton(
-                      onPressed: () => onTap(index),
-                      icon: Icon(
-                        navBarIcons[index],
-                        size: iconSize,
-                        // Change color based on selection
-                        color: selectedIndex == index
-                            ? Colors.white
-                            : Colors.grey[300],
-                      ),
-                    );
-                  }),
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: List.generate(navBarIcons.length, (index) {
+                      return IconButton(
+                        onPressed: () => onTap(index),
+                        icon: Icon(
+                          navBarIcons[index],
+                          size: iconSize,
+                          // Change color based on selection
+                          color:
+                              selectedIndex == index
+                                  ? Colors.white
+                                  : Colors.grey[300],
+                        ),
+                      );
+                    }),
+                  ),
                 ),
               ],
             ),
