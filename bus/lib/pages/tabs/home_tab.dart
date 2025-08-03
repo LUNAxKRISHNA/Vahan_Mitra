@@ -1,8 +1,8 @@
 // lib/pages/tabs/home_tab.dart
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../widgets/wave_clipper.dart';
-
 //======================================================================
 class HomeTab extends StatelessWidget {
   const HomeTab({super.key});
@@ -19,9 +19,7 @@ class HomeTab extends StatelessWidget {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    const _QuickActionsSectionHome(),
-                    const SizedBox(height: 24),
-                    const _ActiveBusesSectionHome(),
+                    const _MyBusesSectionHome(),
                   ],
                 ),
               ),
@@ -46,13 +44,7 @@ class _HomeTabHeader extends StatelessWidget {
       child: Container(
         height: 290,
         width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [const Color.fromARGB(255,35,36,90), const Color.fromARGB(255,255,255,255)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: const Color.fromARGB(255, 17, 34, 80),
         child: SafeArea(
           child: Padding(
             padding:
@@ -60,21 +52,31 @@ class _HomeTabHeader extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Campus Transit',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold)),
-                const Text('Smart bus tracking for your college',
-                    style: TextStyle(color: Colors.white70, fontSize: 16)),
-                const Spacer(),
-                Text(timeFormat.format(now),
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold)),
-                Text(dateFormat.format(now),
-                    style: const TextStyle(color: Colors.white70, fontSize: 18)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                Text('Vahan Mitra',
+                  style: GoogleFonts.montserrat(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold)),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                Text('CHINMAYA VISHWA VIDYAPEETH',
+                  style: GoogleFonts.montserrat(color: Colors.white, fontSize: 16)),
+                ],
+              ),
+              const SizedBox(height: 70), // Added space between rows and time
+              Text(timeFormat.format(now),
+                style: GoogleFonts.montserrat(
+                  color: Colors.white,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold)),
+              Text(dateFormat.format(now),
+                style: GoogleFonts.montserrat(color: Colors.white, fontSize: 18)),
               ],
             ),
           ),
@@ -84,108 +86,39 @@ class _HomeTabHeader extends StatelessWidget {
   }
 }
 
-class _QuickActionsSectionHome extends StatelessWidget {
-  const _QuickActionsSectionHome();
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Quick Actions',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 16),
-        _QuickActionCardHome(
-            icon: Icons.directions_bus_filled,
-            title: 'Track Buses',
-            subtitle: 'View all campus buses in real-time',
-            onTap: () {}),
-        const SizedBox(height: 12),
-        _QuickActionCardHome(
-            icon: Icons.map,
-            title: 'View Map',
-            subtitle: 'Interactive campus transit map',
-            onTap: () {}),
-        const SizedBox(height: 12),
-        _QuickActionCardHome(
-            icon: Icons.person,
-            title: 'My Profile',
-            subtitle: 'Manage settings and view stats',
-            onTap: () {}),
-      ],
-    );
-  }
-}
-
-class _QuickActionCardHome extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _QuickActionCardHome(
-      {required this.icon,
-      required this.title,
-      required this.subtitle,
-      required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-        onTap: onTap,
-        child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: const Offset(0, 3))
-                ]),
-            child: Row(children: [
-              Icon(icon, color: Colors.blue.shade600, size: 30),
-              const SizedBox(width: 16),
-              Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                    Text(title,
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
-                    Text(subtitle,
-                        style: TextStyle(color: Colors.grey.shade600))
-                  ])),
-              Icon(Icons.arrow_forward_ios,
-                  color: Colors.grey.shade400, size: 16)
-            ])));
-  }
-}
-
-class _ActiveBusesSectionHome extends StatelessWidget {
-  const _ActiveBusesSectionHome();
+class _MyBusesSectionHome extends StatelessWidget {
+  const _MyBusesSectionHome();
   @override
   Widget build(BuildContext context) {
     return Column(children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        const Text('Active Buses',
+        const Text('My Buses',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         TextButton(
-            onPressed: () {},
+            onPressed: () {
+              // Navigate to buses page
+              Navigator.pushNamed(context, '/buses');
+            },
             child: Text('View All',
                 style: TextStyle(color: Colors.blue.shade700)))
       ]),
       const SizedBox(height: 8),
-      const _ActiveBusCardHome()
+      GestureDetector(
+        onTap: () {
+          // Navigate to buses page when card is tapped
+          Navigator.pushNamed(context, '/buses');
+        },
+        child: const _MyBusCardHome(),
+      ),
     ]);
   }
 }
 
-class _ActiveBusCardHome extends StatelessWidget {
-  const _ActiveBusCardHome();
+class _MyBusCardHome extends StatelessWidget {
+  const _MyBusCardHome();
   @override
   Widget build(BuildContext context) {
+    // Replace below with user's alloted/default bus details as needed
     return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -193,7 +126,7 @@ class _ActiveBusCardHome extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey,
                   spreadRadius: 2,
                   blurRadius: 5,
                   offset: const Offset(0, 3))
@@ -210,28 +143,12 @@ class _ActiveBusCardHome extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: Colors.green.shade100,
                     borderRadius: BorderRadius.circular(6)),
-                child: Text('Live',
+                child: Text('Alloted',
                     style: TextStyle(
                         color: Colors.green.shade800,
                         fontWeight: FontWeight.bold,
                         fontSize: 12)))
           ]),
-          Text('Main Campus - Engineering',
-              style: TextStyle(color: Colors.grey.shade600)),
-          const Divider(height: 24),
-          Row(children: [
-            Icon(Icons.location_on_outlined,
-                color: Colors.grey.shade600, size: 16),
-            const SizedBox(width: 4),
-            Text('Engineering Building',
-                style: TextStyle(color: Colors.grey.shade700)),
-            const SizedBox(width: 4),
-            const Text('•', style: TextStyle(color: Colors.grey)),
-            const SizedBox(width: 4),
-            Text('3 min', style: TextStyle(color: Colors.grey.shade700)),
-            const Spacer(),
-            const Icon(Icons.wifi, color: Colors.green, size: 18)
-          ])
         ]));
   }
 }
