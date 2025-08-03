@@ -44,7 +44,7 @@ class _HomeTabHeader extends StatelessWidget {
       child: Container(
         height: 290,
         width: double.infinity,
-        color: const Color.fromARGB(255, 17, 34, 80),
+        color: const Color.fromARGB(255,61,65,38),
         child: SafeArea(
           child: Padding(
             padding:
@@ -57,7 +57,7 @@ class _HomeTabHeader extends StatelessWidget {
                 children: [
                 Text('Vahan Mitra',
                   style: GoogleFonts.montserrat(
-                    color: Colors.white,
+                    color: Color.fromARGB(255,246,237,222),
                     fontSize: 30,
                     fontWeight: FontWeight.bold)),
                 ],
@@ -66,17 +66,17 @@ class _HomeTabHeader extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                 Text('CHINMAYA VISHWA VIDYAPEETH',
-                  style: GoogleFonts.montserrat(color: Colors.white, fontSize: 16)),
+                  style: GoogleFonts.montserrat(color: Color.fromARGB(255,246,237,222), fontSize: 16)),
                 ],
               ),
               const SizedBox(height: 70), // Added space between rows and time
               Text(timeFormat.format(now),
                 style: GoogleFonts.montserrat(
-                  color: Colors.white,
+                  color: Color.fromARGB(255,246,237,222),
                   fontSize: 36,
                   fontWeight: FontWeight.bold)),
               Text(dateFormat.format(now),
-                style: GoogleFonts.montserrat(color: Colors.white, fontSize: 18)),
+                style: GoogleFonts.montserrat(color: Color.fromARGB(255,246,237,222), fontSize: 18)),
               ],
             ),
           ),
@@ -92,15 +92,15 @@ class _MyBusesSectionHome extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(children: [
       Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        const Text('My Buses',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text('My Buses',
+            style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold,color: Color.fromARGB(255,61,65,38))),
         TextButton(
             onPressed: () {
               // Navigate to buses page
               Navigator.pushNamed(context, '/buses');
             },
             child: Text('View All',
-                style: TextStyle(color: Colors.blue.shade700)))
+                style: TextStyle(color: Color.fromARGB(255,61,65,38))))
       ]),
       const SizedBox(height: 8),
       GestureDetector(
@@ -135,19 +135,24 @@ class _MyBusCardHome extends StatelessWidget {
           Row(children: [
             const Icon(Icons.directions_bus, color: Colors.grey),
             const SizedBox(width: 8),
-            const Text('Bus 101', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Bus 101', style: TextStyle(fontWeight: FontWeight.bold,color: Color.fromARGB(255,61,65,38))),
             const Spacer(),
             Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(6)),
-                child: Text('Alloted',
-                    style: TextStyle(
-                        color: Colors.green.shade800,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12)))
+          padding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+              color: Color.fromARGB(255,246,237,222),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                color: Color.fromARGB(255,61,65,38), // Border color
+                width: 2, // Border width
+              ),
+          ),
+          child: Text('Alloted',
+              style: TextStyle(
+            color: Color.fromARGB(255,61,65,38),
+            fontWeight: FontWeight.bold,
+            fontSize: 12)))
           ]),
         ]));
   }
