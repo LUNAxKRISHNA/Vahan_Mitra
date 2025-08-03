@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:ui'; // Needed for ImageFilter.blur
 import 'tabs/home_tab.dart';
 import 'tabs/buses_page.dart';
 import 'tabs/profile_page.dart';
@@ -12,12 +11,11 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // We now have only 3 tabs as requested
-  int _selectedIndex = 0; // Start with Home
+  int _selectedIndex = 1; // Start with Home (center item)
 
   static const List<Widget> _widgetOptions = <Widget>[
-    HomeTab(),
     BusesPage(),
+    HomeTab(),
     ProfilePage(),
   ];
 
@@ -30,38 +28,26 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // The body now uses a Stack to allow the glassmorphism effect to work
-      body: Stack(
-        children: [
-          // Your main page content
-          IndexedStack(
-            index: _selectedIndex,
-            children: _widgetOptions,
-          ),
-          // The custom navigation bar positioned at the bottom
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: GlassmorphicNavBar(
-              selectedIndex: _selectedIndex,
-              onTap: _onItemTapped,
-            ),
-          ),
-        ],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _widgetOptions,
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        selectedIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }
 }
 
 //================================================
-// CUSTOM GLASSMORPHIC NAVIGATION BAR
+// CUSTOM BOTTOM NAVIGATION BAR WITH LINE INDICATOR
 //================================================
-class GlassmorphicNavBar extends StatelessWidget {
+class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTap;
 
-  const GlassmorphicNavBar({
+  const CustomBottomNavBar({
     super.key,
     required this.selectedIndex,
     required this.onTap,
@@ -69,74 +55,74 @@ class GlassmorphicNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    const double navBarHeight = 70;
-    const double iconSize = 26;
-    const double highlightSize = 55;
+    final screenWidth = MediaQuery.of(context).size.width;
+    const indicatorWidth = 40.0; // The width of the moving line
+    const indicatorHeight = 4.0;
 
-    // Calculate the position for the moving highlight
-    final double highlightLeftPosition = (size.width / 3) * selectedIndex +
-        (size.width / 6) -
-        (highlightSize / 2);
+    // Calculate the position for the moving line indicator
+    final double indicatorLeftPosition =
+        (screenWidth / 3) * selectedIndex + (screenWidth / 6) - (indicatorWidth / 2);
 
-    final navBarIcons = [
-      Icons.home_filled,
-      Icons.directions_bus_filled,
-      Icons.person,
-    ];
-
-    // This is the main floating container
-    return Padding(
-      padding: const EdgeInsets.all(20.0), // Creates the space from the bottom/sides
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(25.0),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-          child: Container(
-            height: navBarHeight,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(25.0),
-              border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
-            ),
-            child: Stack(
-              children: [
-                // The moving highlight circle
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeInOut,
-                  left: highlightLeftPosition,
-                  top: (navBarHeight - highlightSize),
-                  child: Container(
-                    width: highlightSize,
-                    height: highlightSize,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color.fromARGB(255, 128, 45, 221),
-                    ),
-                  ),
+    return Container(
+      // A container to hold the Stack, allowing for a background color and shadow
+      height: 80, // Standard height for a bottom nav bar
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // The actual BottomNavigationBar with transparent indicator
+          Positioned.fill(
+            child: BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.directions_bus),
+                  label: 'Buses',
                 ),
-                // The row of icons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(navBarIcons.length, (index) {
-                    return IconButton(
-                      onPressed: () => onTap(index),
-                      icon: Icon(
-                        navBarIcons[index],
-                        size: iconSize,
-                        // Change color based on selection
-                        color: selectedIndex == index
-                            ? Colors.white
-                            : Colors.grey[300],
-                      ),
-                    );
-                  }),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person),
+                  label: 'Profile',
                 ),
               ],
+              currentIndex: selectedIndex,
+              onTap: onTap,
+              // Styling
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.transparent, // Important for the Stack
+              elevation: 0,
+              selectedItemColor: const Color.fromARGB(255,61,65,38),
+              unselectedItemColor: Color.fromARGB(255,61,65,38),
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
             ),
           ),
-        ),
+          // The custom moving line indicator
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            top: 0,
+            left: indicatorLeftPosition,
+            child: Container(
+              width: indicatorWidth,
+              height: indicatorHeight,
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255,61,65,38), // Indicator color
+                borderRadius: BorderRadius.circular(5),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
