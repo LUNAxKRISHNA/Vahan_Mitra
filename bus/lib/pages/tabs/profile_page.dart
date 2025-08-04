@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/wave_clipper.dart';
-import '../auth/login_page.dart'; // <-- 1. ADD THIS IMPORT
+import '../auth/login_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -57,8 +58,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-// --- ALL OTHER PROFILE PAGE WIDGETS GO HERE ---
-// (No changes needed for _ProfilePageHeader, _TransitStatsSection, etc.)
 
 class _ProfilePageHeader extends StatelessWidget {
   const _ProfilePageHeader();
@@ -88,11 +87,11 @@ class _ProfilePageHeader extends StatelessWidget {
                       radius: 35,
                       backgroundColor: Colors.white,
                       child: Text(
-                        'AJ',
+                        'PC',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+                          color: Color.fromARGB(255, 61, 65, 38),
                         ),
                       ),
                     ),
@@ -120,12 +119,12 @@ class _ProfilePageHeader extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: Color.fromARGB(255, 246, 237, 222),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(
                             'Student ID: 29114567',
-                            style: TextStyle(color: Colors.white, fontSize: 12),
+                            style: TextStyle(color: Color.fromARGB(255, 61, 65, 38), fontSize: 12),
                           ),
                         ),
                       ],
@@ -220,7 +219,7 @@ class _StatCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
-              color: Colors.blue.shade800,
+              color: Color.fromARGB(255, 246, 237, 222),
             ),
           ),
           const SizedBox(height: 4),
@@ -238,9 +237,9 @@ class _QuickActionsSectionProfile extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Quick Actions',
-          style: TextStyle(fontSize: 18,color: Color.fromARGB(255, 61, 65, 38), fontWeight: FontWeight.bold),
+          style: GoogleFonts.montserrat(fontSize: 18,color: Color.fromARGB(255, 61, 65, 38), fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         GridView.count(

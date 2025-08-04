@@ -60,6 +60,12 @@ class _HomeTabHeader extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Image.asset(
+                      'assets/logo.png',
+                      height: 55.0, // Adjust height as needed
+                      width: 55.0,  // Adjust width as needed
+                    ),
+                    const SizedBox(width: 12), 
                     Text(
                       'Vahan Mitra',
                       style: GoogleFonts.montserrat(
@@ -82,7 +88,7 @@ class _HomeTabHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 70), // Added space between rows and time
+                const SizedBox(height: 50), // Added space between rows and time
                 Text(
                   timeFormat.format(now),
                   style: GoogleFonts.montserrat(

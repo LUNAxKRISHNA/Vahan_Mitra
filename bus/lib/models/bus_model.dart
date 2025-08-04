@@ -1,12 +1,13 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+// This should be the entire content of 'lib/models/bus_model.dart'
 class Bus {
   final String id;
   final String route;
   final String status;
   final String nextStop;
   final int eta;
-  final int fullness;
-  final bool hasWifi;
-  final bool hasCharging;
+  final LatLng location; // The location property that was missing
 
   const Bus({
     required this.id,
@@ -14,8 +15,6 @@ class Bus {
     required this.status,
     required this.nextStop,
     required this.eta,
-    required this.fullness,
-    this.hasWifi = true,
-    this.hasCharging = false,
+    required this.location, // Added this required parameter
   });
 }

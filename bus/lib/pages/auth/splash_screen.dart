@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xff1a202c),
+      backgroundColor:Color.fromARGB(255, 61, 65, 38),
       body: Center(
         child: FadeTransition(
           opacity: _animation,
@@ -51,14 +51,11 @@ class _SplashScreenState extends State<SplashScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Assuming you have a 'logo.png' in an 'assets' folder
-              // If not, this will cause an error. You can comment it out.
-              /*
               Image.asset(
                 'assets/logo.png',
                 width: 150.0,
                 height: 150.0,
               ),
-              */
               const SizedBox(height: 20),
               Text(
                 'Vahan Mitra',

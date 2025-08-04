@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../models/bus_model.dart';
 import '../../widgets/wave_clipper.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import "map_page.dart";
+
 
 class BusesPage extends StatefulWidget {
   const BusesPage({super.key});
@@ -14,51 +17,40 @@ class _BusesPageState extends State<BusesPage> {
 
   final List<String> _filters = ['All Buses', 'Active', 'Delayed'];
 
-  final List<Bus> _allBuses = const [
+  // Mock data for demonstration
+  final List<Bus> _allBuses = [
     Bus(
       id: '101',
       route: 'Main Campus - Engineering',
       status: 'active',
       nextStop: 'Engineering Building',
       eta: 3,
-      fullness: 65,
-      hasWifi: true,
-    ),
-    Bus(
-      id: '202',
-      route: 'Dormitories - Library',
-      status: 'active',
-      nextStop: 'Central Library',
-      eta: 7,
-      fullness: 30,
-      hasWifi: true,
-      hasCharging: true,
-    ),
-    Bus(
-      id: '303',
-      route: 'Campus - Downtown',
-      status: 'delayed',
-      nextStop: 'Student Center',
-      eta: 12,
-      fullness: 85,
-      hasWifi: true,
+      // Added location for map integration
+      location: LatLng(9.9095, 76.4305),
     ),
     Bus(
       id: '102',
-      route: 'Main Campus - Sports Complex',
-      status: 'active',
-      nextStop: 'Gymnasium',
-      eta: 5,
-      fullness: 40,
-      hasWifi: true,
+      route: 'Library - Sports Complex',
+      status: 'delayed',
+      nextStop: 'Central Library',
+      eta: 15,
+      location: LatLng(9.9048, 76.4410),
     ),
     Bus(
-      id: '401',
-      route: 'North Campus - Arts Building',
+      id: '103',
+      route: 'Student Housing - Downtown',
+      status: 'active',
+      nextStop: 'Oak Street',
+      eta: 12,
+      location: LatLng(9.9073, 76.4384),
+    ),
+    Bus(
+      id: '104',
+      route: 'Science Park - North Gate',
       status: 'inactive',
-      nextStop: 'Fine Arts Hall',
+      nextStop: 'N/A',
       eta: 0,
-      fullness: 0,
+      location: LatLng(9.90, 76.43), // Dummy location
     ),
   ];
 
@@ -74,32 +66,45 @@ class _BusesPageState extends State<BusesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const _BusesPageHeader(),
-        _buildFilterChips(),
-        Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            itemCount: _filters.length,
-            itemBuilder: (context, index) {
-              final buses = _getFilteredBuses(_filters[index]);
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: buses.length,
-                itemBuilder: (context, busIndex) {
-                  return _BusInfoCard(bus: buses[busIndex]);
-                },
-              );
-            },
+    return Scaffold(
+      backgroundColor: Colors.grey[100],
+      body: Column(
+        children: [
+          const _BusesPageHeader(),
+          _buildFilterChips(),
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              itemCount: _filters.length,
+              itemBuilder: (context, index) {
+                final buses = _getFilteredBuses(_filters[index]);
+                if (buses.isEmpty) {
+                  return Center(
+                    child: Text(
+                      'No buses found for "${_filters[index]}"',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: buses.length,
+                  itemBuilder: (context, busIndex) {
+                    // --- UPDATED ---
+                    // The _BusInfoCard now handles navigation
+                    return _BusInfoCard(bus: buses[busIndex]);
+                  },
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -116,9 +121,6 @@ class _BusesPageState extends State<BusesPage> {
             selected: isSelected,
             onSelected: (selected) {
               if (selected) {
-                setState(() {
-                  _currentIndex = index;
-                });
                 _pageController.animateToPage(
                   index,
                   duration: const Duration(milliseconds: 300),
@@ -130,8 +132,8 @@ class _BusesPageState extends State<BusesPage> {
               color: isSelected ? Colors.white : Colors.black87,
               fontWeight: FontWeight.bold,
             ),
-            backgroundColor: Colors.grey[200],
-            selectedColor: Color.fromARGB(255, 61, 65, 38),
+            backgroundColor: Colors.white,
+            selectedColor: const Color.fromARGB(255, 41, 44, 26),
             showCheckmark: false,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
@@ -154,9 +156,9 @@ class _BusesPageHeader extends StatelessWidget {
       child: Container(
         height: 150,
         width: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.black, Color.fromARGB(255, 61, 65, 38)],
+            colors: [Colors.black, Color.fromARGB(255, 41, 44, 26)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -190,6 +192,7 @@ class _BusesPageHeader extends StatelessWidget {
   }
 }
 
+// --- Bus Info Card Widget (Updated) ---
 class _BusInfoCard extends StatelessWidget {
   final Bus bus;
   const _BusInfoCard({required this.bus});
@@ -197,62 +200,69 @@ class _BusInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = bus.status == 'active' ? Colors.green : Colors.orange;
+    // --- UPDATED ---
+    // Wrapped the Card in an InkWell to make it tappable
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
-      shadowColor: Colors.black12,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Icon(Icons.directions_bus, color: Colors.grey[600]),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bus ${bus.id}',
-                      style: const TextStyle(
+      elevation: 4,
+      shadowColor: Colors.black.withOpacity(0.1),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          // Navigate to the MapPage, passing the selected bus
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => MapPage(bus: bus),
+          ));
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.directions_bus, color: Colors.grey[800], size: 30),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bus ${bus.id}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(bus.route, style: TextStyle(color: Colors.grey[600])),
+                    ],
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      bus.status.toUpperCase(),
+                      style: TextStyle(
+                        color: statusColor,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 12,
                       ),
                     ),
-                    Text(bus.route, style: TextStyle(color: Colors.grey[600])),
-                  ],
-                ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
                   ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    bus.status,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 24),
-            _InfoRow(
-              icon: Icons.location_on_outlined,
-              text: 'Next: ${bus.nextStop}',
-            ),
-            const SizedBox(height: 8),
-            _InfoRow(icon: Icons.schedule, text: 'ETA: ${bus.eta} min'),
-            const SizedBox(height: 8),
-          ],
+                ],
+              ),
+              const Divider(height: 24),
+              _InfoRow(
+                icon: Icons.location_on_outlined,
+                text: 'Next: ${bus.nextStop}',
+              ),
+              const SizedBox(height: 8),
+              _InfoRow(icon: Icons.schedule, text: 'ETA: ${bus.eta} min'),
+            ],
+          ),
         ),
       ),
     );
@@ -273,6 +283,8 @@ class _InfoRow extends StatelessWidget {
         Icon(icon, color: Colors.grey[600], size: 20),
         const SizedBox(width: 8),
         Text(text, style: TextStyle(color: Colors.grey[800])),
+        const Spacer(),
+        if (trailing != null) trailing!,
       ],
     );
   }
