@@ -1,10 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../models/bus_model.dart'; // Import your bus model
+import 'package:location/location.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:convert';
+// Import your models and the drivers_page to access the driver list
+import '../../models/bus_model.dart';
+import '../../models/drivers_model.dart';
+import 'drivers_page.dart'; // This gives us access to the public 'driversList'
 
 class MapPage extends StatefulWidget {
-  // Add an optional bus parameter to the constructor to receive data
   final Bus? bus;
   const MapPage({super.key, this.bus});
 
@@ -13,63 +20,296 @@ class MapPage extends StatefulWidget {
 }
 
 class _MapPageState extends State<MapPage> {
-  final Completer<GoogleMapController> _controller = Completer();
+  final Completer<GoogleMapController> _mapController = Completer();
+  final Location _locationController = Location();
+  // --- CORRECTED ---
+  // The API key is now provided here in the constructor, as required by your package version.
+  final PolylinePoints _polylinePoints = PolylinePoints(apiKey:'AIzaSyBcIEYWuyKgOkGdMkRP68w99TCsu1qw25M');
 
-  // A default location in case no specific bus is passed to the page
-  static const LatLng _defaultCenter = LatLng(9.9073, 76.4384);
-  
-  late LatLng _initialLocation;
+  LatLng? _userCurrentPosition;
   final Set<Marker> _markers = {};
-
+  final Set<Polyline> _polylines = {};
+  Drivers? _assignedDriver;
+  int? _etaMinutes;
+  
   @override
   void initState() {
     super.initState();
-    // Use the passed bus's location, or the default one if no bus is provided
-    _initialLocation = widget.bus?.location ?? _defaultCenter;
-    _setupMarkers();
+    _findAssignedDriver();
+    _getUserLocation();
   }
 
-  // Prepares the marker for the bus to be displayed on the map
-  void _setupMarkers() {
-    // Only add a marker if a bus was actually passed to this page
+  // Find the driver associated with the current bus
+  void _findAssignedDriver() {
     if (widget.bus != null) {
-      _markers.add(
-        Marker(
-          markerId: MarkerId(widget.bus!.id),
-          position: widget.bus!.location,
-          infoWindow: InfoWindow(
-            title: 'Bus ${widget.bus!.id}',
-            snippet: widget.bus!.route,
-          ),
-          // Using a distinct color for the bus marker
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        ),
-      );
+      setState(() {
+        // Search the public list from drivers_page.dart
+        _assignedDriver = driversList.firstWhere(
+          (driver) => driver.id == widget.bus!.driverId,
+          orElse: () => driversList.first, // Fallback to the first driver
+        );
+      });
     }
-    // You could add more markers here, for example, for the user's location
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Added an AppBar to allow easy navigation back to the previous screen
       appBar: AppBar(
         title: Text(widget.bus != null ? 'Bus ${widget.bus!.id} Location' : 'Live Map'),
         backgroundColor: const Color(0xff2a3a5b),
         elevation: 0,
       ),
-      body: GoogleMap(
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-        },
-        // The initial camera position is centered on the selected bus
-        initialCameraPosition: CameraPosition(
-          target: _initialLocation,
-          zoom: 15.0,
+      body: Stack(
+        children: [
+          GoogleMap(
+            onMapCreated: (GoogleMapController controller) {
+              _mapController.complete(controller);
+            },
+            initialCameraPosition: CameraPosition(
+              target: widget.bus?.location ?? const LatLng(9.9073, 76.4384),
+              zoom: 14.5,
+            ),
+            markers: _markers,
+            polylines: _polylines,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+          ),
+          _buildTopHeader(),
+          if (widget.bus != null && _assignedDriver != null)
+            _buildBottomInfoCard(),
+        ],
+      ),
+    );
+  }
+
+  // --- UI Widgets ---
+
+  Widget _buildTopHeader() {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Container(
+        margin: const EdgeInsets.only(top: 20),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+        decoration: BoxDecoration(
+          color: const Color(0xff2a3a5b),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: const [
+            BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
+          ],
         ),
-        markers: _markers,
-        myLocationButtonEnabled: false,
-        zoomControlsEnabled: false,
+        child: Text(
+          '${widget.bus?.eta ?? 'N/A'} Minutes Away',
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomInfoCard() {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, 4)),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildInfoRow(
+              icon: Icons.directions_bus,
+              label: 'Bus Route',
+              value: widget.bus?.route ?? 'Unknown Route',
+            ),
+            const Divider(height: 20),
+            InkWell(
+              onTap: () => _showDriverDetails(context, _assignedDriver!),
+              child: _buildInfoRow(
+                icon: Icons.person_outline,
+                label: 'Driver',
+                value: _assignedDriver!.name,
+                showArrow: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool showArrow = false,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: const Color.fromARGB(255, 61, 65, 38), size: 24),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12)),
+            Text(value, style: GoogleFonts.poppins(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        const Spacer(),
+        if (showArrow) const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+      ],
+    );
+  }
+
+  // --- Driver Detail Sheet Logic ---
+
+  void _showDriverDetails(BuildContext context, Drivers driver) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _DriverDetailSheet(driver: driver),
+    );
+  }
+
+  // --- Location and Route Drawing Logic ---
+
+  Future<void> _getUserLocation() async {
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+
+    serviceEnabled = await _locationController.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await _locationController.requestService();
+      if (!serviceEnabled) return;
+    }
+
+    permissionGranted = await _locationController.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await _locationController.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) return;
+    }
+
+    final locationData = await _locationController.getLocation();
+    if (locationData.latitude != null && locationData.longitude != null) {
+      setState(() {
+        _userCurrentPosition = LatLng(locationData.latitude!, locationData.longitude!);
+        _setupMarkers();
+        _drawRoute();
+      });
+    }
+  }
+
+  void _setupMarkers() {
+    _markers.clear();
+    if (widget.bus != null) {
+      _markers.add(
+        Marker(
+          markerId: MarkerId('bus_${widget.bus!.id}'),
+          position: widget.bus!.location,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          infoWindow: InfoWindow(title: 'Bus ${widget.bus!.id}'),
+        ),
+      );
+    }
+    if (_userCurrentPosition != null) {
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('user_location'),
+          position: _userCurrentPosition!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          infoWindow: const InfoWindow(title: 'Your Location'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _drawRoute() async {
+    if (_userCurrentPosition == null || widget.bus == null) return;
+    
+    // --- CORRECTED ---
+    // The method now uses PolylineRequest and no longer passes the API key,
+    // as it's handled in the PolylinePoints constructor.
+    PolylineResult result = await _polylinePoints.getRouteBetweenCoordinates(request: PolylineRequest(origin: PointLatLng(_userCurrentPosition!.latitude, _userCurrentPosition!.longitude),destination: PointLatLng(widget.bus!.location.latitude, widget.bus!.location.longitude), mode: TravelMode.transit)
+
+    );
+
+    if (result.points.isNotEmpty) {
+      final polylineCoordinates = result.points
+          .map((point) => LatLng(point.latitude, point.longitude))
+          .toList();
+
+      setState(() {
+        _polylines.add(
+          Polyline(
+            polylineId: const PolylineId('route'),
+            points: polylineCoordinates,
+            color: Colors.redAccent,
+            width: 5,
+          ),
+        );
+      });
+    }
+  }
+}
+
+// --- Widget for the Modal Bottom Sheet ---
+class _DriverDetailSheet extends StatelessWidget {
+  final Drivers driver;
+  const _DriverDetailSheet({required this.driver});
+
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 45,
+            backgroundColor: Colors.grey[200],
+            backgroundImage: AssetImage(driver.imageUrl),
+          ),
+          const SizedBox(height: 16),
+          Text(driver.name, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 41, 44, 26))),
+          const SizedBox(height: 8),
+          Text('License: ${driver.license}', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          const Divider(height: 32),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.call_outlined),
+            label: Text(driver.phoneNumber),
+            onPressed: () => _makePhoneCall(driver.phoneNumber),
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: const Color.fromARGB(255, 61, 65, 38),
+              minimumSize: const Size(double.infinity, 50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              textStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
       ),
     );
   }

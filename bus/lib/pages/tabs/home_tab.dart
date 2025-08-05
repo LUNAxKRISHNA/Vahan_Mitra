@@ -1,7 +1,11 @@
 // lib/pages/tabs/home_tab.dart
+import 'package:bus/pages/tabs/drivers_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+
+// Assuming these files exist in your project structure
+import '../../models/drivers_model.dart';
 import '../../widgets/wave_clipper.dart';
 
 //======================================================================
@@ -11,6 +15,7 @@ class HomeTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       body: Column(
         children: [
           const _HomeTabHeader(),
@@ -18,7 +23,14 @@ class HomeTab extends StatelessWidget {
             child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(children: [const _MyBusesSectionHome()]),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _QuickActionsSection(),
+                    const SizedBox(height: 24),
+                    const _DriversSection(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -28,20 +40,20 @@ class HomeTab extends StatelessWidget {
   }
 }
 
+// --- 1. Redesigned Header ---
 class _HomeTabHeader extends StatelessWidget {
   const _HomeTabHeader();
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final timeFormat = DateFormat('hh:mm a');
-    final dateFormat = DateFormat('EEEE d MMM');
+    final dateFormat = DateFormat('EEEE, d MMMM');
 
     return ClipPath(
       clipper: WaveClipper(),
       child: Container(
-        height: 290,
+        height: 250, // Slightly reduced height
         width: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Colors.black, Color.fromARGB(255, 61, 65, 38)],
             begin: Alignment.topLeft,
@@ -50,58 +62,138 @@ class _HomeTabHeader extends StatelessWidget {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 16.0,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SizedBox(height: 20),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Image.asset(
-                      'assets/logo.png',
-                      height: 55.0, // Adjust height as needed
-                      width: 55.0,  // Adjust width as needed
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Good Afternoon,',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white70,
+                            fontSize: 18,
+                          ),
+                        ),
+                        Text(
+                          'Vahan Mitra User', // Placeholder for user name
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12), 
-                    Text(
-                      'Vahan Mitra',
-                      style: GoogleFonts.montserrat(
-                        color: Color.fromARGB(255, 246, 237, 222),
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
+                    const CircleAvatar(
+                      radius: 25,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.person,
+                        size: 30,
+                        color: Color.fromARGB(255, 61, 65, 38),
                       ),
                     ),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'CHINMAYA VISHWA VIDYAPEETH',
-                      style: GoogleFonts.montserrat(
-                        color: Color.fromARGB(255, 246, 237, 222),
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 50), // Added space between rows and time
-                Text(
-                  timeFormat.format(now),
-                  style: GoogleFonts.montserrat(
-                    color: Color.fromARGB(255, 246, 237, 222),
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                const Spacer(),
                 Text(
                   dateFormat.format(now),
-                  style: GoogleFonts.montserrat(
-                    color: Color.fromARGB(255, 246, 237, 222),
-                    fontSize: 18,
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- Quick Actions Section ---
+class _QuickActionsSection extends StatelessWidget {
+  const _QuickActionsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: const Color.fromARGB(255, 61, 65, 38),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _QuickActionCard(
+              icon: Icons.map_outlined,
+              label: 'Track My Bus',
+              onTap: () {},
+            ),
+            _QuickActionCard(
+              icon: Icons.alt_route,
+              label: 'View All Routes',
+              onTap: () {},
+            ),
+            _QuickActionCard(
+              icon: Icons.notifications_none,
+              label: 'Announcements',
+              onTap: () {},
+            ),
+          ],
+        )
+      ],
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickActionCard(
+      {required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Card(
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.05),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              children: [
+                Icon(icon,
+                    size: 30, color: const Color.fromARGB(255, 61, 65, 38)),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -113,64 +205,101 @@ class _HomeTabHeader extends StatelessWidget {
   }
 }
 
-class _MyBusesSectionHome extends StatelessWidget {
-  const _MyBusesSectionHome();
+// --- 4. Refined Driver Carousel Section ---
+class _DriversSection extends StatelessWidget {
+  const _DriversSection();
+
+  final List<Drivers> _driversList = const [
+    Drivers(
+      id: 'D1',
+      name: 'Ramesh Kumar',
+      phoneNumber: '+91 98765 43210',
+      license: 'KL-01-2020-0012345',
+      place: 'Kochi',
+      imageUrl: 'assets/drivers/ramesh.png',
+    ),
+    Drivers(
+      id: 'D2',
+      name: 'Suresh Menon',
+      phoneNumber: '+91 91234 56789',
+      license: 'KL-07-2018-0054321',
+      place: 'Thrissur',
+      imageUrl: 'assets/drivers/suresh.png',
+    ),
+    Drivers(
+      id: 'D3',
+      name: 'Anil Varma',
+      phoneNumber: '+91 99887 76655',
+      license: 'KL-08-2019-0098765',
+      place: 'Ernakulam',
+      imageUrl: 'assets/drivers/anil.png',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'My Buses',
+              'Our Drivers',
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color.fromARGB(255, 61, 65, 38),
+                color: const Color.fromARGB(255, 61, 65, 38),
               ),
             ),
             TextButton(
               onPressed: () {
-                // Navigate to buses page
-                Navigator.pushNamed(context, '/buses');
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const DriversPage(),
+                ));
               },
-              child: Text(
+              child: const Text(
                 'View All',
                 style: TextStyle(color: Color.fromARGB(255, 61, 65, 38)),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () {
-            // Navigate to buses page when card is tapped
-            Navigator.pushNamed(context, '/buses');
-          },
-          child: const _MyBusCardHome(),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 180,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _driversList.length,
+            itemBuilder: (context, index) {
+              return _DriverCarouselCard(driver: _driversList[index]);
+            },
+          ),
         ),
       ],
     );
   }
 }
 
-class _MyBusCardHome extends StatelessWidget {
-  const _MyBusCardHome();
+class _DriverCarouselCard extends StatelessWidget {
+  final Drivers driver;
+  const _DriverCarouselCard({required this.driver});
+
   @override
   Widget build(BuildContext context) {
-    // Replace below with user's alloted/default bus details as needed
     return Container(
+      width: 250,
+      margin: const EdgeInsets.only(right: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: const Color.fromARGB(255, 61, 65, 38),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey,
+            color: Colors.black.withOpacity(0.1),
             spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -179,19 +308,53 @@ class _MyBusCardHome extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.directions_bus, color: Colors.grey),
-              const SizedBox(width: 8),
-              const Text(
-                'Bus 101',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 61, 65, 38),
+              CircleAvatar(
+                radius: 25,
+                backgroundColor: Colors.white,
+                backgroundImage: AssetImage(driver.imageUrl),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  driver.name,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
+          const Spacer(),
+          _buildDriverDetailRow(
+            icon: Icons.phone_outlined,
+            text: driver.phoneNumber,
+          ),
+          const SizedBox(height: 8),
+          _buildDriverDetailRow(
+            icon: Icons.badge_outlined,
+            text: driver.license,
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDriverDetailRow({required IconData icon, required String text}) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white70, size: 16),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

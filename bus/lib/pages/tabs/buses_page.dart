@@ -4,6 +4,7 @@ import '../../widgets/wave_clipper.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import "map_page.dart";
 
+//==========================================================================
 
 class BusesPage extends StatefulWidget {
   const BusesPage({super.key});
@@ -25,6 +26,7 @@ class _BusesPageState extends State<BusesPage> {
       status: 'active',
       nextStop: 'Engineering Building',
       eta: 3,
+      driverId: 'D1',
       // Added location for map integration
       location: LatLng(9.9095, 76.4305),
     ),
@@ -34,6 +36,7 @@ class _BusesPageState extends State<BusesPage> {
       status: 'delayed',
       nextStop: 'Central Library',
       eta: 15,
+      driverId: 'D2',
       location: LatLng(9.9048, 76.4410),
     ),
     Bus(
@@ -42,6 +45,7 @@ class _BusesPageState extends State<BusesPage> {
       status: 'active',
       nextStop: 'Oak Street',
       eta: 12,
+      driverId: 'D3',
       location: LatLng(9.9073, 76.4384),
     ),
     Bus(
@@ -50,6 +54,7 @@ class _BusesPageState extends State<BusesPage> {
       status: 'inactive',
       nextStop: 'N/A',
       eta: 0,
+      driverId: 'D4',
       location: LatLng(9.90, 76.43), // Dummy location
     ),
   ];
@@ -273,9 +278,7 @@ class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
   final Widget? trailing;
-
   const _InfoRow({required this.icon, required this.text, this.trailing});
-
   @override
   Widget build(BuildContext context) {
     return Row(
