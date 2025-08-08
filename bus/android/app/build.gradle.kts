@@ -1,3 +1,5 @@
+
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -6,6 +8,7 @@ plugins {
 }
 
 android {
+    ndkVersion = "27.0.12077973"
     namespace = "com.example.bus"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
