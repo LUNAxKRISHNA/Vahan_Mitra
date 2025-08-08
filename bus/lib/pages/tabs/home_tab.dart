@@ -1,21 +1,39 @@
 // lib/pages/tabs/home_tab.dart
-import 'package:bus/pages/tabs/drivers_page.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Assuming these files exist in your project structure
 import '../../models/drivers_model.dart';
 import '../../widgets/wave_clipper.dart';
+import '../tabs/drivers_page.dart';
 
 //======================================================================
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
+
+  @override
+  State<HomeTab> createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  // --- SOS Logic ---
+  void _showSosDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User must tap a button to close
+      builder: (BuildContext context) {
+        return const _SosCountdownDialog();
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Color(0xFFF7F7F7),
       body: Column(
         children: [
           const _HomeTabHeader(),
@@ -36,11 +54,20 @@ class HomeTab extends StatelessWidget {
           ),
         ],
       ),
+      // --- Floating SOS Button ---
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showSosDialog,
+        backgroundColor: Colors.red[700],
+        foregroundColor: Colors.white,
+        tooltip: 'SOS',
+        child: const Icon(Icons.sos, size: 30),
+      ),
     );
   }
 }
 
-// --- 1. Redesigned Header ---
+// --- Header and other sections remain the same ---
+
 class _HomeTabHeader extends StatelessWidget {
   const _HomeTabHeader();
   @override
@@ -51,14 +78,10 @@ class _HomeTabHeader extends StatelessWidget {
     return ClipPath(
       clipper: WaveClipper(),
       child: Container(
-        height: 250, // Slightly reduced height
+        height: 250,
         width: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.black, Color.fromARGB(255, 61, 65, 38)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Color(0xFF1A1A1A),
         ),
         child: SafeArea(
           child: Padding(
@@ -76,35 +99,34 @@ class _HomeTabHeader extends StatelessWidget {
                         Text(
                           'Good Afternoon,',
                           style: GoogleFonts.poppins(
-                            color: Colors.white70,
+                            color: Color(0xFFE0E0E0),
                             fontSize: 18,
                           ),
                         ),
                         Text(
-                          'Vahan Mitra User', // Placeholder for user name
+                          'Vahan Mitra User',
                           style: GoogleFonts.poppins(
-                            color: Colors.white,
+                            color: Color(0xFFE0E0E0),
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                    const CircleAvatar(
-                      radius: 25,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.person,
-                        size: 30,
-                        color: Color.fromARGB(255, 61, 65, 38),
-                      ),
-                    ),
+                    const SizedBox(width: 16),
                   ],
                 ),
                 const Spacer(),
                 Text(
                   dateFormat.format(now),
+<<<<<<< HEAD
                   style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+=======
+                  style: GoogleFonts.poppins(
+                    color: Color(0xFFBFBFBF),
+                    fontSize: 16,
+                  ),
+>>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
                 ),
                 const SizedBox(height: 30),
               ],
@@ -116,7 +138,6 @@ class _HomeTabHeader extends StatelessWidget {
   }
 }
 
-// --- Quick Actions Section ---
 class _QuickActionsSection extends StatelessWidget {
   const _QuickActionsSection();
 
@@ -130,7 +151,7 @@ class _QuickActionsSection extends StatelessWidget {
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: const Color.fromARGB(255, 61, 65, 38),
+            color: const Color(0xFF1A1A1A),
           ),
         ),
         const SizedBox(height: 12),
@@ -175,7 +196,7 @@ class _QuickActionCard extends StatelessWidget {
     return Expanded(
       child: Card(
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Color(0xFF1A1A1A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: InkWell(
           onTap: onTap,
@@ -184,18 +205,23 @@ class _QuickActionCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               children: [
+<<<<<<< HEAD
                 Icon(
                   icon,
                   size: 30,
                   color: const Color.fromARGB(255, 61, 65, 38),
                 ),
+=======
+                Icon(icon,
+                    size: 30, color: Color(0xFF222526)),
+>>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
                 const SizedBox(height: 8),
                 Text(
                   label,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 12,
-                    color: Colors.grey[800],
+                    color: Color(0xFF222526),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -208,10 +234,11 @@ class _QuickActionCard extends StatelessWidget {
   }
 }
 
-// --- 4. Refined Driver Carousel Section ---
+
 class _DriversSection extends StatelessWidget {
   const _DriversSection();
 
+<<<<<<< HEAD
   final List<Drivers> _driversList = const [
     Drivers(
       id: 'D1',
@@ -236,6 +263,8 @@ class _DriversSection extends StatelessWidget {
     ),
   ];
 
+=======
+>>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -249,7 +278,7 @@ class _DriversSection extends StatelessWidget {
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: const Color.fromARGB(255, 61, 65, 38),
+                color: const Color(0xFF1A1A1A),
               ),
             ),
             TextButton(
@@ -260,7 +289,7 @@ class _DriversSection extends StatelessWidget {
               },
               child: const Text(
                 'View All',
-                style: TextStyle(color: Color.fromARGB(255, 61, 65, 38)),
+                style: TextStyle(color: Color(0xFF1A1A1A)),
               ),
             ),
           ],
@@ -270,9 +299,9 @@ class _DriversSection extends StatelessWidget {
           height: 180,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: _driversList.length,
+            itemCount: driversList.length > 3 ? 3 : driversList.length, // Show max 3 drivers
             itemBuilder: (context, index) {
-              return _DriverCarouselCard(driver: _driversList[index]);
+              return _DriverCarouselCard(driver: driversList[index]);
             },
           ),
         ),
@@ -292,11 +321,11 @@ class _DriverCarouselCard extends StatelessWidget {
       margin: const EdgeInsets.only(right: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 61, 65, 38),
+        color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Color(0xFF1A1A1A),
             spreadRadius: 2,
             blurRadius: 8,
             offset: const Offset(0, 4),
@@ -306,6 +335,7 @@ class _DriverCarouselCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+<<<<<<< HEAD
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -317,6 +347,28 @@ class _DriverCarouselCard extends StatelessWidget {
               ),
               overflow: TextOverflow.ellipsis,
             ),
+=======
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 25,
+                backgroundColor: Color(0xFFE0E0E0),
+                backgroundImage: AssetImage(driver.imageUrl),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  driver.name,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Color(0xFFE0E0E0),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+>>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
           ),
           const Spacer(),
           _buildDriverDetailRow(
@@ -336,12 +388,12 @@ class _DriverCarouselCard extends StatelessWidget {
   Widget _buildDriverDetailRow({required IconData icon, required String text}) {
     return Row(
       children: [
-        Icon(icon, color: Colors.white70, size: 16),
+        Icon(icon, color: Color(0xFFE0E0E0), size: 16),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(color: Colors.white70, fontSize: 14),
+            style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 14),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -349,3 +401,111 @@ class _DriverCarouselCard extends StatelessWidget {
     );
   }
 }
+<<<<<<< HEAD
+=======
+
+
+// --- New Widget for the SOS Countdown Dialog ---
+class _SosCountdownDialog extends StatefulWidget {
+  const _SosCountdownDialog();
+
+  @override
+  State<_SosCountdownDialog> createState() => _SosCountdownDialogState();
+}
+
+class _SosCountdownDialogState extends State<_SosCountdownDialog> {
+  late Timer _timer;
+  int _countdown = 10;
+
+  final String emergencyNumber = '+918891098650'; 
+  final String emergencyMessage = 'I am in an emergency and need help. My current location is [Your Location].'; 
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_countdown == 0) {
+        timer.cancel();
+        if(mounted) {
+          Navigator.of(context).pop(); // Close the dialog
+          _triggerSosActions();
+        }
+      } else {
+        if(mounted){
+          setState(() {
+            _countdown--;
+          });
+        }
+      }
+    });
+  }
+
+  Future<void> _triggerSosActions() async {
+    // Action 1: Send SMS
+    final Uri smsUri = Uri(
+      scheme: 'sms',
+      path: emergencyNumber,
+      queryParameters: {'body': emergencyMessage},
+    );
+    if (await canLaunchUrl(smsUri)) {
+      await launchUrl(smsUri);
+    }
+
+    // Action 2: Make a Phone Call (add a small delay)
+    await Future.delayed(const Duration(seconds: 2));
+    final Uri callUri = Uri(scheme: 'tel', path: emergencyNumber);
+    if (await canLaunchUrl(callUri)) {
+      await launchUrl(callUri);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel(); // Important to prevent memory leaks
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text('SOS Confirmation', textAlign: TextAlign.center),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'Sending alert in...',
+            style: TextStyle(color: Color(0xFFBFBFBF)),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '$_countdown',
+            style: GoogleFonts.poppins(
+              fontSize: 60,
+              fontWeight: FontWeight.bold,
+              color: Colors.red[700],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'An SMS and a call will be made to your emergency contact.',
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            _timer.cancel();
+            Navigator.of(context).pop();
+          },
+          child: const Text('CANCEL', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    );
+  }
+}
+>>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552

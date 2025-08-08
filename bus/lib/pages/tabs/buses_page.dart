@@ -16,7 +16,7 @@ class _BusesPageState extends State<BusesPage> {
   final PageController _pageController = PageController();
   int _currentIndex = 0;
 
-  final List<String> _filters = ['All Buses', 'Active', 'Delayed'];
+  final List<String> _filters = ['All Buses', 'Active', 'Inactive'];
 
   // Mock data for demonstration
   final List<Bus> _allBuses = [
@@ -33,7 +33,7 @@ class _BusesPageState extends State<BusesPage> {
     Bus(
       id: '102',
       route: 'Library - Sports Complex',
-      status: 'delayed',
+      status: 'inactive',
       nextStop: 'Central Library',
       eta: 15,
       driverId: 'D2',
@@ -58,21 +58,10 @@ class _BusesPageState extends State<BusesPage> {
       location: LatLng(9.90, 76.43), // Dummy location
     ),
   ];
-
-  List<Bus> _getFilteredBuses(String filter) {
-    if (filter == 'Active') {
-      return _allBuses.where((bus) => bus.status == 'active').toList();
-    }
-    if (filter == 'Delayed') {
-      return _allBuses.where((bus) => bus.status == 'delayed').toList();
-    }
-    return _allBuses.where((bus) => bus.status != 'inactive').toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Color(0xFFF7F7F7),
       body: Column(
         children: [
           const _BusesPageHeader(),
@@ -92,7 +81,7 @@ class _BusesPageState extends State<BusesPage> {
                   return Center(
                     child: Text(
                       'No buses found for "${_filters[index]}"',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                      style: TextStyle(color: Color(0xFF222526), fontSize: 16),
                     ),
                   );
                 }
@@ -111,6 +100,17 @@ class _BusesPageState extends State<BusesPage> {
         ],
       ),
     );
+  }
+
+  List<Bus> _getFilteredBuses(String filter) {
+    if (filter == 'All Buses') {
+      return _allBuses;
+    } else if (filter == 'Active') {
+      return _allBuses.where((bus) => bus.status == 'active').toList();
+    } else if (filter == 'Inactive') {
+      return _allBuses.where((bus) => bus.status == 'inactive').toList();
+    }
+    return [];
   }
 
   Widget _buildFilterChips() {
@@ -134,15 +134,15 @@ class _BusesPageState extends State<BusesPage> {
               }
             },
             labelStyle: TextStyle(
-              color: isSelected ? Colors.white : Colors.black87,
+              color: isSelected ? Color(0xFFE0E0E0) : Color(0xFF1A1A1A),
               fontWeight: FontWeight.bold,
             ),
-            backgroundColor: Colors.white,
-            selectedColor: const Color.fromARGB(255, 41, 44, 26),
+            backgroundColor: Color(0xFFE0E0E0),
+            selectedColor: const Color(0xFF1A1A1A),
             showCheckmark: false,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.grey[300]!),
+              side: BorderSide(color: Color(0xFFE0E0E0)),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           );
@@ -161,13 +161,7 @@ class _BusesPageHeader extends StatelessWidget {
       child: Container(
         height: 150,
         width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.black, Color.fromARGB(255, 41, 44, 26)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        color:Color(0xFF1A1A1A),
         child: const SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.0),
@@ -176,16 +170,16 @@ class _BusesPageHeader extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Campus Transit',
+                  'Track Buses',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFFE0E0E0),
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   'Track your bus in real-time',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                  style: TextStyle(color: Color(0xFFE0E0E0), fontSize: 16),
                 ),
                 SizedBox(height: 30),
               ],
@@ -205,13 +199,11 @@ class _BusInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = bus.status == 'active' ? Colors.green : Colors.orange;
-    // --- UPDATED ---
-    // Wrapped the Card in an InkWell to make it tappable
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Color(0xFF1A1A1A),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
@@ -226,7 +218,7 @@ class _BusInfoCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.directions_bus, color: Colors.grey[800], size: 30),
+                  Icon(Icons.directions_bus, color: Color(0xFF222526), size: 30),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,20 +230,20 @@ class _BusInfoCard extends StatelessWidget {
                           fontSize: 16,
                         ),
                       ),
-                      Text(bus.route, style: TextStyle(color: Colors.grey[600])),
+                      Text(bus.route, style: TextStyle(color: Color(0xFF222526))),
                     ],
                   ),
                   const Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.15),
+                      color: statusColor,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
                       bus.status.toUpperCase(),
                       style: TextStyle(
-                        color: statusColor,
+                        color: Color(0xFFE0E0E0),
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -283,9 +275,9 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: Colors.grey[600], size: 20),
+        Icon(icon, color: Color(0xFF222526), size: 20),
         const SizedBox(width: 8),
-        Text(text, style: TextStyle(color: Colors.grey[800])),
+        Text(text, style: TextStyle(color: Color(0xFF222526))),
         const Spacer(),
         if (trailing != null) trailing!,
       ],
