@@ -96,9 +96,6 @@ flutter:
   # see https://flutter.dev/to/font-from-package
   assets:
     - assets/logo.png
-    - assets/drivers/ramesh.png
-    - assets/drivers/suresh.png
-    - assets/drivers/anil.png
 flutter_launcher_icons:
   android: true
   ios: true

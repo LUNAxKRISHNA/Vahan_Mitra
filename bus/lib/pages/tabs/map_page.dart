@@ -58,16 +58,11 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-<<<<<<< HEAD
         title: Text(
           widget.bus != null ? 'Bus ${widget.bus!.id} Location' : 'Live Map',
         ),
         backgroundColor: const Color(0xff2a3a5b),
-=======
-        title: Text(widget.bus != null ? 'Bus ${widget.bus!.id} Location' : 'Live Map'),
-        backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: Color(0xFFE0E0E0),
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
         elevation: 0,
       ),
       body: Stack(
@@ -105,15 +100,11 @@ class _MapPageState extends State<MapPage> {
           color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(30),
           boxShadow: const [
-<<<<<<< HEAD
             BoxShadow(
               color: Colors.black26,
               blurRadius: 10,
               offset: Offset(0, 4),
             ),
-=======
-            BoxShadow(color: Color(0xFF222526), blurRadius: 10, offset: Offset(0, 4)),
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
           ],
         ),
         child: Text(
@@ -138,15 +129,11 @@ class _MapPageState extends State<MapPage> {
           color: Color(0xFFE0E0E0),
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
-<<<<<<< HEAD
             BoxShadow(
               color: Colors.black12,
               blurRadius: 15,
               offset: Offset(0, 4),
             ),
-=======
-            BoxShadow(color: Color(0xFF1A1A1A), blurRadius: 15, offset: Offset(0, 4)),
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
           ],
         ),
         child: Column(
@@ -186,7 +173,6 @@ class _MapPageState extends State<MapPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-<<<<<<< HEAD
             Text(
               label,
               style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12),
@@ -204,14 +190,6 @@ class _MapPageState extends State<MapPage> {
         const Spacer(),
         if (showArrow)
           const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-=======
-            Text(label, style: GoogleFonts.poppins(color: Color(0xFF353A3E), fontSize: 12)),
-            Text(value, style: GoogleFonts.poppins(color: Color(0xFF1A1A1A), fontSize: 16, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const Spacer(),
-        if (showArrow) const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFFBFBFBF)),
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
       ],
     );
   }
@@ -287,7 +265,6 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _drawRoute() async {
     if (_userCurrentPosition == null || widget.bus == null) return;
-<<<<<<< HEAD
 
     // --- CORRECTED ---
     // The method now uses PolylineRequest and no longer passes the API key,
@@ -304,9 +281,6 @@ class _MapPageState extends State<MapPage> {
         ),
         mode: TravelMode.transit,
       ),
-=======
-    PolylineResult result = await _polylinePoints.getRouteBetweenCoordinates(request: PolylineRequest(origin: PointLatLng(_userCurrentPosition!.latitude, _userCurrentPosition!.longitude),destination: PointLatLng(widget.bus!.location.latitude, widget.bus!.location.longitude), mode: TravelMode.transit)
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
     );
 
     if (result.points.isNotEmpty) {
@@ -355,14 +329,11 @@ class _DriverDetailSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-<<<<<<< HEAD
-=======
           CircleAvatar(
             radius: 45,
-            backgroundColor: Color(0xFFE0E0E0),
+            backgroundColor: Colors.grey[200],
             backgroundImage: AssetImage(driver.imageUrl),
           ),
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
           const SizedBox(height: 16),
           Text(
             driver.name,

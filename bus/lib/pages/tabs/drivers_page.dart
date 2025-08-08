@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/drivers_model.dart';
 
-
-
 final List<Drivers> driversList = const [
   Drivers(
     id: 'D1',
@@ -12,6 +10,7 @@ final List<Drivers> driversList = const [
     phoneNumber: '+919876543210',
     license: 'KL-01-2020-0012345',
     place: 'Kochi',
+    imageUrl: 'assets/drivers/ramesh.png',
   ),
   Drivers(
     id: 'D2',
@@ -19,6 +18,7 @@ final List<Drivers> driversList = const [
     phoneNumber: '+919123456789',
     license: 'KL-07-2018-0054321',
     place: 'Thrissur',
+    imageUrl: 'assets/drivers/suresh.png',
   ),
   Drivers(
     id: 'D3',
@@ -26,6 +26,7 @@ final List<Drivers> driversList = const [
     phoneNumber: '+919988776655',
     license: 'KL-08-2019-0098765',
     place: 'Ernakulam',
+    imageUrl: 'assets/drivers/anil.png',
   ),
   Drivers(
     id: 'D4',
@@ -33,6 +34,7 @@ final List<Drivers> driversList = const [
     phoneNumber: '+919555512345',
     license: 'KL-05-2021-0011223',
     place: 'Alappuzha',
+    imageUrl: 'assets/drivers/biju.png',
   ),
 ];
 
@@ -80,14 +82,11 @@ class _DriverListPageCard extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-<<<<<<< HEAD
-=======
             CircleAvatar(
               radius: 35,
-              backgroundColor: Color(0xFFE0E0E0),
+              backgroundColor: Colors.grey[200],
               backgroundImage: AssetImage(driver.imageUrl),
             ),
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
             const SizedBox(width: 16),
             Expanded(
               child: Column(

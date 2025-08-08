@@ -119,14 +119,10 @@ class _HomeTabHeader extends StatelessWidget {
                 const Spacer(),
                 Text(
                   dateFormat.format(now),
-<<<<<<< HEAD
-                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
-=======
                   style: GoogleFonts.poppins(
-                    color: Color(0xFFBFBFBF),
+                    color: Colors.white,
                     fontSize: 16,
                   ),
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
                 ),
                 const SizedBox(height: 30),
               ],
@@ -174,7 +170,7 @@ class _QuickActionsSection extends StatelessWidget {
               onTap: () {},
             ),
           ],
-        ),
+        )
       ],
     );
   }
@@ -185,11 +181,8 @@ class _QuickActionCard extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _QuickActionCard({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+  const _QuickActionCard(
+      {required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -205,16 +198,8 @@ class _QuickActionCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               children: [
-<<<<<<< HEAD
-                Icon(
-                  icon,
-                  size: 30,
-                  color: const Color.fromARGB(255, 61, 65, 38),
-                ),
-=======
                 Icon(icon,
-                    size: 30, color: Color(0xFF222526)),
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
+                    size: 30, color: const Color.fromARGB(255, 61, 65, 38)),
                 const SizedBox(height: 8),
                 Text(
                   label,
@@ -246,6 +231,7 @@ class _DriversSection extends StatelessWidget {
       phoneNumber: '+91 98765 43210',
       license: 'KL-01-2020-0012345',
       place: 'Kochi',
+      imageUrl: 'assets/drivers/ramesh.png',
     ),
     Drivers(
       id: 'D2',
@@ -253,6 +239,7 @@ class _DriversSection extends StatelessWidget {
       phoneNumber: '+91 91234 56789',
       license: 'KL-07-2018-0054321',
       place: 'Thrissur',
+      imageUrl: 'assets/drivers/suresh.png',
     ),
     Drivers(
       id: 'D3',
@@ -260,6 +247,7 @@ class _DriversSection extends StatelessWidget {
       phoneNumber: '+91 99887 76655',
       license: 'KL-08-2019-0098765',
       place: 'Ernakulam',
+      imageUrl: 'assets/drivers/anil.png',
     ),
   ];
 
@@ -283,9 +271,9 @@ class _DriversSection extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const DriversPage()),
-                );
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const DriversPage(),
+                ));
               },
               child: const Text(
                 'View All',
@@ -335,24 +323,11 @@ class _DriverCarouselCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-<<<<<<< HEAD
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              driver.name,
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                fontSize: 36,
-                color: Colors.white,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-=======
           Row(
             children: [
               CircleAvatar(
                 radius: 25,
-                backgroundColor: Color(0xFFE0E0E0),
+                backgroundColor: Colors.white,
                 backgroundImage: AssetImage(driver.imageUrl),
               ),
               const SizedBox(width: 12),
@@ -362,13 +337,12 @@ class _DriverCarouselCard extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
-                    color: Color(0xFFE0E0E0),
+                    color: Colors.white,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
           ),
           const Spacer(),
           _buildDriverDetailRow(
@@ -401,111 +375,3 @@ class _DriverCarouselCard extends StatelessWidget {
     );
   }
 }
-<<<<<<< HEAD
-=======
-
-
-// --- New Widget for the SOS Countdown Dialog ---
-class _SosCountdownDialog extends StatefulWidget {
-  const _SosCountdownDialog();
-
-  @override
-  State<_SosCountdownDialog> createState() => _SosCountdownDialogState();
-}
-
-class _SosCountdownDialogState extends State<_SosCountdownDialog> {
-  late Timer _timer;
-  int _countdown = 10;
-
-  final String emergencyNumber = '+918891098650'; 
-  final String emergencyMessage = 'I am in an emergency and need help. My current location is [Your Location].'; 
-  @override
-  void initState() {
-    super.initState();
-    _startTimer();
-  }
-
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_countdown == 0) {
-        timer.cancel();
-        if(mounted) {
-          Navigator.of(context).pop(); // Close the dialog
-          _triggerSosActions();
-        }
-      } else {
-        if(mounted){
-          setState(() {
-            _countdown--;
-          });
-        }
-      }
-    });
-  }
-
-  Future<void> _triggerSosActions() async {
-    // Action 1: Send SMS
-    final Uri smsUri = Uri(
-      scheme: 'sms',
-      path: emergencyNumber,
-      queryParameters: {'body': emergencyMessage},
-    );
-    if (await canLaunchUrl(smsUri)) {
-      await launchUrl(smsUri);
-    }
-
-    // Action 2: Make a Phone Call (add a small delay)
-    await Future.delayed(const Duration(seconds: 2));
-    final Uri callUri = Uri(scheme: 'tel', path: emergencyNumber);
-    if (await canLaunchUrl(callUri)) {
-      await launchUrl(callUri);
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel(); // Important to prevent memory leaks
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('SOS Confirmation', textAlign: TextAlign.center),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Sending alert in...',
-            style: TextStyle(color: Color(0xFFBFBFBF)),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '$_countdown',
-            style: GoogleFonts.poppins(
-              fontSize: 60,
-              fontWeight: FontWeight.bold,
-              color: Colors.red[700],
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'An SMS and a call will be made to your emergency contact.',
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            _timer.cancel();
-            Navigator.of(context).pop();
-          },
-          child: const Text('CANCEL', style: TextStyle(color: Colors.red)),
-        ),
-      ],
-    );
-  }
-}
->>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
