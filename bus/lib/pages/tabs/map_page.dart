@@ -24,14 +24,16 @@ class _MapPageState extends State<MapPage> {
   final Location _locationController = Location();
   // --- CORRECTED ---
   // The API key is now provided here in the constructor, as required by your package version.
-  final PolylinePoints _polylinePoints = PolylinePoints(apiKey:'AIzaSyBcIEYWuyKgOkGdMkRP68w99TCsu1qw25M');
+  final PolylinePoints _polylinePoints = PolylinePoints(
+    apiKey: 'AIzaSyBcIEYWuyKgOkGdMkRP68w99TCsu1qw25M',
+  );
 
   LatLng? _userCurrentPosition;
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
   Drivers? _assignedDriver;
   int? _etaMinutes;
-  
+
   @override
   void initState() {
     super.initState();
@@ -56,7 +58,9 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.bus != null ? 'Bus ${widget.bus!.id} Location' : 'Live Map'),
+        title: Text(
+          widget.bus != null ? 'Bus ${widget.bus!.id} Location' : 'Live Map',
+        ),
         backgroundColor: const Color(0xff2a3a5b),
         elevation: 0,
       ),
@@ -95,7 +99,11 @@ class _MapPageState extends State<MapPage> {
           color: const Color(0xff2a3a5b),
           borderRadius: BorderRadius.circular(30),
           boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
           ],
         ),
         child: Text(
@@ -120,7 +128,11 @@ class _MapPageState extends State<MapPage> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
-            BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, 4)),
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 15,
+              offset: Offset(0, 4),
+            ),
           ],
         ),
         child: Column(
@@ -160,12 +172,23 @@ class _MapPageState extends State<MapPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12)),
-            Text(value, style: GoogleFonts.poppins(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              label,
+              style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12),
+            ),
+            Text(
+              value,
+              style: GoogleFonts.poppins(
+                color: Colors.black87,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         const Spacer(),
-        if (showArrow) const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+        if (showArrow)
+          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       ],
     );
   }
@@ -201,7 +224,10 @@ class _MapPageState extends State<MapPage> {
     final locationData = await _locationController.getLocation();
     if (locationData.latitude != null && locationData.longitude != null) {
       setState(() {
-        _userCurrentPosition = LatLng(locationData.latitude!, locationData.longitude!);
+        _userCurrentPosition = LatLng(
+          locationData.latitude!,
+          locationData.longitude!,
+        );
         _setupMarkers();
         _drawRoute();
       });
@@ -215,7 +241,9 @@ class _MapPageState extends State<MapPage> {
         Marker(
           markerId: MarkerId('bus_${widget.bus!.id}'),
           position: widget.bus!.location,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueAzure,
+          ),
           infoWindow: InfoWindow(title: 'Bus ${widget.bus!.id}'),
         ),
       );
@@ -225,7 +253,9 @@ class _MapPageState extends State<MapPage> {
         Marker(
           markerId: const MarkerId('user_location'),
           position: _userCurrentPosition!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            BitmapDescriptor.hueGreen,
+          ),
           infoWindow: const InfoWindow(title: 'Your Location'),
         ),
       );
@@ -234,18 +264,29 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _drawRoute() async {
     if (_userCurrentPosition == null || widget.bus == null) return;
-    
+
     // --- CORRECTED ---
     // The method now uses PolylineRequest and no longer passes the API key,
     // as it's handled in the PolylinePoints constructor.
-    PolylineResult result = await _polylinePoints.getRouteBetweenCoordinates(request: PolylineRequest(origin: PointLatLng(_userCurrentPosition!.latitude, _userCurrentPosition!.longitude),destination: PointLatLng(widget.bus!.location.latitude, widget.bus!.location.longitude), mode: TravelMode.transit)
-
+    PolylineResult result = await _polylinePoints.getRouteBetweenCoordinates(
+      request: PolylineRequest(
+        origin: PointLatLng(
+          _userCurrentPosition!.latitude,
+          _userCurrentPosition!.longitude,
+        ),
+        destination: PointLatLng(
+          widget.bus!.location.latitude,
+          widget.bus!.location.longitude,
+        ),
+        mode: TravelMode.transit,
+      ),
     );
 
     if (result.points.isNotEmpty) {
-      final polylineCoordinates = result.points
-          .map((point) => LatLng(point.latitude, point.longitude))
-          .toList();
+      final polylineCoordinates =
+          result.points
+              .map((point) => LatLng(point.latitude, point.longitude))
+              .toList();
 
       setState(() {
         _polylines.add(
@@ -287,15 +328,20 @@ class _DriverDetailSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircleAvatar(
-            radius: 45,
-            backgroundColor: Colors.grey[200],
-            backgroundImage: AssetImage(driver.imageUrl),
-          ),
           const SizedBox(height: 16),
-          Text(driver.name, style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 41, 44, 26))),
+          Text(
+            driver.name,
+            style: GoogleFonts.poppins(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: const Color.fromARGB(255, 41, 44, 26),
+            ),
+          ),
           const SizedBox(height: 8),
-          Text('License: ${driver.license}', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
+          Text(
+            'License: ${driver.license}',
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+          ),
           const Divider(height: 32),
           ElevatedButton.icon(
             icon: const Icon(Icons.call_outlined),
@@ -305,8 +351,13 @@ class _DriverDetailSheet extends StatelessWidget {
               foregroundColor: Colors.white,
               backgroundColor: const Color.fromARGB(255, 61, 65, 38),
               minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              textStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

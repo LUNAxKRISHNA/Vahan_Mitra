@@ -104,10 +104,7 @@ class _HomeTabHeader extends StatelessWidget {
                 const Spacer(),
                 Text(
                   dateFormat.format(now),
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
+                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
                 ),
                 const SizedBox(height: 30),
               ],
@@ -156,7 +153,7 @@ class _QuickActionsSection extends StatelessWidget {
               onTap: () {},
             ),
           ],
-        )
+        ),
       ],
     );
   }
@@ -167,8 +164,11 @@ class _QuickActionCard extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _QuickActionCard(
-      {required this.icon, required this.label, required this.onTap});
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -184,8 +184,11 @@ class _QuickActionCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
               children: [
-                Icon(icon,
-                    size: 30, color: const Color.fromARGB(255, 61, 65, 38)),
+                Icon(
+                  icon,
+                  size: 30,
+                  color: const Color.fromARGB(255, 61, 65, 38),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   label,
@@ -216,7 +219,6 @@ class _DriversSection extends StatelessWidget {
       phoneNumber: '+91 98765 43210',
       license: 'KL-01-2020-0012345',
       place: 'Kochi',
-      imageUrl: 'assets/drivers/ramesh.png',
     ),
     Drivers(
       id: 'D2',
@@ -224,7 +226,6 @@ class _DriversSection extends StatelessWidget {
       phoneNumber: '+91 91234 56789',
       license: 'KL-07-2018-0054321',
       place: 'Thrissur',
-      imageUrl: 'assets/drivers/suresh.png',
     ),
     Drivers(
       id: 'D3',
@@ -232,7 +233,6 @@ class _DriversSection extends StatelessWidget {
       phoneNumber: '+91 99887 76655',
       license: 'KL-08-2019-0098765',
       place: 'Ernakulam',
-      imageUrl: 'assets/drivers/anil.png',
     ),
   ];
 
@@ -254,9 +254,9 @@ class _DriversSection extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const DriversPage(),
-                ));
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const DriversPage()),
+                );
               },
               child: const Text(
                 'View All',
@@ -306,26 +306,17 @@ class _DriverCarouselCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 25,
-                backgroundColor: Colors.white,
-                backgroundImage: AssetImage(driver.imageUrl),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              driver.name,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 36,
+                color: Colors.white,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  driver.name,
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           const Spacer(),
           _buildDriverDetailRow(

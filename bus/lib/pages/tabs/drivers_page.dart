@@ -15,7 +15,6 @@ final List<Drivers> driversList = const [
     phoneNumber: '+919876543210',
     license: 'KL-01-2020-0012345',
     place: 'Kochi',
-    imageUrl: 'assets/drivers/ramesh.png',
   ),
   Drivers(
     id: 'D2',
@@ -23,7 +22,6 @@ final List<Drivers> driversList = const [
     phoneNumber: '+919123456789',
     license: 'KL-07-2018-0054321',
     place: 'Thrissur',
-    imageUrl: 'assets/drivers/suresh.png',
   ),
   Drivers(
     id: 'D3',
@@ -31,7 +29,6 @@ final List<Drivers> driversList = const [
     phoneNumber: '+919988776655',
     license: 'KL-08-2019-0098765',
     place: 'Ernakulam',
-    imageUrl: 'assets/drivers/anil.png',
   ),
   Drivers(
     id: 'D4',
@@ -39,7 +36,6 @@ final List<Drivers> driversList = const [
     phoneNumber: '+919555512345',
     license: 'KL-05-2021-0011223',
     place: 'Alappuzha',
-    imageUrl: 'assets/drivers/biju.png',
   ),
 ];
 
@@ -87,11 +83,6 @@ class _DriverListPageCard extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 35,
-              backgroundColor: Colors.grey[200],
-              backgroundImage: AssetImage(driver.imageUrl),
-            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -115,7 +106,7 @@ class _DriverListPageCard extends StatelessWidget {
                     icon: Icons.badge_outlined,
                     text: driver.license,
                   ),
-                   const SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   _buildDriverDetailRow(
                     icon: Icons.location_on_outlined,
                     text: driver.place,
