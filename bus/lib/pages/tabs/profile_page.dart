@@ -3,6 +3,29 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../widgets/wave_clipper.dart';
 import '../auth/login_page.dart';
 
+class StudentProfile {
+  final String name;
+  final String regNo;
+  final String email;
+  final String profileImageUrl;
+  final String allocatedRoute;
+  final String allocatedBus;
+  final String feeRate;
+  final bool isFeePaid;
+
+  const StudentProfile({
+    required this.name,
+    required this.regNo,
+    required this.email,
+    required this.profileImageUrl,
+    required this.allocatedRoute,
+    required this.allocatedBus,
+    required this.feeRate,
+    required this.isFeePaid,
+  });
+}
+
+//======================================================================
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -11,56 +34,81 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+
+  final _studentProfile = const StudentProfile(
+    name: 'Priya Chauhan',
+    regNo: '29114567',
+    email: 'priya.chauhan@cvv.ac.in',
+    profileImageUrl: 'assets/logo.png', 
+    allocatedRoute: 'Main Campus - Engineering',
+    allocatedBus: 'Bus 101',
+    feeRate: '₹5,000 / Month',
+    isFeePaid: true,
+  );
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const _ProfilePageHeader(),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  const _TransitStatsSection(),
-                  const SizedBox(height: 24),
-                  const _QuickActionsSectionProfile(),
-                  const SizedBox(height: 32), 
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.logout),
-                    label: const Text('Logout'),
-                    onPressed:(){
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
+    return Scaffold(
+      backgroundColor: Color(0xFFF7F7F7),
+      body: Column(
+        children: [
+          _ProfilePageHeader(student: _studentProfile),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    _BusAllocationCard(
+                      route: _studentProfile.allocatedRoute,
+                      bus: _studentProfile.allocatedBus,
+                    ),
+                    const SizedBox(height: 16),
+                    _FeeDetailsCard(
+                      rate: _studentProfile.feeRate,
+                      isPaid: _studentProfile.isFeePaid,
+                    ),
+                    const SizedBox(height: 32),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Logout'),
+                      onPressed: () {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => const LoginPage(),
+                          ),
+                          (Route<dynamic> route) => false,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.red[400],
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        (Route<dynamic> route) => false,
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.redAccent,
-                      minimumSize: const Size(
-                        double.infinity,
-                        50,
-                      ), // Make button wider
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        textStyle: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
+// --- Header Widget ---
 class _ProfilePageHeader extends StatelessWidget {
-  const _ProfilePageHeader();
+  final StudentProfile student;
+  const _ProfilePageHeader({required this.student});
+
   @override
   Widget build(BuildContext context) {
     return ClipPath(
@@ -68,13 +116,7 @@ class _ProfilePageHeader extends StatelessWidget {
       child: Container(
         height: 240,
         width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.black, Color.fromARGB(255, 61, 65, 38)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        color: const Color(0xFF1A1A1A),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -83,34 +125,28 @@ class _ProfilePageHeader extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 35,
-                      backgroundColor: Colors.white,
-                      child: Text(
-                        'PC',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color.fromARGB(255, 61, 65, 38),
-                        ),
-                      ),
+                      backgroundColor: Color(0xFFBFBFBF),
+                      backgroundImage: AssetImage(student.profileImageUrl),
                     ),
                     const SizedBox(width: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Person @Chinmaya',
-                          style: TextStyle(
-                            color: Colors.white,
+                        Text(
+                          student.name,
+                          style: GoogleFonts.poppins(
+                            color: Color(0xFFBFBFBF),
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'person.1@cvv.ac.in',
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
+                        Text(
+                          student.email,
+                          style: const TextStyle(
+                              color: Color(0xFFBFBFBF), fontSize: 14),
                         ),
                         const SizedBox(height: 6),
                         Container(
@@ -119,12 +155,14 @@ class _ProfilePageHeader extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 246, 237, 222),
+                            color: const Color(0xFFBFBFBF),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Text(
-                            'Student ID: 29114567',
-                            style: TextStyle(color: Color.fromARGB(255, 61, 65, 38), fontSize: 12),
+                          child: Text(
+                            'Reg No: ${student.regNo}',
+                            style: const TextStyle(
+                                color: Color(0xFF1A1A1A),
+                                fontSize: 12),
                           ),
                         ),
                       ],
@@ -141,57 +179,28 @@ class _ProfilePageHeader extends StatelessWidget {
   }
 }
 
-class _TransitStatsSection extends StatelessWidget {
-  const _TransitStatsSection();
+// --- Bus Allocation Info Card ---
+class _BusAllocationCard extends StatelessWidget {
+  final String route;
+  final String bus;
+  const _BusAllocationCard({required this.route, required this.bus});
+
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      shadowColor: Colors.black12,
+      shadowColor: Color(0xFF1A1A1A),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.directions_bus, color: Color.fromARGB(255, 61, 65, 38)),
-                const SizedBox(width: 8),
-                const Text(
-                  'Transit Stats',
-                  style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 61, 65, 38), fontWeight: FontWeight.bold),
-                  
-                ),
-              ],
-            ),
+            _buildSectionTitle(icon: Icons.directions_bus, title: 'Bus Allocation'),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: Card(
-                elevation: 0,
-                color: Colors.grey[100],
-                child: const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Most Used Route',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Main Campus - Engineering',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            _buildInfoRow(label: 'Allocated Route', value: route),
+            const Divider(height: 24),
+            _buildInfoRow(label: 'Allocated Bus', value: bus),
           ],
         ),
       ),
@@ -199,126 +208,95 @@ class _TransitStatsSection extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final String value;
-  final String label;
-  const _StatCard({required this.value, required this.label});
+// --- Fee Details Info Card ---
+class _FeeDetailsCard extends StatelessWidget {
+  final String rate;
+  final bool isPaid;
+  const _FeeDetailsCard({required this.rate, required this.isPaid});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 246, 237, 222),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: Colors.grey)),
-        ],
-      ),
-    );
-  }
-}
+    final statusColor = isPaid ? Colors.green : Colors.orange;
+    final statusText = isPaid ? 'Paid' : 'Pending';
 
-class _QuickActionsSectionProfile extends StatelessWidget {
-  const _QuickActionsSectionProfile();
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Actions',
-          style: GoogleFonts.montserrat(fontSize: 18,color: Color.fromARGB(255, 61, 65, 38), fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.5,
-          children: const [
-            _ActionCard(
-              icon: Icons.route_outlined,
-              label: 'Saved Routes',
-              value: '3',
-            ),
-            _ActionCard(
-              icon: Icons.history,
-              label: 'Ride History',
-              value: '247',
-            ),
-            _ActionCard(
-              icon: Icons.star_border,
-              label: 'Favorite Stops',
-              value: '5',
-            ),
-            _ActionCard(
-              icon: Icons.notifications_outlined,
-              label: 'Notifications',
-              value: '2',
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  const _ActionCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      shadowColor: Colors.black12,
+      shadowColor: Color(0xFF1A1A1A),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: Colors.black, size: 28),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            _buildSectionTitle(icon: Icons.receipt_long, title: 'Fee Details'),
+            const SizedBox(height: 16),
+            _buildInfoRow(label: 'Fee Rate', value: rate),
+            const Divider(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  label,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
+                  'Payment Status',
+                  style: TextStyle(color: Color(0xFF222526),fontSize: 14),
                 ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    statusText.toUpperCase(),
+                    style: TextStyle(
+                      color: Color(0xFFE0E0E0),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
-            ),
+            )
           ],
         ),
       ),
     );
   }
+}
+
+// --- Helper Widgets ---
+Widget _buildSectionTitle({required IconData icon, required String title}) {
+  return Row(
+    children: [
+      Icon(icon, color: const Color(0xFF1A1A1A)),
+      const SizedBox(width: 8),
+      Text(
+        title,
+        style: GoogleFonts.poppins(
+            fontSize: 16,
+            color: const Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold),
+      ),
+    ],
+  );
+}
+
+Widget _buildInfoRow({required String label, required String value}) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(
+        label,
+        style: TextStyle(color: Color(0xFF222526), fontSize: 14),
+      ),
+      Text(
+        value,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 14,
+          color: Color(0xFF1A1A1A),
+        ),
+      ),
+    ],
+  );
 }

@@ -1,13 +1,10 @@
 // lib/pages/drivers_page.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-// Assuming your Drivers model is in this path
 import '../../models/drivers_model.dart';
 
-// --- CORRECTED ---
-// The list is now a top-level variable (outside the class) and named without
-// a leading underscore, making it public and accessible to other files.
+
+
 final List<Drivers> driversList = const [
   Drivers(
     id: 'D1',
@@ -50,14 +47,14 @@ class DriversPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Color(0xFFF7F7F7),
       appBar: AppBar(
         title: Text(
           'All Drivers',
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color.fromARGB(255, 61, 65, 38),
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF1A1A1A),
+        foregroundColor: Color(0xFFE0E0E0),
         elevation: 0,
       ),
       body: ListView.builder(
@@ -89,7 +86,7 @@ class _DriverListPageCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 35,
-              backgroundColor: Colors.grey[200],
+              backgroundColor: Color(0xFFE0E0E0),
               backgroundImage: AssetImage(driver.imageUrl),
             ),
             const SizedBox(width: 16),
@@ -102,7 +99,7 @@ class _DriverListPageCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: const Color.fromARGB(255, 41, 44, 26),
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -132,12 +129,12 @@ class _DriverListPageCard extends StatelessWidget {
   Widget _buildDriverDetailRow({required IconData icon, required String text}) {
     return Row(
       children: [
-        Icon(icon, color: Colors.grey[600], size: 16),
+        Icon(icon, color: Color(0xFF222526), size: 16),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(color: Colors.grey[800], fontSize: 14),
+            style: TextStyle(color: Color(0xFF222526), fontSize: 14),
             overflow: TextOverflow.ellipsis,
           ),
         ),

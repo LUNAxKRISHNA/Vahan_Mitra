@@ -57,7 +57,8 @@ class _MapPageState extends State<MapPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.bus != null ? 'Bus ${widget.bus!.id} Location' : 'Live Map'),
-        backgroundColor: const Color(0xff2a3a5b),
+        backgroundColor: const Color(0xFF1A1A1A),
+        foregroundColor: Color(0xFFE0E0E0),
         elevation: 0,
       ),
       body: Stack(
@@ -92,16 +93,16 @@ class _MapPageState extends State<MapPage> {
         margin: const EdgeInsets.only(top: 20),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
         decoration: BoxDecoration(
-          color: const Color(0xff2a3a5b),
+          color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(30),
           boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
+            BoxShadow(color: Color(0xFF222526), blurRadius: 10, offset: Offset(0, 4)),
           ],
         ),
         child: Text(
           '${widget.bus?.eta ?? 'N/A'} Minutes Away',
           style: GoogleFonts.poppins(
-            color: Colors.white,
+            color: Color(0xFFE0E0E0),
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -117,10 +118,10 @@ class _MapPageState extends State<MapPage> {
         margin: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFFE0E0E0),
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
-            BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, 4)),
+            BoxShadow(color: Color(0xFF1A1A1A), blurRadius: 15, offset: Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -155,17 +156,17 @@ class _MapPageState extends State<MapPage> {
   }) {
     return Row(
       children: [
-        Icon(icon, color: const Color.fromARGB(255, 61, 65, 38), size: 24),
+        Icon(icon, color: const Color(0xFF1A1A1A), size: 24),
         const SizedBox(width: 12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12)),
-            Text(value, style: GoogleFonts.poppins(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(label, style: GoogleFonts.poppins(color: Color(0xFF353A3E), fontSize: 12)),
+            Text(value, style: GoogleFonts.poppins(color: Color(0xFF1A1A1A), fontSize: 16, fontWeight: FontWeight.bold)),
           ],
         ),
         const Spacer(),
-        if (showArrow) const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+        if (showArrow) const Icon(Icons.arrow_forward_ios, size: 16, color: Color(0xFFBFBFBF)),
       ],
     );
   }
@@ -234,12 +235,7 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _drawRoute() async {
     if (_userCurrentPosition == null || widget.bus == null) return;
-    
-    // --- CORRECTED ---
-    // The method now uses PolylineRequest and no longer passes the API key,
-    // as it's handled in the PolylinePoints constructor.
     PolylineResult result = await _polylinePoints.getRouteBetweenCoordinates(request: PolylineRequest(origin: PointLatLng(_userCurrentPosition!.latitude, _userCurrentPosition!.longitude),destination: PointLatLng(widget.bus!.location.latitude, widget.bus!.location.longitude), mode: TravelMode.transit)
-
     );
 
     if (result.points.isNotEmpty) {
@@ -278,7 +274,7 @@ class _DriverDetailSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFE0E0E0),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -289,7 +285,7 @@ class _DriverDetailSheet extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 45,
-            backgroundColor: Colors.grey[200],
+            backgroundColor: Color(0xFFE0E0E0),
             backgroundImage: AssetImage(driver.imageUrl),
           ),
           const SizedBox(height: 16),
@@ -302,8 +298,8 @@ class _DriverDetailSheet extends StatelessWidget {
             label: Text(driver.phoneNumber),
             onPressed: () => _makePhoneCall(driver.phoneNumber),
             style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: const Color.fromARGB(255, 61, 65, 38),
+              foregroundColor: Color(0xFFE0E0E0),
+              backgroundColor: const Color(0xFF1A1A1A),
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               textStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),

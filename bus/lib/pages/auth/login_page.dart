@@ -40,7 +40,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 61, 65, 38),
+      backgroundColor: const Color(0XFF1A1A1A),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -68,23 +68,18 @@ class _LoginPageState extends State<LoginPage> {
                       'Vahan Mitra',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.montserrat(
-                        color: Colors.white,
+                        color: Color(0xfFE0E0E0),
                         fontSize: 32.0,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 12), // Spacing between text and logo
-                    // --- Add your logo here ---
-                    // Make sure you have 'logo.png' in your 'assets' folder
-                    // and have declared it in pubspec.yaml
-                    
                   ],
                 ),
                 Text(
                   'Welcome Back!',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.lobster(
-                    color: Colors.white,
+                    color: Color(0xFFE0E0E0),
                     fontSize: 22,
                     fontWeight: FontWeight.w500,
                   ),
@@ -93,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                 const Text(
                   'Sign in to continue',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                  style: TextStyle(color: Color(0xFFE0E0E0), fontSize: 16),
                 ),
                 const SizedBox(height: 40),
 
@@ -101,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   focusNode: _emailFocusNode, // Assign focus node
                   keyboardType: TextInputType.emailAddress,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Color(0xFF1A1A1A)),
                   decoration: _buildInputDecoration(
                     label: 'Email',
                     icon: Icons.email_outlined,
@@ -114,7 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   focusNode: _passwordFocusNode, // Assign focus node
                   obscureText: !_isPasswordVisible,
-                  style: const TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Color(0xFF1A1A1A)),
                   decoration: _buildInputDecoration(
                     label: 'Password',
                     icon: Icons.lock_outline,
@@ -132,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 246, 237, 222),
+                    backgroundColor: const Color(0xFFF6EDED),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -166,16 +161,16 @@ class _LoginPageState extends State<LoginPage> {
       // --- This is the key change ---
       // Show labelText when not focused, and hintText when focused.
       labelText: isFocused ? null : label,
-      labelStyle: const TextStyle(color: Colors.white70),
+      labelStyle: const TextStyle(color: Color(0xFF1A1A1A)),
       hintText: isFocused ? label : '',
-      hintStyle: const TextStyle(color: Colors.white70),
+      hintStyle: const TextStyle(color: Color(0xFF1A1A1A)),
 
-      prefixIcon: Icon(icon, color: Colors.white70),
+      prefixIcon: Icon(icon, color: Color(0xFF1A1A1A)),
       suffixIcon: isPassword
           ? IconButton(
               icon: Icon(
                 _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                color: Colors.white70,
+                color: Color(0xFF1A1A1A),
               ),
               onPressed: () {
                 setState(() {
@@ -184,16 +179,12 @@ class _LoginPageState extends State<LoginPage> {
               },
             )
           : null,
-      
-      // Consistent styling for both text fields
       filled: true,
-      // --- CORRECTED --- Increased opacity for better visibility
-      fillColor: Colors.white.withOpacity(0.2), 
+      fillColor: Colors.white, 
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
-      // Remove the floating label's space when it's not visible
       floatingLabelBehavior: FloatingLabelBehavior.never,
     );
   }
