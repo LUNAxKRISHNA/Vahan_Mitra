@@ -120,7 +120,11 @@ class _HomeTabHeader extends StatelessWidget {
                 Text(
                   dateFormat.format(now),
                   style: GoogleFonts.poppins(
+<<<<<<< HEAD
                     color: const Color(0xFFBFBFBF),
+=======
+                    color: Colors.white,
+>>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
                     fontSize: 16,
                   ),
                 ),
@@ -199,7 +203,11 @@ class _QuickActionCard extends StatelessWidget {
             child: Column(
               children: [
                 Icon(icon,
+<<<<<<< HEAD
                     size: 30, color: const Color(0xFF222526)),
+=======
+                    size: 30, color: const Color.fromARGB(255, 61, 65, 38)),
+>>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
                 const SizedBox(height: 8),
                 Text(
                   label,
@@ -223,6 +231,36 @@ class _QuickActionCard extends StatelessWidget {
 class _DriversSection extends StatelessWidget {
   const _DriversSection();
 
+<<<<<<< HEAD
+  final List<Drivers> _driversList = const [
+    Drivers(
+      id: 'D1',
+      name: 'Ramesh Kumar',
+      phoneNumber: '+91 98765 43210',
+      license: 'KL-01-2020-0012345',
+      place: 'Kochi',
+      imageUrl: 'assets/drivers/ramesh.png',
+    ),
+    Drivers(
+      id: 'D2',
+      name: 'Suresh Menon',
+      phoneNumber: '+91 91234 56789',
+      license: 'KL-07-2018-0054321',
+      place: 'Thrissur',
+      imageUrl: 'assets/drivers/suresh.png',
+    ),
+    Drivers(
+      id: 'D3',
+      name: 'Anil Varma',
+      phoneNumber: '+91 99887 76655',
+      license: 'KL-08-2019-0098765',
+      place: 'Ernakulam',
+      imageUrl: 'assets/drivers/anil.png',
+    ),
+  ];
+
+=======
+>>>>>>> 8b2ee2a97b976f6178e7cf8a68366ab4b608a552
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -297,7 +335,11 @@ class _DriverCarouselCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 25,
+<<<<<<< HEAD
                 backgroundColor: const Color(0xFFE0E0E0),
+=======
+                backgroundColor: Colors.white,
+>>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
                 backgroundImage: AssetImage(driver.imageUrl),
               ),
               const SizedBox(width: 12),
@@ -307,7 +349,11 @@ class _DriverCarouselCard extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
+<<<<<<< HEAD
                     color: const Color(0xFFE0E0E0),
+=======
+                    color: Colors.white,
+>>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -344,6 +390,7 @@ class _DriverCarouselCard extends StatelessWidget {
       ],
     );
   }
+<<<<<<< HEAD
 }
 
 
@@ -466,3 +513,6 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
     );
   }
 }
+=======
+}
+>>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
