@@ -3,13 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/drivers_model.dart';
 
-<<<<<<< HEAD
-
-
-const List<Drivers> driversList = [
-=======
 final List<Drivers> driversList = const [
->>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
   Drivers(
     id: 'D1',
     name: 'Ramesh Kumar',
@@ -88,16 +82,12 @@ class _DriverListPageCard extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 35,
-<<<<<<< HEAD
-              backgroundColor: const Color(0xFFE0E0E0),
-=======
-              backgroundColor: Colors.grey[200],
->>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
-              backgroundImage: AssetImage(driver.imageUrl),
-            ),
-            const SizedBox(width: 16),
+CircleAvatar(
+  radius: 35,
+  backgroundColor: const Color(0xFFE0E0E0),
+  backgroundImage: AssetImage(driver.imageUrl),
+),
+const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

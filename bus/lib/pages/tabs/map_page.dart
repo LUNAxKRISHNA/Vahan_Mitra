@@ -5,7 +5,6 @@ import 'package:location/location.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:convert';
 // Import your models and the drivers_page to access the driver list
 import '../../models/bus_model.dart';
 import '../../models/drivers_model.dart';
@@ -32,7 +31,6 @@ class _MapPageState extends State<MapPage> {
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
   Drivers? _assignedDriver;
-  int? _etaMinutes;
 
   @override
   void initState() {
@@ -58,17 +56,9 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-<<<<<<< HEAD
         title: Text(widget.bus != null ? 'Bus ${widget.bus!.id} Location' : 'Live Map'),
         backgroundColor: const Color(0xFF1A1A1A),
         foregroundColor: const Color(0xFFE0E0E0),
-=======
-        title: Text(
-          widget.bus != null ? 'Bus ${widget.bus!.id} Location' : 'Live Map',
-        ),
-        backgroundColor: const Color(0xff2a3a5b),
-        foregroundColor: Color(0xFFE0E0E0),
->>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
         elevation: 0,
       ),
       body: Stack(
@@ -179,10 +169,6 @@ class _MapPageState extends State<MapPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-<<<<<<< HEAD
-            Text(label, style: GoogleFonts.poppins(color: const Color(0xFF353A3E), fontSize: 12)),
-            Text(value, style: GoogleFonts.poppins(color: const Color(0xFF1A1A1A), fontSize: 16, fontWeight: FontWeight.bold)),
-=======
             Text(
               label,
               style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12),
@@ -195,7 +181,6 @@ class _MapPageState extends State<MapPage> {
                 fontWeight: FontWeight.bold,
               ),
             ),
->>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
           ],
         ),
         const Spacer(),
@@ -342,19 +327,15 @@ class _DriverDetailSheet extends StatelessWidget {
         ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 45,
-<<<<<<< HEAD
-            backgroundColor: const Color(0xFFE0E0E0),
-=======
-            backgroundColor: Colors.grey[200],
->>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
-            backgroundImage: AssetImage(driver.imageUrl),
-          ),
-          const SizedBox(height: 16),
-          Text(
+mainAxisSize: MainAxisSize.min,
+children: [
+  CircleAvatar(
+    radius: 45,
+    backgroundColor: const Color(0xFFE0E0E0),
+    backgroundImage: AssetImage(driver.imageUrl),
+  ),
+  const SizedBox(height: 16),
+  Text(
             driver.name,
             style: GoogleFonts.poppins(
               fontSize: 22,
@@ -366,19 +347,28 @@ class _DriverDetailSheet extends StatelessWidget {
           Text(
             'License: ${driver.license}',
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
-          ),
-          const Divider(height: 32),
-<<<<<<< HEAD
-          ElevatedButton(
-            onPressed: () => _makePhoneCall(context, driver.phoneNumber),
-            child: Text('Call Driver'),
-=======
-          ElevatedButton.icon(
-            icon: const Icon(Icons.call_outlined),
-            label: Text(driver.phoneNumber),
-            onPressed: () => _makePhoneCall(driver.phoneNumber),
+),
+const Divider(height: 32),
+ElevatedButton(
+  onPressed: () => _makePhoneCall(context, driver.phoneNumber),
+  child: const Text('Call Driver'),
+),
+const Divider(height: 32),
+ElevatedButton(
+  onPressed: () async {
+              final Uri callUri = Uri(scheme: 'tel', path: driver.phoneNumber);
+              if (await canLaunchUrl(callUri)) {
+                await launchUrl(callUri, mode: LaunchMode.externalApplication);
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not open the dialer app.')),
+                  );
+                }
+              }
+            },
             style: ElevatedButton.styleFrom(
-              foregroundColor: Color(0xFFE0E0E0),
+              foregroundColor: const Color(0xFFE0E0E0),
               backgroundColor: const Color(0xFF1A1A1A),
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(
@@ -389,7 +379,7 @@ class _DriverDetailSheet extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
->>>>>>> e06fcf9c8eb2f70211f71e070bcb336e616f83bf
+            child: const Text('Call Driver'),
           ),
         ],
       ),
