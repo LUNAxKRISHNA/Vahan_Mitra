@@ -49,7 +49,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF7F7F7),
+      backgroundColor: const Color(0xFFF7F7F7),
       body: Column(
         children: [
           _ProfilePageHeader(student: _studentProfile),
@@ -127,7 +127,7 @@ class _ProfilePageHeader extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 35,
-                      backgroundColor: Color(0xFFBFBFBF),
+                      backgroundColor: const Color(0xFFBFBFBF),
                       backgroundImage: AssetImage(student.profileImageUrl),
                     ),
                     const SizedBox(width: 16),
@@ -137,7 +137,7 @@ class _ProfilePageHeader extends StatelessWidget {
                         Text(
                           student.name,
                           style: GoogleFonts.poppins(
-                            color: Color(0xFFBFBFBF),
+                            color: const Color(0xFFBFBFBF),
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
@@ -189,7 +189,7 @@ class _BusAllocationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      shadowColor: Color(0xFF1A1A1A),
+      shadowColor: const Color(0xFF1A1A1A),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -221,7 +221,7 @@ class _FeeDetailsCard extends StatelessWidget {
 
     return Card(
       elevation: 2,
-      shadowColor: Color(0xFF1A1A1A),
+      shadowColor: const Color(0xFF1A1A1A),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -235,7 +235,7 @@ class _FeeDetailsCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Payment Status',
                   style: TextStyle(color: Color(0xFF222526),fontSize: 14),
                 ),
@@ -248,7 +248,7 @@ class _FeeDetailsCard extends StatelessWidget {
                   ),
                   child: Text(
                     statusText.toUpperCase(),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Color(0xFFE0E0E0),
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
@@ -287,7 +287,7 @@ Widget _buildInfoRow({required String label, required String value}) {
     children: [
       Text(
         label,
-        style: TextStyle(color: Color(0xFF222526), fontSize: 14),
+        style: const TextStyle(color: Color(0xFF222526), fontSize: 14),
       ),
       Text(
         value,

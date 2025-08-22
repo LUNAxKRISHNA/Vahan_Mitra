@@ -66,13 +66,13 @@ class CustomBottomNavBar extends StatelessWidget {
     return Container(
       // A container to hold the Stack, allowing for a background color and shadow
       height: 80, // Standard height for a bottom nav bar
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Color(0xfFE0E0E0),
         boxShadow: [
           BoxShadow(
             color: Color(0xFF1A1A1A),
             blurRadius: 10,
-            offset: const Offset(0, -5),
+            offset: Offset(0, -5),
           ),
         ],
       ),

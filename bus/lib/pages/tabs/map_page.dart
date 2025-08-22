@@ -58,7 +58,7 @@ class _MapPageState extends State<MapPage> {
       appBar: AppBar(
         title: Text(widget.bus != null ? 'Bus ${widget.bus!.id} Location' : 'Live Map'),
         backgroundColor: const Color(0xFF1A1A1A),
-        foregroundColor: Color(0xFFE0E0E0),
+        foregroundColor: const Color(0xFFE0E0E0),
         elevation: 0,
       ),
       body: Stack(
@@ -102,7 +102,7 @@ class _MapPageState extends State<MapPage> {
         child: Text(
           '${widget.bus?.eta ?? 'N/A'} Minutes Away',
           style: GoogleFonts.poppins(
-            color: Color(0xFFE0E0E0),
+            color: const Color(0xFFE0E0E0),
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -118,7 +118,7 @@ class _MapPageState extends State<MapPage> {
         margin: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Color(0xFFE0E0E0),
+          color: const Color(0xFFE0E0E0),
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
             BoxShadow(color: Color(0xFF1A1A1A), blurRadius: 15, offset: Offset(0, 4)),
@@ -161,8 +161,8 @@ class _MapPageState extends State<MapPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: GoogleFonts.poppins(color: Color(0xFF353A3E), fontSize: 12)),
-            Text(value, style: GoogleFonts.poppins(color: Color(0xFF1A1A1A), fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(label, style: GoogleFonts.poppins(color: const Color(0xFF353A3E), fontSize: 12)),
+            Text(value, style: GoogleFonts.poppins(color: const Color(0xFF1A1A1A), fontSize: 16, fontWeight: FontWeight.bold)),
           ],
         ),
         const Spacer(),
@@ -262,12 +262,13 @@ class _DriverDetailSheet extends StatelessWidget {
   final Drivers driver;
   const _DriverDetailSheet({required this.driver});
 
-  Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(launchUri)) {
-      await launchUrl(
-        launchUri,
-        mode: LaunchMode.externalApplication, // Ensures it opens in the phone app
+  Future<void> _makePhoneCall(BuildContext context, String phoneNumber) async {
+    final Uri callUri = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(callUri)) {
+      await launchUrl(callUri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open the dialer app.')),
       );
     }
   }
@@ -288,7 +289,7 @@ class _DriverDetailSheet extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 45,
-            backgroundColor: Color(0xFFE0E0E0),
+            backgroundColor: const Color(0xFFE0E0E0),
             backgroundImage: AssetImage(driver.imageUrl),
           ),
           const SizedBox(height: 16),
@@ -296,17 +297,9 @@ class _DriverDetailSheet extends StatelessWidget {
           const SizedBox(height: 8),
           Text('License: ${driver.license}', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
           const Divider(height: 32),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.call_outlined),
-            label: Text(driver.phoneNumber),
-            onPressed: () => _makePhoneCall(driver.phoneNumber),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Color(0xFFE0E0E0),
-              backgroundColor: const Color(0xFF1A1A1A),
-              minimumSize: const Size(double.infinity, 50),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              textStyle: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+          ElevatedButton(
+            onPressed: () => _makePhoneCall(context, driver.phoneNumber),
+            child: Text('Call Driver'),
           ),
         ],
       ),

@@ -5,7 +5,7 @@ import '../../models/drivers_model.dart';
 
 
 
-final List<Drivers> driversList = const [
+const List<Drivers> driversList = [
   Drivers(
     id: 'D1',
     name: 'Ramesh Kumar',
@@ -47,14 +47,14 @@ class DriversPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF7F7F7),
+      backgroundColor: const Color(0xFFF7F7F7),
       appBar: AppBar(
         title: Text(
           'All Drivers',
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color(0xFF1A1A1A),
-        foregroundColor: Color(0xFFE0E0E0),
+        foregroundColor: const Color(0xFFE0E0E0),
         elevation: 0,
       ),
       body: ListView.builder(
@@ -86,7 +86,7 @@ class _DriverListPageCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 35,
-              backgroundColor: Color(0xFFE0E0E0),
+              backgroundColor: const Color(0xFFE0E0E0),
               backgroundImage: AssetImage(driver.imageUrl),
             ),
             const SizedBox(width: 16),
@@ -99,7 +99,7 @@ class _DriverListPageCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
-                      color: Color(0xFF1A1A1A),
+                      color: const Color(0xFF1A1A1A),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -129,12 +129,12 @@ class _DriverListPageCard extends StatelessWidget {
   Widget _buildDriverDetailRow({required IconData icon, required String text}) {
     return Row(
       children: [
-        Icon(icon, color: Color(0xFF222526), size: 16),
+        Icon(icon, color: const Color(0xFF222526), size: 16),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(color: Color(0xFF222526), fontSize: 14),
+            style: const TextStyle(color: Color(0xFF222526), fontSize: 14),
             overflow: TextOverflow.ellipsis,
           ),
         ),

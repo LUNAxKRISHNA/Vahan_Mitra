@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                       'Vahan Mitra',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.montserrat(
-                        color: Color(0xfFE0E0E0),
+                        color: const Color(0xfFE0E0E0),
                         fontSize: 32.0,
                         fontWeight: FontWeight.bold,
                       ),
@@ -79,7 +79,7 @@ class _LoginPageState extends State<LoginPage> {
                   'Welcome Back!',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.lobster(
-                    color: Color(0xFFE0E0E0),
+                    color: const Color(0xFFE0E0E0),
                     fontSize: 22,
                     fontWeight: FontWeight.w500,
                   ),
@@ -165,12 +165,12 @@ class _LoginPageState extends State<LoginPage> {
       hintText: isFocused ? label : '',
       hintStyle: const TextStyle(color: Color(0xFF1A1A1A)),
 
-      prefixIcon: Icon(icon, color: Color(0xFF1A1A1A)),
+      prefixIcon: Icon(icon, color: const Color(0xFF1A1A1A)),
       suffixIcon: isPassword
           ? IconButton(
               icon: Icon(
                 _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                color: Color(0xFF1A1A1A),
+                color: const Color(0xFF1A1A1A),
               ),
               onPressed: () {
                 setState(() {

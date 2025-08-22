@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/bus_model.dart';
 import '../../widgets/wave_clipper.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -20,7 +21,7 @@ class _BusesPageState extends State<BusesPage> {
 
   // Mock data for demonstration
   final List<Bus> _allBuses = [
-    Bus(
+    const Bus(
       id: '101',
       route: 'Main Campus - Engineering',
       status: 'active',
@@ -30,7 +31,7 @@ class _BusesPageState extends State<BusesPage> {
       // Added location for map integration
       location: LatLng(9.9095, 76.4305),
     ),
-    Bus(
+    const Bus(
       id: '102',
       route: 'Library - Sports Complex',
       status: 'inactive',
@@ -39,7 +40,7 @@ class _BusesPageState extends State<BusesPage> {
       driverId: 'D2',
       location: LatLng(9.9048, 76.4410),
     ),
-    Bus(
+    const Bus(
       id: '103',
       route: 'Student Housing - Downtown',
       status: 'active',
@@ -48,7 +49,7 @@ class _BusesPageState extends State<BusesPage> {
       driverId: 'D3',
       location: LatLng(9.9073, 76.4384),
     ),
-    Bus(
+    const Bus(
       id: '104',
       route: 'Science Park - North Gate',
       status: 'inactive',
@@ -61,7 +62,7 @@ class _BusesPageState extends State<BusesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF7F7F7),
+      backgroundColor: const Color(0xFFF7F7F7),
       body: Column(
         children: [
           const _BusesPageHeader(),
@@ -81,7 +82,7 @@ class _BusesPageState extends State<BusesPage> {
                   return Center(
                     child: Text(
                       'No buses found for "${_filters[index]}"',
-                      style: TextStyle(color: Color(0xFF222526), fontSize: 16),
+                      style: const TextStyle(color: Color(0xFF222526), fontSize: 16),
                     ),
                   );
                 }
@@ -134,15 +135,15 @@ class _BusesPageState extends State<BusesPage> {
               }
             },
             labelStyle: TextStyle(
-              color: isSelected ? Color(0xFFE0E0E0) : Color(0xFF1A1A1A),
+              color: isSelected ? const Color(0xFFE0E0E0) : const Color(0xFF1A1A1A),
               fontWeight: FontWeight.bold,
             ),
-            backgroundColor: Color(0xFFE0E0E0),
+            backgroundColor: const Color(0xFFE0E0E0),
             selectedColor: const Color(0xFF1A1A1A),
             showCheckmark: false,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Color(0xFFE0E0E0)),
+              side: const BorderSide(color: Color(0xFFE0E0E0)),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           );
@@ -161,7 +162,7 @@ class _BusesPageHeader extends StatelessWidget {
       child: Container(
         height: 150,
         width: double.infinity,
-        color:Color(0xFF1A1A1A),
+        color:const Color(0xFF1A1A1A),
         child: const SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.0),
@@ -203,7 +204,7 @@ class _BusInfoCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
-      shadowColor: Color(0xFF1A1A1A),
+      shadowColor: const Color(0xFF1A1A1A),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
@@ -218,7 +219,7 @@ class _BusInfoCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.directions_bus, color: Color(0xFF222526), size: 30),
+                  const Icon(Icons.directions_bus, color: Color(0xFF222526), size: 30),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,7 +231,7 @@ class _BusInfoCard extends StatelessWidget {
                           fontSize: 16,
                         ),
                       ),
-                      Text(bus.route, style: TextStyle(color: Color(0xFF222526))),
+                      Text(bus.route, style: const TextStyle(color: Color(0xFF222526))),
                     ],
                   ),
                   const Spacer(),
@@ -242,7 +243,7 @@ class _BusInfoCard extends StatelessWidget {
                     ),
                     child: Text(
                       bus.status.toUpperCase(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color(0xFFE0E0E0),
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
@@ -275,12 +276,23 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: Color(0xFF222526), size: 20),
+        Icon(icon, color: const Color(0xFF222526), size: 20),
         const SizedBox(width: 8),
-        Text(text, style: TextStyle(color: Color(0xFF222526))),
+        Text(text, style: const TextStyle(color: Color(0xFF222526))),
         const Spacer(),
         if (trailing != null) trailing!,
       ],
+    );
+  }
+}
+
+Future<void> _makePhoneCall(BuildContext context, String phoneNumber) async {
+  final Uri callUri = Uri(scheme: 'tel', path: phoneNumber);
+  if (await canLaunchUrl(callUri)) {
+    await launchUrl(callUri, mode: LaunchMode.externalApplication);
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Could not open the dialer app.')),
     );
   }
 }

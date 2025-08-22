@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF1A1A1A),
+      backgroundColor: const Color(0xFF1A1A1A),
       body: Center(
         child: FadeTransition(
           opacity: _animation,
@@ -62,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen>
                 style: GoogleFonts.montserrat(
                   fontSize: 32.0,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFE0E0E0),
+                  color: const Color(0xFFE0E0E0),
                 ),
               ),
             ],

@@ -33,20 +33,20 @@ class _HomeTabState extends State<HomeTab> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF7F7F7),
-      body: Column(
+      backgroundColor: const Color(0xFFF7F7F7),
+      body: const Column(
         children: [
-          const _HomeTabHeader(),
+          _HomeTabHeader(),
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const _QuickActionsSection(),
-                    const SizedBox(height: 24),
-                    const _DriversSection(),
+                    _QuickActionsSection(),
+                    SizedBox(height: 24),
+                    _DriversSection(),
                   ],
                 ),
               ),
@@ -99,14 +99,14 @@ class _HomeTabHeader extends StatelessWidget {
                         Text(
                           'Good Afternoon,',
                           style: GoogleFonts.poppins(
-                            color: Color(0xFFE0E0E0),
+                            color: const Color(0xFFE0E0E0),
                             fontSize: 18,
                           ),
                         ),
                         Text(
                           'Vahan Mitra User',
                           style: GoogleFonts.poppins(
-                            color: Color(0xFFE0E0E0),
+                            color: const Color(0xFFE0E0E0),
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
@@ -120,7 +120,7 @@ class _HomeTabHeader extends StatelessWidget {
                 Text(
                   dateFormat.format(now),
                   style: GoogleFonts.poppins(
-                    color: Color(0xFFBFBFBF),
+                    color: const Color(0xFFBFBFBF),
                     fontSize: 16,
                   ),
                 ),
@@ -189,7 +189,7 @@ class _QuickActionCard extends StatelessWidget {
     return Expanded(
       child: Card(
         elevation: 2,
-        shadowColor: Color(0xFF1A1A1A),
+        shadowColor: const Color(0xFF1A1A1A),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: InkWell(
           onTap: onTap,
@@ -199,12 +199,12 @@ class _QuickActionCard extends StatelessWidget {
             child: Column(
               children: [
                 Icon(icon,
-                    size: 30, color: Color(0xFF222526)),
+                    size: 30, color: const Color(0xFF222526)),
                 const SizedBox(height: 8),
                 Text(
                   label,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF222526),
                     fontWeight: FontWeight.w500,
@@ -281,12 +281,12 @@ class _DriverCarouselCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: Color(0xFF1A1A1A),
             spreadRadius: 2,
             blurRadius: 8,
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -297,7 +297,7 @@ class _DriverCarouselCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 25,
-                backgroundColor: Color(0xFFE0E0E0),
+                backgroundColor: const Color(0xFFE0E0E0),
                 backgroundImage: AssetImage(driver.imageUrl),
               ),
               const SizedBox(width: 12),
@@ -307,7 +307,7 @@ class _DriverCarouselCard extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
-                    color: Color(0xFFE0E0E0),
+                    color: const Color(0xFFE0E0E0),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -332,7 +332,7 @@ class _DriverCarouselCard extends StatelessWidget {
   Widget _buildDriverDetailRow({required IconData icon, required String text}) {
     return Row(
       children: [
-        Icon(icon, color: Color(0xFFE0E0E0), size: 16),
+        Icon(icon, color: const Color(0xFFE0E0E0), size: 16),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -393,14 +393,30 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
       queryParameters: {'body': emergencyMessage},
     );
     if (await canLaunchUrl(smsUri)) {
-      await launchUrl(smsUri);
+      await launchUrl(
+        smsUri,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the SMS app.')),
+      );
     }
 
     // Action 2: Make a Phone Call (add a small delay)
     await Future.delayed(const Duration(seconds: 2));
     final Uri callUri = Uri(scheme: 'tel', path: emergencyNumber);
     if (await canLaunchUrl(callUri)) {
-      await launchUrl(callUri);
+      await launchUrl(
+        callUri,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the dialer app.')),
+      );
     }
   }
 
@@ -418,7 +434,7 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          const Text(
             'Sending alert in...',
             style: TextStyle(color: Color(0xFFBFBFBF)),
           ),
