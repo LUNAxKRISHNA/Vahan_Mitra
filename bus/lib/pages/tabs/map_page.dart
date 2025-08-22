@@ -265,7 +265,10 @@ class _DriverDetailSheet extends StatelessWidget {
   Future<void> _makePhoneCall(String phoneNumber) async {
     final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
     if (await canLaunchUrl(launchUri)) {
-      await launchUrl(launchUri);
+      await launchUrl(
+        launchUri,
+        mode: LaunchMode.externalApplication, // Ensures it opens in the phone app
+      );
     }
   }
 
