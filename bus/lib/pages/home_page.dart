@@ -67,14 +67,7 @@ class CustomBottomNavBar extends StatelessWidget {
       // A container to hold the Stack, allowing for a background color and shadow
       height: 80, // Standard height for a bottom nav bar
       decoration: const BoxDecoration(
-        color: Color(0xfFE0E0E0),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0xFF1A1A1A),
-            blurRadius: 10,
-            offset: Offset(0, -5),
-          ),
-        ],
+        color: Colors.white,
       ),
       child: Stack(
         children: [
@@ -101,8 +94,8 @@ class CustomBottomNavBar extends StatelessWidget {
               type: BottomNavigationBarType.fixed,
               backgroundColor: Colors.transparent, // Important for the Stack
               elevation: 0,
-              selectedItemColor: const Color(0xFF1A1A1A),
-              unselectedItemColor: const Color(0xFF1A1A1A),
+              selectedItemColor: const Color(0xFF0D47A1),
+              unselectedItemColor: const Color(0xFF0D47A1),
               showSelectedLabels: true,
               showUnselectedLabels: true,
             ),
@@ -117,7 +110,7 @@ class CustomBottomNavBar extends StatelessWidget {
               width: indicatorWidth,
               height: indicatorHeight,
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A), // Indicator color
+                color: const Color(0xFF0D47A1), // Indicator color
                 borderRadius: BorderRadius.circular(5),
               ),
             ),

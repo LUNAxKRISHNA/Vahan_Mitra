@@ -1,15 +1,15 @@
-// lib/pages/tabs/home_tab.dart
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
-import '../../models/drivers_model.dart';
-import '../../widgets/wave_clipper.dart';
+  // lib/pages/tabs/home_tab.dart
+  import 'dart:async';
+  import 'package:flutter/material.dart';
+  import 'package:google_fonts/google_fonts.dart';
+  import 'package:intl/intl.dart';
+  import 'package:url_launcher/url_launcher.dart';
+  import 'package:geolocator/geolocator.dart';
+  import 'package:permission_handler/permission_handler.dart';
+  import '../../models/drivers_model.dart';
+  import '../../widgets/wave_clipper.dart';
 
-//======================================================================
+  //======================================================================
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
@@ -32,28 +32,33 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
-      // --- BODY WAS MISSING, NOW RESTORED ---
-      body: const Column(
-        children: [
-          _HomeTabHeader(), 
-          Expanded(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _QuickActionsSection(),
-                    SizedBox(height: 24),
-                    _DriversSection(),
-                  ],
-                ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const _HomeTabHeader(),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Quick Actions',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const _QuickActionsSection(),
+                  const SizedBox(height: 24),
+                  const _DriversSection(),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      // --- FloatingActionButton is correct ---
       floatingActionButton: FloatingActionButton(
         onPressed: _showSosDialog,
         backgroundColor: Colors.red[700],
@@ -82,14 +87,19 @@ class _HomeTabHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final dateFormat = DateFormat('EEEE, d MMMM');
+    const Color primaryColor = Color(0xFF0D47A1);
 
     return ClipPath(
       clipper: WaveClipper(),
       child: Container(
         height: 250,
         width: double.infinity,
-        decoration: const BoxDecoration(
-          color: Color(0xFF1A1A1A),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade200, primaryColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
         child: SafeArea(
           child: Padding(
@@ -107,14 +117,14 @@ class _HomeTabHeader extends StatelessWidget {
                         Text(
                           getGreeting(),
                           style: GoogleFonts.poppins(
-                            color: const Color(0xFFE0E0E0),
+                            color: Colors.white,
                             fontSize: 18,
                           ),
                         ),
                         Text(
                           'Vahan Mitra User',
                           style: GoogleFonts.poppins(
-                            color: const Color(0xFFE0E0E0),
+                            color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
@@ -128,7 +138,7 @@ class _HomeTabHeader extends StatelessWidget {
                 Text(
                   dateFormat.format(now),
                   style: GoogleFonts.poppins(
-                    color: const Color(0xFFBFBFBF),
+                    color: Colors.white.withOpacity(0.9),
                     fontSize: 16,
                   ),
                 ),
@@ -148,11 +158,11 @@ class _QuickActionsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.count(
-      crossAxisCount: 2, // Display 2 items per row
+      crossAxisCount: 2,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      shrinkWrap: true, // Important for GridView inside a SingleChildScrollView
-      physics: const NeverScrollableScrollPhysics(), // Disable GridView's own scrolling
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       children: [
         _QuickActionCard(
           icon: Icons.directions_bus_filled,
@@ -169,7 +179,6 @@ class _QuickActionsSection extends StatelessWidget {
   }
 }
 
-// Replace the old _QuickActionCard
 class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -183,6 +192,8 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const Color primaryColor = Color(0xFF0D47A1);
+
     return Card(
       elevation: 2,
       shadowColor: Colors.black26,
@@ -198,7 +209,7 @@ class _QuickActionCard extends StatelessWidget {
               Icon(
                 icon,
                 size: 40,
-                color: const Color(0xFF1A1A1A),
+                color: primaryColor,
               ),
               const SizedBox(height: 12),
               Text(
@@ -217,25 +228,28 @@ class _QuickActionCard extends StatelessWidget {
     );
   }
 }
+
 class _DriversSection extends StatelessWidget {
   const _DriversSection();
 
+  // CHANGED: Added 'allocatedBus' to the mock data.
+  // NOTE: You would also need to add this field to your 'Drivers' model class.
   static final List<Drivers> driversList = [
-    Drivers(
+    const Drivers(
       id: 'D1',
       name: 'Ramesh Kumar',
       phoneNumber: '+91 9876543210',
       license: 'DL-123456',
       place: 'Delhi',
-      imageUrl: 'assets/images/driver1.jpg',
+      allocatedBus: 'Bus 101',
     ),
-    Drivers(
+    const Drivers(
       id: 'D2',
       name: 'Suresh Singh',
       phoneNumber: '+91 9123456780',
       license: 'DL-654321',
       place: 'Mumbai',
-      imageUrl: 'assets/images/driver2.jpg',
+      allocatedBus: 'Bus 102',
     ),
   ];
 
@@ -254,7 +268,7 @@ class _DriversSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 220, // CORRECTED HEIGHT
+          height: 220,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: driversList.length,
@@ -267,91 +281,96 @@ class _DriversSection extends StatelessWidget {
     );
   }
 }
+
+// =======================================================================
+// --- REDESIGNED DRIVER CARD ---
+// =======================================================================
 class _DriverCarouselCard extends StatelessWidget {
   final Drivers driver;
 
   const _DriverCarouselCard({required this.driver});
 
+  // Helper widget for info rows to avoid repetition
+  Widget _buildInfoRow({required IconData icon, required String text}) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.black54, size: 16),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: GoogleFonts.poppins(
+              fontSize: 13,
+              color: Colors.black87,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    const Color primaryColor = Color(0xFF0D47A1);
+
     return Container(
-      width: 180, // A bit narrower for a more vertical look
+      width: 280, // Made card wider for more text
       margin: const EdgeInsets.only(right: 16),
       child: Card(
         elevation: 4,
         shadowColor: Colors.black38,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Profile picture with status indicator
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(50), // Make it a circle
-                    child: Image.asset(
-                      driver.imageUrl,
-                      width: 70,
-                      height: 70,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 2,
-                    right: 2,
-                    child: Container(
-                      width: 15,
-                      height: 15,
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Driver details
               Text(
                 driver.name,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 18,
                   color: const Color(0xFF1A1A1A),
                 ),
               ),
-              Text(
-                driver.place,
-                style: GoogleFonts.poppins(
-                  fontSize: 13,
-                  color: const Color(0xFF555555),
-                ),
+              const Divider(height: 20),
+              _buildInfoRow(
+                icon: Icons.directions_bus,
+                text: 'Bus: ${driver.allocatedBus}',
+              ),
+              const SizedBox(height: 8),
+              _buildInfoRow(
+                icon: Icons.badge_outlined,
+                text: 'License: ${driver.license}',
+              ),
+              const SizedBox(height: 8),
+              _buildInfoRow(
+                icon: Icons.location_on_outlined,
+                text: 'Place: ${driver.place}',
               ),
               const Spacer(), // Pushes the button to the bottom
-              // Action Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    final Uri callUri = Uri(scheme: 'tel', path: driver.phoneNumber);
+                    final Uri callUri =
+                        Uri(scheme: 'tel', path: driver.phoneNumber);
                     if (await canLaunchUrl(callUri)) {
                       await launchUrl(callUri);
                     }
                   },
                   icon: const Icon(Icons.call, size: 16),
-                  label: const Text('Call'),
+                  label: const Text('Call Driver'),
                   style: ElevatedButton.styleFrom(
-                    foregroundColor: const Color(0xFF1A1A1A),
-                    backgroundColor: Colors.grey[200],
-                    elevation: 0,
+                    foregroundColor: Colors.white,
+                    backgroundColor: primaryColor,
+                    elevation: 1,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -364,7 +383,7 @@ class _DriverCarouselCard extends StatelessWidget {
   }
 }
 
-// SOS Countdown Dialog
+// NOTE: The _SosCountdownDialog remains unchanged
 class _SosCountdownDialog extends StatefulWidget {
   const _SosCountdownDialog();
 
@@ -375,49 +394,50 @@ class _SosCountdownDialog extends StatefulWidget {
 class _SosCountdownDialogState extends State<_SosCountdownDialog> {
   late Timer _timer;
   int _countdown = 10;
-  // Make totalCountdown a state variable or a constant if it's fixed
   final int _totalCountdownDuration = 10;
 
   final String emergencyNumber = '+918891098650';
-  String _locationMessage = "Fetching location..."; // Default message
+  String _locationMessage = "Fetching location...";
 
   @override
   void initState() {
     super.initState();
-    _initializeSos(); // Handles permissions and location
+    _initializeSos();
     _startTimer();
   }
 
-  // New method to handle permissions and location (as provided in previous response)
   Future<void> _initializeSos() async {
-    // 1. Request Permissions
     Map<Permission, PermissionStatus> statuses = await [
       Permission.location,
       Permission.phone,
     ].request();
 
-    // 2. Get Location if permission is granted
     if (statuses[Permission.location] == PermissionStatus.granted) {
       try {
         Position position = await Geolocator.getCurrentPosition(
             desiredAccuracy: LocationAccuracy.high);
-        setState(() {
-          _locationMessage =
-              "Lat: ${position.latitude}, Long: ${position.longitude}";
-        });
+        if (mounted) {
+          setState(() {
+            _locationMessage =
+                "Lat: ${position.latitude}, Long: ${position.longitude}";
+          });
+        }
       } catch (e) {
-        setState(() {
-          _locationMessage = "[Location not available]";
-        });
+        if (mounted) {
+          setState(() {
+            _locationMessage = "[Location not available]";
+          });
+        }
         debugPrint('Failed to get location: $e');
       }
     } else {
-       setState(() {
+      if (mounted) {
+        setState(() {
           _locationMessage = "[Location permission denied]";
         });
+      }
     }
   }
-
 
   String get emergencyMessageText =>
       'I am in an emergency and need help. My current location is $_locationMessage.';
@@ -427,7 +447,7 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
       if (_countdown == 0) {
         timer.cancel();
         if (mounted) {
-          Navigator.of(context).pop(); // Close the dialog
+          Navigator.of(context).pop();
           _triggerSosActions();
         }
       } else {
@@ -448,10 +468,7 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
     );
     try {
       await launchUrl(smsUri);
-      debugPrint('SOS SMS sent successfully');
     } catch (e) {
-      debugPrint('Could not launch SOS SMS: $e');
-      // Show user feedback
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to send SOS SMS: $e')),
@@ -462,10 +479,7 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
     final Uri callUri = Uri(scheme: 'tel', path: emergencyNumber);
     try {
       await launchUrl(callUri);
-      debugPrint('SOS call initiated successfully.');
     } catch (e) {
-      debugPrint('Could not launch SOS call: $e');
-      // Show user feedback
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to initiate SOS call: $e')),
@@ -543,15 +557,15 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
             child: ElevatedButton(
               onPressed: () {
                 _timer.cancel();
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[50], // Light red background
-                foregroundColor: Colors.red[700], // Red text color
+                backgroundColor: Colors.red[50],
+                foregroundColor: Colors.red[700],
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.red[700]!, width: 1), // Red border
+                  side: BorderSide(color: Colors.red[700]!, width: 1),
                 ),
                 elevation: 0,
               ),
@@ -574,4 +588,4 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
     _timer.cancel();
     super.dispose();
   }
-} 
+}

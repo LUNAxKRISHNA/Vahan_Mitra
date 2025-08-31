@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/bus_model.dart';
 import '../../models/drivers_model.dart';
 import 'drivers_page.dart';
-
+//=======================================================
 class MapPage extends StatefulWidget {
   final Bus? bus;
   const MapPage({super.key, this.bus});
@@ -73,45 +73,12 @@ class _MapPageState extends State<MapPage> {
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
           ),
-          _buildTopHeader(),
           if (widget.bus != null && _assignedDriver != null)
             _buildBottomInfoCard(),
         ],
       ),
     );
   }
-
-  // --- UI Widgets ---
-
-  Widget _buildTopHeader() {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Container(
-        margin: const EdgeInsets.only(top: 20),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(30),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 10,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Text(
-          '${widget.bus?.eta ?? 'N/A'} Minutes Away',
-          style: GoogleFonts.poppins(
-            color: const Color(0xFFE0E0E0),
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildBottomInfoCard() {
     return Align(
       alignment: Alignment.bottomCenter,
@@ -186,9 +153,6 @@ class _MapPageState extends State<MapPage> {
       ],
     );
   }
-
-  // --- Driver Detail Sheet Logic ---
-
   void _showDriverDetails(BuildContext context, Drivers driver) {
     showModalBottomSheet(
       context: context,
@@ -196,9 +160,6 @@ class _MapPageState extends State<MapPage> {
       builder: (context) => _DriverDetailSheet(driver: driver),
     );
   }
-
-  // --- Location and Route Drawing Logic ---
-
   Future<void> _getUserLocation() async {
     bool serviceEnabled;
     PermissionStatus permissionGranted;
@@ -227,7 +188,6 @@ class _MapPageState extends State<MapPage> {
       });
     }
   }
-
   void _setupMarkers() {
     _markers.clear();
     if (widget.bus != null) {
@@ -263,6 +223,7 @@ class _MapPageState extends State<MapPage> {
     // The method now uses PolylineRequest and no longer passes the API key,
     // as it's handled in the PolylinePoints constructor.
     PolylineResult result = await _polylinePoints.getRouteBetweenCoordinates(
+      // ignore: deprecated_member_use
       request: PolylineRequest(
         origin: PointLatLng(
           _userCurrentPosition!.latitude,
@@ -296,21 +257,10 @@ class _MapPageState extends State<MapPage> {
   }
 }
 
-// --- Widget for the Modal Bottom Sheet ---
 class _DriverDetailSheet extends StatelessWidget {
   final Drivers driver;
   const _DriverDetailSheet({required this.driver});
 
-  Future<void> _makePhoneCall(BuildContext context, String phoneNumber) async {
-    final Uri callUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(callUri)) {
-      await launchUrl(callUri, mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open the dialer app.')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -326,11 +276,6 @@ class _DriverDetailSheet extends StatelessWidget {
       child: Column(
 mainAxisSize: MainAxisSize.min,
 children: [
-  CircleAvatar(
-    radius: 45,
-    backgroundColor: const Color(0xFFE0E0E0),
-    backgroundImage: AssetImage(driver.imageUrl),
-  ),
   const SizedBox(height: 16),
   Text(
             driver.name,

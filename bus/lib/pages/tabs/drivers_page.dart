@@ -10,7 +10,7 @@ const List<Drivers> driversList = [
     phoneNumber: '8921522905',
     license: 'KL-01-2020-0012345',
     place: 'Kochi',
-    imageUrl: 'assets/drivers/ramesh.png',
+    allocatedBus: 'Bus 101',
   ),
   Drivers(
     id: 'D2',
@@ -18,7 +18,7 @@ const List<Drivers> driversList = [
     phoneNumber: '+919123456789',
     license: 'KL-07-2018-0054321',
     place: 'Thrissur',
-    imageUrl: 'assets/drivers/suresh.png',
+    allocatedBus: 'Bus 102',
   ),
   Drivers(
     id: 'D3',
@@ -26,7 +26,7 @@ const List<Drivers> driversList = [
     phoneNumber: '+919988776655',
     license: 'KL-08-2019-0098765',
     place: 'Ernakulam',
-    imageUrl: 'assets/drivers/anil.png',
+    allocatedBus: 'Bus 103',
   ),
   Drivers(
     id: 'D4',
@@ -34,7 +34,7 @@ const List<Drivers> driversList = [
     phoneNumber: '+919555512345',
     license: 'KL-05-2021-0011223',
     place: 'Alappuzha',
-    imageUrl: 'assets/drivers/biju.png',
+    allocatedBus: 'Bus 104',
   ),
 ];
 
@@ -77,17 +77,13 @@ class _DriverListPageCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
+      // ignore: deprecated_member_use
       shadowColor: Colors.black.withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-CircleAvatar(
-  radius: 35,
-  backgroundColor: const Color(0xFFE0E0E0),
-  backgroundImage: AssetImage(driver.imageUrl),
-),
-const SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../models/bus_model.dart';
 import '../../widgets/wave_clipper.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -28,7 +27,6 @@ class _BusesPageState extends State<BusesPage> {
       nextStop: 'Engineering Building',
       eta: 3,
       driverId: 'D1',
-      // Added location for map integration
       location: LatLng(9.9095, 76.4305),
     ),
     const Bus(
@@ -56,7 +54,7 @@ class _BusesPageState extends State<BusesPage> {
       nextStop: 'N/A',
       eta: 0,
       driverId: 'D4',
-      location: LatLng(9.90, 76.43), // Dummy location
+      location: LatLng(9.90, 76.43),
     ),
   ];
   @override
@@ -82,7 +80,7 @@ class _BusesPageState extends State<BusesPage> {
                   return Center(
                     child: Text(
                       'No buses found for "${_filters[index]}"',
-                      style: const TextStyle(color: Color(0xFF222526), fontSize: 16),
+                      style: const TextStyle(color: Colors.black54, fontSize: 16),
                     ),
                   );
                 }
@@ -90,8 +88,6 @@ class _BusesPageState extends State<BusesPage> {
                   padding: const EdgeInsets.all(16),
                   itemCount: buses.length,
                   itemBuilder: (context, busIndex) {
-                    // --- UPDATED ---
-                    // The _BusInfoCard now handles navigation
                     return _BusInfoCard(bus: buses[busIndex]);
                   },
                 );
@@ -115,6 +111,9 @@ class _BusesPageState extends State<BusesPage> {
   }
 
   Widget _buildFilterChips() {
+    // Use the same primary color from the login page
+    final Color primaryColor = const Color(0xFF0D47A1);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -134,16 +133,18 @@ class _BusesPageState extends State<BusesPage> {
                 );
               }
             },
+            // CHANGED: Label style for light theme
             labelStyle: TextStyle(
-              color: isSelected ? const Color(0xFFE0E0E0) : const Color(0xFF1A1A1A),
+              color: isSelected ? Colors.white : Colors.black87,
               fontWeight: FontWeight.bold,
             ),
-            backgroundColor: const Color(0xFFE0E0E0),
-            selectedColor: const Color(0xFF1A1A1A),
+            backgroundColor: Colors.grey.shade200,
+            // CHANGED: Selected color to match theme
+            selectedColor: primaryColor,
             showCheckmark: false,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: const BorderSide(color: Color(0xFFE0E0E0)),
+              side: BorderSide(color: Colors.grey.shade300),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           );
@@ -157,15 +158,25 @@ class _BusesPageHeader extends StatelessWidget {
   const _BusesPageHeader();
   @override
   Widget build(BuildContext context) {
+    // Use the same primary color from the login page
+    final Color primaryColor = const Color(0xFF0D47A1);
+
     return ClipPath(
       clipper: WaveClipper(),
       child: Container(
         height: 150,
         width: double.infinity,
-        color:const Color(0xFF1A1A1A),
-        child: const SafeArea(
+        // CHANGED: Switched to the light theme gradient
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade200, primaryColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -173,16 +184,18 @@ class _BusesPageHeader extends StatelessWidget {
                 Text(
                   'Track Buses',
                   style: TextStyle(
-                    color: Color(0xFFE0E0E0),
+                    // CHANGED: Text color to white for contrast
+                    color: Colors.white,
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   'Track your bus in real-time',
-                  style: TextStyle(color: Color(0xFFE0E0E0), fontSize: 16),
+                  // CHANGED: Text color to light for contrast
+                  style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 16),
                 ),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
               ],
             ),
           ),
@@ -192,23 +205,24 @@ class _BusesPageHeader extends StatelessWidget {
   }
 }
 
-// --- Bus Info Card Widget (Updated) ---
 class _BusInfoCard extends StatelessWidget {
   final Bus bus;
   const _BusInfoCard({required this.bus});
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = bus.status == 'active' ? Colors.green : Colors.orange;
+    final statusColor = bus.status == 'active' ? Colors.green.shade600 : Colors.orange.shade600;
+    // Use the same primary color from the login page
+    final Color primaryColor = const Color(0xFF0D47A1);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
-      shadowColor: const Color(0xFF1A1A1A),
+      shadowColor: Colors.black26,
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          // Navigate to the MapPage, passing the selected bus
           Navigator.of(context).push(MaterialPageRoute(
             builder: (context) => MapPage(bus: bus),
           ));
@@ -219,7 +233,8 @@ class _BusInfoCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.directions_bus, color: Color(0xFF222526), size: 30),
+                  // CHANGED: Using the primary color for the main icon
+                  Icon(Icons.directions_bus, color: primaryColor, size: 30),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,9 +244,10 @@ class _BusInfoCard extends StatelessWidget {
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: Colors.black87,
                         ),
                       ),
-                      Text(bus.route, style: const TextStyle(color: Color(0xFF222526))),
+                      const Text('Route Details', style: TextStyle(color: Colors.black54)),
                     ],
                   ),
                   const Spacer(),
@@ -244,7 +260,7 @@ class _BusInfoCard extends StatelessWidget {
                     child: Text(
                       bus.status.toUpperCase(),
                       style: const TextStyle(
-                        color: Color(0xFFE0E0E0),
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -270,29 +286,15 @@ class _BusInfoCard extends StatelessWidget {
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String text;
-  final Widget? trailing;
-  const _InfoRow({required this.icon, required this.text, this.trailing});
+  const _InfoRow({required this.icon, required this.text});
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: const Color(0xFF222526), size: 20),
+        Icon(icon, color: Colors.black54, size: 20),
         const SizedBox(width: 8),
-        Text(text, style: const TextStyle(color: Color(0xFF222526))),
-        const Spacer(),
-        if (trailing != null) trailing!,
+        Text(text, style: const TextStyle(color: Colors.black87)),
       ],
-    );
-  }
-}
-
-Future<void> _makePhoneCall(BuildContext context, String phoneNumber) async {
-  final Uri callUri = Uri(scheme: 'tel', path: phoneNumber);
-  if (await canLaunchUrl(callUri)) {
-    await launchUrl(callUri, mode: LaunchMode.externalApplication);
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Could not open the dialer app.')),
     );
   }
 }

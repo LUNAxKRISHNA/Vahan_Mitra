@@ -34,12 +34,11 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-
   final _studentProfile = const StudentProfile(
     name: 'Priya Chauhan',
     regNo: '29114567',
     email: 'priya.chauhan@cvv.ac.in',
-    profileImageUrl: 'assets/logo.png', 
+    profileImageUrl: 'assets/logo.png',
     allocatedRoute: 'Main Campus - Engineering',
     allocatedBus: 'Bus 101',
     feeRate: '₹5,000 / Month',
@@ -82,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: Colors.red[400],
+                        backgroundColor: Colors.red.shade400,
                         minimumSize: const Size(double.infinity, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -104,19 +103,28 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// --- Header Widget ---
+// --- Header Widget (Updated for Light Theme) ---
 class _ProfilePageHeader extends StatelessWidget {
   final StudentProfile student;
   const _ProfilePageHeader({required this.student});
 
   @override
   Widget build(BuildContext context) {
+    final Color primaryColor = const Color(0xFF0D47A1); // Primary theme color
+
     return ClipPath(
       clipper: WaveClipper(),
       child: Container(
         height: 240,
         width: double.infinity,
-        color: const Color(0xFF1A1A1A),
+        // CHANGED: Using the light theme gradient
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade200, primaryColor],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -127,7 +135,7 @@ class _ProfilePageHeader extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 35,
-                      backgroundColor: const Color(0xFFBFBFBF),
+                      backgroundColor: Colors.white,
                       backgroundImage: AssetImage(student.profileImageUrl),
                     ),
                     const SizedBox(width: 16),
@@ -137,7 +145,8 @@ class _ProfilePageHeader extends StatelessWidget {
                         Text(
                           student.name,
                           style: GoogleFonts.poppins(
-                            color: const Color(0xFFBFBFBF),
+                            // CHANGED: Text color for contrast
+                            color: Colors.white,
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
@@ -145,8 +154,10 @@ class _ProfilePageHeader extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           student.email,
-                          style: const TextStyle(
-                              color: Color(0xFFBFBFBF), fontSize: 14),
+                          style: TextStyle(
+                              // CHANGED: Text color for contrast
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 14),
                         ),
                         const SizedBox(height: 6),
                         Container(
@@ -155,13 +166,16 @@ class _ProfilePageHeader extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFBFBFBF),
+                            // CHANGED: Background for contrast
+                            color: Colors.white.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             'Reg No: ${student.regNo}',
-                            style: const TextStyle(
-                                color: Color(0xFF1A1A1A),
+                            style: TextStyle(
+                                // CHANGED: Text color for contrast
+                                color: primaryColor,
+                                fontWeight: FontWeight.bold,
                                 fontSize: 12),
                           ),
                         ),
@@ -189,14 +203,15 @@ class _BusAllocationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      shadowColor: const Color(0xFF1A1A1A),
+      shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionTitle(icon: Icons.directions_bus, title: 'Bus Allocation'),
+            _buildSectionTitle(
+                icon: Icons.directions_bus, title: 'Bus Allocation'),
             const SizedBox(height: 16),
             _buildInfoRow(label: 'Allocated Route', value: route),
             const Divider(height: 24),
@@ -216,12 +231,12 @@ class _FeeDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = isPaid ? Colors.green : Colors.orange;
+    final statusColor = isPaid ? Colors.green.shade600 : Colors.orange.shade600;
     final statusText = isPaid ? 'Paid' : 'Pending';
 
     return Card(
       elevation: 2,
-      shadowColor: const Color(0xFF1A1A1A),
+      shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -237,7 +252,7 @@ class _FeeDetailsCard extends StatelessWidget {
               children: [
                 const Text(
                   'Payment Status',
-                  style: TextStyle(color: Color(0xFF222526),fontSize: 14),
+                  style: TextStyle(color: Colors.black54, fontSize: 14),
                 ),
                 Container(
                   padding:
@@ -249,7 +264,7 @@ class _FeeDetailsCard extends StatelessWidget {
                   child: Text(
                     statusText.toUpperCase(),
                     style: const TextStyle(
-                      color: Color(0xFFE0E0E0),
+                      color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -264,17 +279,19 @@ class _FeeDetailsCard extends StatelessWidget {
   }
 }
 
-// --- Helper Widgets ---
+// --- Helper Widgets (Updated for Light Theme) ---
 Widget _buildSectionTitle({required IconData icon, required String title}) {
+  final Color primaryColor = const Color(0xFF0D47A1); // Primary theme color
   return Row(
     children: [
-      Icon(icon, color: const Color(0xFF1A1A1A)),
+      // CHANGED: Using primary color for icon
+      Icon(icon, color: primaryColor),
       const SizedBox(width: 8),
       Text(
         title,
         style: GoogleFonts.poppins(
             fontSize: 16,
-            color: const Color(0xFF1A1A1A),
+            color: Colors.black87,
             fontWeight: FontWeight.bold),
       ),
     ],
@@ -287,14 +304,14 @@ Widget _buildInfoRow({required String label, required String value}) {
     children: [
       Text(
         label,
-        style: const TextStyle(color: Color(0xFF222526), fontSize: 14),
+        style: const TextStyle(color: Colors.black54, fontSize: 14),
       ),
       Text(
         value,
         style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 14,
-          color: Color(0xFF1A1A1A),
+          color: Colors.black87,
         ),
       ),
     ],
