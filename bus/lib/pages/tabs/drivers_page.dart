@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/drivers_model.dart';
 
-final List<Drivers> driversList = const [
+const List<Drivers> driversList = [
   Drivers(
     id: 'D1',
     name: 'Ramesh Kumar',

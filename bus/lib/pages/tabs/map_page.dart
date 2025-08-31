@@ -5,10 +5,9 @@ import 'package:location/location.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-// Import your models and the drivers_page to access the driver list
 import '../../models/bus_model.dart';
 import '../../models/drivers_model.dart';
-import 'drivers_page.dart'; // This gives us access to the public 'driversList'
+import 'drivers_page.dart';
 
 class MapPage extends StatefulWidget {
   final Bus? bus;
@@ -21,8 +20,6 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final Completer<GoogleMapController> _mapController = Completer();
   final Location _locationController = Location();
-  // --- CORRECTED ---
-  // The API key is now provided here in the constructor, as required by your package version.
   final PolylinePoints _polylinePoints = PolylinePoints(
     apiKey: 'AIzaSyBcIEYWuyKgOkGdMkRP68w99TCsu1qw25M',
   );
@@ -347,11 +344,6 @@ children: [
           Text(
             'License: ${driver.license}',
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
-),
-const Divider(height: 32),
-ElevatedButton(
-  onPressed: () => _makePhoneCall(context, driver.phoneNumber),
-  child: const Text('Call Driver'),
 ),
 const Divider(height: 32),
 ElevatedButton(
