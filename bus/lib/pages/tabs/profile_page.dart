@@ -156,7 +156,7 @@ class _ProfilePageHeader extends StatelessWidget {
                           student.email,
                           style: TextStyle(
                               // CHANGED: Text color for contrast
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white,
                               fontSize: 14),
                         ),
                         const SizedBox(height: 6),
@@ -167,7 +167,7 @@ class _ProfilePageHeader extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             // CHANGED: Background for contrast
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -202,6 +202,7 @@ class _BusAllocationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: const Color(0xFFE3F2FD),
       elevation: 2,
       shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -235,6 +236,7 @@ class _FeeDetailsCard extends StatelessWidget {
     final statusText = isPaid ? 'Paid' : 'Pending';
 
     return Card(
+      color: const Color(0xFFE3F2FD),
       elevation: 2,
       shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

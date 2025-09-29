@@ -1,15 +1,19 @@
-  // lib/pages/tabs/home_tab.dart
-  import 'dart:async';
-  import 'package:flutter/material.dart';
-  import 'package:google_fonts/google_fonts.dart';
-  import 'package:intl/intl.dart';
-  import 'package:url_launcher/url_launcher.dart';
-  import 'package:geolocator/geolocator.dart';
-  import 'package:permission_handler/permission_handler.dart';
-  import '../../models/drivers_model.dart';
-  import '../../widgets/wave_clipper.dart';
+import 'dart:async';
+import 'dart:io';
 
-  //======================================================================
+import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:another_telephony/telephony.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import '../../models/drivers_model.dart';
+import '../../widgets/wave_clipper.dart';
+
+//======================================================================
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
 
@@ -138,7 +142,7 @@ class _HomeTabHeader extends StatelessWidget {
                 Text(
                   dateFormat.format(now),
                   style: GoogleFonts.poppins(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white,
                     fontSize: 16,
                   ),
                 ),
@@ -168,11 +172,13 @@ class _QuickActionsSection extends StatelessWidget {
           icon: Icons.directions_bus_filled,
           label: 'Track Bus',
           onTap: () {},
+          backgroundColor: const Color(0xFFE3F2FD),
         ),
         _QuickActionCard(
           icon: Icons.alt_route,
           label: 'View All Routes',
           onTap: () {},
+          backgroundColor: const Color(0xFFE3F2FD),
         ),
       ],
     );
@@ -183,11 +189,13 @@ class _QuickActionCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Color backgroundColor;
 
   const _QuickActionCard({
     required this.icon,
     required this.label,
     required this.onTap,
+    required this.backgroundColor,
   });
 
   @override
@@ -195,6 +203,7 @@ class _QuickActionCard extends StatelessWidget {
     const Color primaryColor = Color(0xFF0D47A1);
 
     return Card(
+      color: backgroundColor,
       elevation: 2,
       shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -232,8 +241,6 @@ class _QuickActionCard extends StatelessWidget {
 class _DriversSection extends StatelessWidget {
   const _DriversSection();
 
-  // CHANGED: Added 'allocatedBus' to the mock data.
-  // NOTE: You would also need to add this field to your 'Drivers' model class.
   static final List<Drivers> driversList = [
     const Drivers(
       id: 'D1',
@@ -282,15 +289,11 @@ class _DriversSection extends StatelessWidget {
   }
 }
 
-// =======================================================================
-// --- REDESIGNED DRIVER CARD ---
-// =======================================================================
 class _DriverCarouselCard extends StatelessWidget {
   final Drivers driver;
 
   const _DriverCarouselCard({required this.driver});
 
-  // Helper widget for info rows to avoid repetition
   Widget _buildInfoRow({required IconData icon, required String text}) {
     return Row(
       children: [
@@ -315,9 +318,10 @@ class _DriverCarouselCard extends StatelessWidget {
     const Color primaryColor = Color(0xFF0D47A1);
 
     return Container(
-      width: 280, // Made card wider for more text
+      width: 280,
       margin: const EdgeInsets.only(right: 16),
       child: Card(
+        color: const Color(0xFFE3F2FD),
         elevation: 4,
         shadowColor: Colors.black38,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -349,7 +353,7 @@ class _DriverCarouselCard extends StatelessWidget {
                 icon: Icons.location_on_outlined,
                 text: 'Place: ${driver.place}',
               ),
-              const Spacer(), // Pushes the button to the bottom
+              const Spacer(),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -383,7 +387,9 @@ class _DriverCarouselCard extends StatelessWidget {
   }
 }
 
-// NOTE: The _SosCountdownDialog remains unchanged
+// =======================================================================
+// SOS DIALOG
+// =======================================================================
 class _SosCountdownDialog extends StatefulWidget {
   const _SosCountdownDialog();
 
@@ -399,6 +405,8 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
   final String emergencyNumber = '+918891098650';
   String _locationMessage = "Fetching location...";
 
+  final Telephony telephony = Telephony.instance;
+
   @override
   void initState() {
     super.initState();
@@ -410,16 +418,16 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.location,
       Permission.phone,
+      Permission.sms,
     ].request();
 
     if (statuses[Permission.location] == PermissionStatus.granted) {
       try {
-        Position position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high);
+        Position position = await Geolocator.getCurrentPosition();
         if (mounted) {
           setState(() {
             _locationMessage =
-                "Lat: ${position.latitude}, Long: ${position.longitude}";
+                "https://maps.google.com/?q=${position.latitude},${position.longitude}";
           });
         }
       } catch (e) {
@@ -428,7 +436,6 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
             _locationMessage = "[Location not available]";
           });
         }
-        debugPrint('Failed to get location: $e');
       }
     } else {
       if (mounted) {
@@ -461,31 +468,67 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
   }
 
   Future<void> _triggerSosActions() async {
-    final Uri smsUri = Uri(
-      scheme: 'sms',
-      path: emergencyNumber,
-      queryParameters: <String, String>{'body': emergencyMessageText},
-    );
+    await _makeDirectCall();
+    await _sendEmergencyMessages();
+  }
+
+  Future<void> _makeDirectCall() async {
     try {
-      await launchUrl(smsUri);
+      await FlutterPhoneDirectCaller.callNumber(emergencyNumber);
+      _showFeedback('SOS call initiated successfully.');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send SOS SMS: $e')),
+      _showFeedback('Failed to make SOS call: $e', isError: true);
+    }
+  }
+
+  Future<void> _sendEmergencyMessages() async {
+    if (Platform.isAndroid) {
+      try {
+        await telephony.sendSms(
+          to: emergencyNumber,
+          message: emergencyMessageText,
         );
+        _showFeedback('Direct SMS sent successfully.');
+      } catch (e) {
+        _showFeedback('Error sending direct SMS: $e', isError: true);
+      }
+    } else {
+      final Uri smsUri = Uri(
+        scheme: 'sms',
+        path: emergencyNumber,
+        queryParameters: {'body': Uri.encodeComponent(emergencyMessageText)},
+      );
+      if (await canLaunchUrl(smsUri)) {
+        await launchUrl(smsUri);
+        _showFeedback('SMS app opened.');
+      } else {
+        _showFeedback('Could not open SMS app.', isError: true);
       }
     }
 
-    final Uri callUri = Uri(scheme: 'tel', path: emergencyNumber);
-    try {
-      await launchUrl(callUri);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to initiate SOS call: $e')),
-        );
-      }
+    // WhatsApp
+    final String whatsappNumber = emergencyNumber.replaceFirst('+', '');
+    final String whatsappUrl =
+        "https://wa.me/$whatsappNumber/?text=${Uri.encodeComponent(emergencyMessageText)}";
+    final Uri whatsappUri = Uri.parse(whatsappUrl);
+
+    if (await canLaunchUrl(whatsappUri)) {
+      await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+      _showFeedback('WhatsApp opened.');
+    } else {
+      _showFeedback('Could not launch WhatsApp. Is it installed?',
+          isError: true);
     }
+  }
+
+  void _showFeedback(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
+      ),
+    );
   }
 
   @override

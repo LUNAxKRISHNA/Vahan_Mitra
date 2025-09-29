@@ -5,6 +5,7 @@ import '../../widgets/wave_clipper.dart';
 //==============================================================
 
 class LoginPage extends StatefulWidget {
+  // ignore: use_super_parameters
   const LoginPage({Key? key}) : super(key: key);
 
   @override
@@ -59,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
                         'Sign in to your Vahan Mitra account',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white,
                             fontSize: 16),
                       ),
                     ],

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/bus_model.dart';
 import '../../widgets/wave_clipper.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import "map_page.dart";
+import "map_page.dart" as map_page;
 
 //==========================================================================
 
@@ -18,43 +18,15 @@ class _BusesPageState extends State<BusesPage> {
 
   final List<String> _filters = ['All Buses', 'Active', 'Inactive'];
 
-  // Mock data for demonstration
   final List<Bus> _allBuses = [
     const Bus(
       id: '101',
-      route: 'Main Campus - Engineering',
+      route: 'Kaloor - Chinmaya Vishwa Vidyapeeth',
       status: 'active',
       nextStop: 'Engineering Building',
       eta: 3,
       driverId: 'D1',
       location: LatLng(9.9095, 76.4305),
-    ),
-    const Bus(
-      id: '102',
-      route: 'Library - Sports Complex',
-      status: 'inactive',
-      nextStop: 'Central Library',
-      eta: 15,
-      driverId: 'D2',
-      location: LatLng(9.9048, 76.4410),
-    ),
-    const Bus(
-      id: '103',
-      route: 'Student Housing - Downtown',
-      status: 'active',
-      nextStop: 'Oak Street',
-      eta: 12,
-      driverId: 'D3',
-      location: LatLng(9.9073, 76.4384),
-    ),
-    const Bus(
-      id: '104',
-      route: 'Science Park - North Gate',
-      status: 'inactive',
-      nextStop: 'N/A',
-      eta: 0,
-      driverId: 'D4',
-      location: LatLng(9.90, 76.43),
     ),
   ];
   @override
@@ -193,7 +165,7 @@ class _BusesPageHeader extends StatelessWidget {
                 Text(
                   'Track your bus in real-time',
                   // CHANGED: Text color to light for contrast
-                  style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 16),
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
                 const SizedBox(height: 30),
               ],
@@ -216,6 +188,7 @@ class _BusInfoCard extends StatelessWidget {
     final Color primaryColor = const Color(0xFF0D47A1);
 
     return Card(
+      color: const Color(0xFFE3F2FD),
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
@@ -224,7 +197,7 @@ class _BusInfoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => MapPage(bus: bus),
+            builder: (context) => map_page.MapPage(bus: bus),
           ));
         },
         child: Padding(
