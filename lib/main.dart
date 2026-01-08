@@ -2,8 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'pages/auth/splash_screen.dart';
+import 'services/config_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ConfigService().loadConfig();
   runApp(const MyApp());
 }
 
@@ -17,7 +20,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.light,
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const Color.fromARGB(255,246,237,222),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 246, 237, 222),
         fontFamily: 'Roboto',
       ),
       home: const SplashScreen(),

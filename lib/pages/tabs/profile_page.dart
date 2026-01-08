@@ -1,29 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../widgets/wave_clipper.dart';
+import '../../services/config_service.dart';
 import '../auth/login_page.dart';
-
-class StudentProfile {
-  final String name;
-  final String regNo;
-  final String email;
-  final String profileImageUrl;
-  final String allocatedRoute;
-  final String allocatedBus;
-  final String feeRate;
-  final bool isFeePaid;
-
-  const StudentProfile({
-    required this.name,
-    required this.regNo,
-    required this.email,
-    required this.profileImageUrl,
-    required this.allocatedRoute,
-    required this.allocatedBus,
-    required this.feeRate,
-    required this.isFeePaid,
-  });
-}
 
 //======================================================================
 class ProfilePage extends StatefulWidget {
@@ -34,24 +12,17 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final _studentProfile = const StudentProfile(
-    name: 'Priya Chauhan',
-    regNo: '29114567',
-    email: 'priya.chauhan@cvv.ac.in',
-    profileImageUrl: 'assets/logo.png',
-    allocatedRoute: 'Main Campus - Engineering',
-    allocatedBus: 'Bus 101',
-    feeRate: '₹5,000 / Month',
-    isFeePaid: true,
-  );
+  // Data is now fetched from ConfigService in build method
 
   @override
   Widget build(BuildContext context) {
+    final userConfig = ConfigService().user;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
       body: Column(
         children: [
-          _ProfilePageHeader(student: _studentProfile),
+          _ProfilePageHeader(userConfig: userConfig),
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
@@ -59,13 +30,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   children: [
                     _BusAllocationCard(
-                      route: _studentProfile.allocatedRoute,
-                      bus: _studentProfile.allocatedBus,
+                      route: userConfig['allocatedRoute'] ?? 'N/A',
+                      bus: userConfig['allocatedBus'] ?? 'N/A',
                     ),
                     const SizedBox(height: 16),
                     _FeeDetailsCard(
-                      rate: _studentProfile.feeRate,
-                      isPaid: _studentProfile.isFeePaid,
+                      rate: userConfig['feeRate'] ?? 'N/A',
+                      isPaid: userConfig['isFeePaid'] ?? false,
                     ),
                     const SizedBox(height: 32),
                     ElevatedButton.icon(
@@ -103,89 +74,94 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// --- Header Widget (Updated for Light Theme) ---
+// --- Header Widget (Updated to Fall Header Style) ---
 class _ProfilePageHeader extends StatelessWidget {
-  final StudentProfile student;
-  const _ProfilePageHeader({required this.student});
+  final Map<String, dynamic> userConfig;
+  const _ProfilePageHeader({required this.userConfig});
 
   @override
   Widget build(BuildContext context) {
-    final Color primaryColor = const Color(0xFF0D47A1); // Primary theme color
+    final primaryColor = Color(ConfigService().getColor('primary_color'));
 
-    return ClipPath(
-      clipper: WaveClipper(),
-      child: Container(
-        height: 240,
-        width: double.infinity,
-        // CHANGED: Using the light theme gradient
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade200, primaryColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return Container(
+      height: 280,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: primaryColor,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 35,
-                      backgroundColor: Colors.white,
-                      backgroundImage: AssetImage(student.profileImageUrl),
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          student.name,
-                          style: GoogleFonts.poppins(
-                            // CHANGED: Text color for contrast
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          student.email,
-                          style: TextStyle(
-                              // CHANGED: Text color for contrast
-                              color: Colors.white,
-                              fontSize: 14),
-                        ),
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            // CHANGED: Background for contrast
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'Reg No: ${student.regNo}',
-                            style: TextStyle(
-                                // CHANGED: Text color for contrast
-                                color: primaryColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+        image: const DecorationImage(
+          image: AssetImage('assets/header_bg.png'),
+          fit: BoxFit.cover,
+          opacity: 0.4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 30),
-              ],
-            ),
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.white,
+                  backgroundImage: AssetImage(
+                    userConfig['profileImageUrl'] ?? 'assets/logo.png',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                userConfig['name'] ?? 'User',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                userConfig['email'] ?? '',
+                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  'Reg No: ${userConfig['regNo'] ?? 'N/A'}',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -202,20 +178,22 @@ class _BusAllocationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: const Color(0xFFE3F2FD),
+      color: Colors.white,
       elevation: 2,
-      shadowColor: Colors.black26,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shadowColor: Colors.black12,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle(
-                icon: Icons.directions_bus, title: 'Bus Allocation'),
-            const SizedBox(height: 16),
+              icon: Icons.directions_bus,
+              title: 'Bus Allocation',
+            ),
+            const SizedBox(height: 20),
             _buildInfoRow(label: 'Allocated Route', value: route),
-            const Divider(height: 24),
+            const Divider(height: 32),
             _buildInfoRow(label: 'Allocated Bus', value: bus),
           ],
         ),
@@ -257,8 +235,10 @@ class _FeeDetailsCard extends StatelessWidget {
                   style: TextStyle(color: Colors.black54, fontSize: 14),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor,
                     borderRadius: BorderRadius.circular(20),
@@ -273,7 +253,7 @@ class _FeeDetailsCard extends StatelessWidget {
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -292,9 +272,10 @@ Widget _buildSectionTitle({required IconData icon, required String title}) {
       Text(
         title,
         style: GoogleFonts.poppins(
-            fontSize: 16,
-            color: Colors.black87,
-            fontWeight: FontWeight.bold),
+          fontSize: 16,
+          color: Colors.black87,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     ],
   );
@@ -304,10 +285,7 @@ Widget _buildInfoRow({required String label, required String value}) {
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      Text(
-        label,
-        style: const TextStyle(color: Colors.black54, fontSize: 14),
-      ),
+      Text(label, style: const TextStyle(color: Colors.black54, fontSize: 14)),
       Text(
         value,
         style: const TextStyle(

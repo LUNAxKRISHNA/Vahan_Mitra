@@ -1,0 +1,51 @@
+{
+  "ui": {
+    "primary_color": "0xFF0D47A1",
+    "secondary_color": "0xFFE3F2FD",
+    "accent_color": "0xFFFFAB40",
+    "text_primary": "0xFF1A1A1A",
+    "text_secondary": "0xFF757575"
+  },
+  "user": {
+    "name": "Krishna K",
+    "regNo": "231140015",
+    "email": "krishna.k@cvv.ac.in",
+    "profileImageUrl": "assets/logo.png",
+    "allocatedRoute": "Onakkoor - Aluva",
+    "allocatedBus": "Mayura",
+    "feeRate": "₹5,000 / Month",
+    "isFeePaid": true
+  },
+  "drivers": [
+    {
+      "id": "D1",
+      "name": "Ramesh Kumar",
+      "phoneNumber": "+91 9876543210",
+      "license": "DL-123456",
+      "place": "Delhi",
+      "allocatedBus": "Bus 101"
+    },
+    {
+      "id": "D2",
+      "name": "Suresh Singh",
+      "phoneNumber": "+91 9123456780",
+      "license": "DL-654321",
+      "place": "Mumbai",
+      "allocatedBus": "Bus 102"
+    }
+  ],
+  "routes": [
+    {
+      "id": "R1",
+      "name": "Route 1: Onakkoor - Aluva",
+      "stops": [
+        "Onakkoor",
+        "Piravom",
+        "Mulanthuruthy",
+        "Tripunithura",
+        "Aluva"
+      ],
+      "timings": "07:30 - 08:15"
+    }
+  ]
+}

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../models/bus_model.dart';
-import '../../widgets/wave_clipper.dart';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import "map_page.dart" as map_page;
 
 //==========================================================================
@@ -52,7 +53,10 @@ class _BusesPageState extends State<BusesPage> {
                   return Center(
                     child: Text(
                       'No buses found for "${_filters[index]}"',
-                      style: const TextStyle(color: Colors.black54, fontSize: 16),
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 16,
+                      ),
                     ),
                   );
                 }
@@ -130,46 +134,52 @@ class _BusesPageHeader extends StatelessWidget {
   const _BusesPageHeader();
   @override
   Widget build(BuildContext context) {
-    // Use the same primary color from the login page
+    // Use the same primary color from config if possible, or fallback
     final Color primaryColor = const Color(0xFF0D47A1);
 
-    return ClipPath(
-      clipper: WaveClipper(),
-      child: Container(
-        height: 150,
-        width: double.infinity,
-        // CHANGED: Switched to the light theme gradient
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade200, primaryColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return Container(
+      height: 180,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: primaryColor,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Track Buses',
-                  style: TextStyle(
-                    // CHANGED: Text color to white for contrast
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
+        image: const DecorationImage(
+          image: AssetImage('assets/header_bg.png'),
+          fit: BoxFit.cover,
+          opacity: 0.4,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Track Buses',
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
                 ),
-                Text(
-                  'Track your bus in real-time',
-                  // CHANGED: Text color to light for contrast
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-                const SizedBox(height: 30),
-              ],
-            ),
+              ),
+              Text(
+                'Track your bus in real-time',
+                style: GoogleFonts.poppins(color: Colors.white70, fontSize: 16),
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
         ),
       ),
@@ -183,7 +193,8 @@ class _BusInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = bus.status == 'active' ? Colors.green.shade600 : Colors.orange.shade600;
+    final statusColor =
+        bus.status == 'active' ? Colors.green.shade600 : Colors.orange.shade600;
     // Use the same primary color from the login page
     final Color primaryColor = const Color(0xFF0D47A1);
 
@@ -196,9 +207,9 @@ class _BusInfoCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => map_page.MapPage(bus: bus),
-          ));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => map_page.MapPage(bus: bus)),
+          );
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -220,12 +231,18 @@ class _BusInfoCard extends StatelessWidget {
                           color: Colors.black87,
                         ),
                       ),
-                      const Text('Route Details', style: TextStyle(color: Colors.black54)),
+                      const Text(
+                        'Route Details',
+                        style: TextStyle(color: Colors.black54),
+                      ),
                     ],
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor,
                       borderRadius: BorderRadius.circular(20),

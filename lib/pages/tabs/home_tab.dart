@@ -10,8 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../models/drivers_model.dart';
-import '../../widgets/wave_clipper.dart';
+import '../../services/config_service.dart';
+import '../routes_page.dart';
 
 //======================================================================
 class HomeTab extends StatefulWidget {
@@ -39,7 +39,7 @@ class _HomeTabState extends State<HomeTab> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const _HomeTabHeader(),
+            const _FallHeader(),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -85,70 +85,119 @@ String getGreeting() {
   return 'Good Evening,';
 }
 
-class _HomeTabHeader extends StatelessWidget {
-  const _HomeTabHeader();
+class _FallHeader extends StatelessWidget {
+  const _FallHeader();
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final dateFormat = DateFormat('EEEE, d MMMM');
-    const Color primaryColor = Color(0xFF0D47A1);
+    final userConfig = ConfigService().user;
+    final userName = userConfig['name'] ?? 'User';
 
-    return ClipPath(
-      clipper: WaveClipper(),
-      child: Container(
-        height: 250,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.blue.shade200, primaryColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+    return Container(
+      height: 280,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Color(ConfigService().getColor('primary_color')),
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          getGreeting(),
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 18,
-                          ),
+        image: const DecorationImage(
+          image: AssetImage('assets/header_bg.png'),
+          fit: BoxFit.cover,
+          opacity: 0.4, // Dim image to ensure text readability
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        getGreeting(),
+                        style: GoogleFonts.poppins(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
-                        Text(
-                          'Vahan Mitra User',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        userName,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 16),
-                  ],
+                    child: CircleAvatar(
+                      radius: 24,
+                      backgroundImage: AssetImage(
+                        userConfig['profileImageUrl'] ?? 'assets/logo.png',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                const Spacer(),
-                Text(
-                  dateFormat.format(now),
-                  style: GoogleFonts.poppins(
-                    color: Colors.white,
-                    fontSize: 16,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
                   ),
                 ),
-                const SizedBox(height: 30),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.calendar_today,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      dateFormat.format(now),
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
           ),
         ),
       ),
@@ -171,13 +220,20 @@ class _QuickActionsSection extends StatelessWidget {
         _QuickActionCard(
           icon: Icons.directions_bus_filled,
           label: 'Track Bus',
-          onTap: () {},
+          onTap: () {
+            // Logic to track bus
+          },
           backgroundColor: const Color(0xFFE3F2FD),
         ),
         _QuickActionCard(
           icon: Icons.alt_route,
           label: 'View All Routes',
-          onTap: () {},
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const RoutesPage()),
+            );
+          },
           backgroundColor: const Color(0xFFE3F2FD),
         ),
       ],
@@ -200,7 +256,7 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryColor = Color(0xFF0D47A1);
+    final primaryColor = Color(ConfigService().getColor('primary_color'));
 
     return Card(
       color: backgroundColor,
@@ -215,12 +271,15 @@ class _QuickActionCard extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                size: 40,
-                color: primaryColor,
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 32, color: primaryColor),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text(
                 label,
                 textAlign: TextAlign.center,
@@ -241,27 +300,10 @@ class _QuickActionCard extends StatelessWidget {
 class _DriversSection extends StatelessWidget {
   const _DriversSection();
 
-  static final List<Drivers> driversList = [
-    const Drivers(
-      id: 'D1',
-      name: 'Ramesh Kumar',
-      phoneNumber: '+91 9876543210',
-      license: 'DL-123456',
-      place: 'Delhi',
-      allocatedBus: 'Bus 101',
-    ),
-    const Drivers(
-      id: 'D2',
-      name: 'Suresh Singh',
-      phoneNumber: '+91 9123456780',
-      license: 'DL-654321',
-      place: 'Mumbai',
-      allocatedBus: 'Bus 102',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final driversData = ConfigService().drivers;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -276,13 +318,23 @@ class _DriversSection extends StatelessWidget {
         const SizedBox(height: 12),
         SizedBox(
           height: 220,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: driversList.length,
-            itemBuilder: (context, index) {
-              return _DriverCarouselCard(driver: driversList[index]);
-            },
-          ),
+          child:
+              driversData.isEmpty
+                  ? const Center(child: Text("No drivers found"))
+                  : ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: driversData.length,
+                    itemBuilder: (context, index) {
+                      final data = driversData[index];
+                      return _DriverCarouselCard(
+                        name: data['name'] ?? '',
+                        allocatedBus: data['allocatedBus'] ?? '',
+                        license: data['license'] ?? '',
+                        place: data['place'] ?? '',
+                        phoneNumber: data['phoneNumber'] ?? '',
+                      );
+                    },
+                  ),
         ),
       ],
     );
@@ -290,9 +342,19 @@ class _DriversSection extends StatelessWidget {
 }
 
 class _DriverCarouselCard extends StatelessWidget {
-  final Drivers driver;
+  final String name;
+  final String allocatedBus;
+  final String license;
+  final String place;
+  final String phoneNumber;
 
-  const _DriverCarouselCard({required this.driver});
+  const _DriverCarouselCard({
+    required this.name,
+    required this.allocatedBus,
+    required this.license,
+    required this.place,
+    required this.phoneNumber,
+  });
 
   Widget _buildInfoRow({required IconData icon, required String text}) {
     return Row(
@@ -302,10 +364,7 @@ class _DriverCarouselCard extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: Colors.black87,
-            ),
+            style: GoogleFonts.poppins(fontSize: 13, color: Colors.black87),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -315,51 +374,62 @@ class _DriverCarouselCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color primaryColor = Color(0xFF0D47A1);
+    final primaryColor = Color(ConfigService().getColor('primary_color'));
 
     return Container(
       width: 280,
-      margin: const EdgeInsets.only(right: 16),
+      margin: const EdgeInsets.only(right: 16, bottom: 8),
       child: Card(
-        color: const Color(0xFFE3F2FD),
-        elevation: 4,
-        shadowColor: Colors.black38,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        color: Colors.white,
+        elevation: 3,
+        shadowColor: Colors.black12,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                driver.name,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: const Color(0xFF1A1A1A),
-                ),
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: primaryColor.withValues(alpha: 0.1),
+                    child: Icon(Icons.person, color: primaryColor),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: GoogleFonts.poppins(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: const Color(0xFF1A1A1A),
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-              const Divider(height: 20),
+              const Divider(height: 24),
               _buildInfoRow(
                 icon: Icons.directions_bus,
-                text: 'Bus: ${driver.allocatedBus}',
+                text: 'Bus: $allocatedBus',
               ),
               const SizedBox(height: 8),
               _buildInfoRow(
                 icon: Icons.badge_outlined,
-                text: 'License: ${driver.license}',
+                text: 'License: $license',
               ),
               const SizedBox(height: 8),
               _buildInfoRow(
                 icon: Icons.location_on_outlined,
-                text: 'Place: ${driver.place}',
+                text: 'Place: $place',
               ),
               const Spacer(),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    final Uri callUri =
-                        Uri(scheme: 'tel', path: driver.phoneNumber);
+                    final Uri callUri = Uri(scheme: 'tel', path: phoneNumber);
                     if (await canLaunchUrl(callUri)) {
                       await launchUrl(callUri);
                     }
@@ -369,16 +439,14 @@ class _DriverCarouselCard extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: primaryColor,
-                    elevation: 1,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    textStyle: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -415,11 +483,8 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
   }
 
   Future<void> _initializeSos() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.location,
-      Permission.phone,
-      Permission.sms,
-    ].request();
+    Map<Permission, PermissionStatus> statuses =
+        await [Permission.location, Permission.phone, Permission.sms].request();
 
     if (statuses[Permission.location] == PermissionStatus.granted) {
       try {
@@ -516,8 +581,10 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
       await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
       _showFeedback('WhatsApp opened.');
     } else {
-      _showFeedback('Could not launch WhatsApp. Is it installed?',
-          isError: true);
+      _showFeedback(
+        'Could not launch WhatsApp. Is it installed?',
+        isError: true,
+      );
     }
   }
 
@@ -551,10 +618,7 @@ class _SosCountdownDialogState extends State<_SosCountdownDialog> {
         children: [
           Text(
             'Sending an SOS alert in:',
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.grey[700],
-            ),
+            style: GoogleFonts.poppins(fontSize: 16, color: Colors.grey[700]),
           ),
           const SizedBox(height: 20),
           SizedBox(

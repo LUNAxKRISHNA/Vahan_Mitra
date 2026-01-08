@@ -1,42 +1,7 @@
 // lib/pages/drivers_page.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../models/drivers_model.dart';
-
-const List<Drivers> driversList = [
-  Drivers(
-    id: 'D1',
-    name: 'Ramesh Kumar',
-    phoneNumber: '8921522905',
-    license: 'KL-01-2020-0012345',
-    place: 'Kochi',
-    allocatedBus: 'Bus 101',
-  ),
-  Drivers(
-    id: 'D2',
-    name: 'Suresh Menon',
-    phoneNumber: '+919123456789',
-    license: 'KL-07-2018-0054321',
-    place: 'Thrissur',
-    allocatedBus: 'Bus 102',
-  ),
-  Drivers(
-    id: 'D3',
-    name: 'Anil Varma',
-    phoneNumber: '+919988776655',
-    license: 'KL-08-2019-0098765',
-    place: 'Ernakulam',
-    allocatedBus: 'Bus 103',
-  ),
-  Drivers(
-    id: 'D4',
-    name: 'Biju Nair',
-    phoneNumber: '+919555512345',
-    license: 'KL-05-2021-0011223',
-    place: 'Alappuzha',
-    allocatedBus: 'Bus 104',
-  ),
-];
+import '../../services/config_service.dart';
 
 //======================================================================
 class DriversPage extends StatelessWidget {
@@ -44,6 +9,9 @@ class DriversPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final driversData = ConfigService().drivers;
+    final primaryColor = Color(ConfigService().getColor('primary_color'));
+
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
       appBar: AppBar(
@@ -51,34 +19,54 @@ class DriversPage extends StatelessWidget {
           'All Drivers',
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFF1A1A1A),
-        foregroundColor: const Color(0xFFE0E0E0),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: driversList.length, // Use the public list
-        itemBuilder: (context, index) {
-          return _DriverListPageCard(driver: driversList[index]);
-        },
-      ),
+      body:
+          driversData.isEmpty
+              ? const Center(child: Text("No drivers found"))
+              : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: driversData.length,
+                itemBuilder: (context, index) {
+                  final data = driversData[index];
+                  return _DriverListPageCard(
+                    name: data['name'] ?? '',
+                    allocatedBus: data['allocatedBus'] ?? '',
+                    license: data['license'] ?? '',
+                    place: data['place'] ?? '',
+                    phoneNumber: data['phoneNumber'] ?? '',
+                  );
+                },
+              ),
     );
   }
 }
 
 // A card widget designed for the vertical list view on this page
 class _DriverListPageCard extends StatelessWidget {
-  final Drivers driver;
-  const _DriverListPageCard({required this.driver});
+  final String name;
+  final String allocatedBus;
+  final String license;
+  final String place;
+  final String phoneNumber;
+
+  const _DriverListPageCard({
+    required this.name,
+    required this.allocatedBus,
+    required this.license,
+    required this.place,
+    required this.phoneNumber,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: const Color(0xFFE3F2FD),
+      color: Colors.white,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
-      // ignore: deprecated_member_use
       shadowColor: Colors.black.withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -90,7 +78,7 @@ class _DriverListPageCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    driver.name,
+                    name,
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -100,17 +88,17 @@ class _DriverListPageCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   _buildDriverDetailRow(
                     icon: Icons.phone_outlined,
-                    text: driver.phoneNumber,
+                    text: phoneNumber,
                   ),
                   const SizedBox(height: 4),
                   _buildDriverDetailRow(
                     icon: Icons.badge_outlined,
-                    text: driver.license,
+                    text: license,
                   ),
                   const SizedBox(height: 4),
                   _buildDriverDetailRow(
                     icon: Icons.location_on_outlined,
-                    text: driver.place,
+                    text: place,
                   ),
                 ],
               ),
