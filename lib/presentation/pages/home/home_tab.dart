@@ -10,8 +10,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../services/config_service.dart';
-import '../routes_page.dart';
+import '../../../data/services/config_service.dart';
+import '../routes/routes_page.dart';
 
 //======================================================================
 class HomeTab extends StatefulWidget {
@@ -55,7 +55,7 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                   const SizedBox(height: 12),
                   const _QuickActionsSection(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   const _DriversSection(),
                 ],
               ),
@@ -96,7 +96,7 @@ class _FallHeader extends StatelessWidget {
     final userName = userConfig['name'] ?? 'User';
 
     return Container(
-      height: 280,
+      height: 340,
       width: double.infinity,
       decoration: BoxDecoration(
         color: Color(ConfigService().getColor('primary_color')),
@@ -214,6 +214,7 @@ class _QuickActionsSection extends StatelessWidget {
       crossAxisCount: 2,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
+      childAspectRatio: 0.9,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       children: [
@@ -317,7 +318,7 @@ class _DriversSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 220,
+          height: 250, // Increased height to prevent overflow
           child:
               driversData.isEmpty
                   ? const Center(child: Text("No drivers found"))
@@ -388,6 +389,7 @@ class _DriverCarouselCard extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, // Use min to adapt
             children: [
               Row(
                 children: [

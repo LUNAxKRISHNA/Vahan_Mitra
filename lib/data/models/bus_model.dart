@@ -7,15 +7,18 @@ class Bus {
   final String status;
   final String nextStop;
   final int eta;
-  final LatLng location; // The location property that was missing
+  final LatLng location;
   final String driverId;
+  final String image;
+
   const Bus({
     required this.id,
     required this.route,
     required this.status,
     required this.nextStop,
     required this.eta,
-    required this.location, // Added this required parameter
+    required this.location,
     required this.driverId,
+    required this.image,
   });
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../services/config_service.dart';
+import '../../../data/services/config_service.dart';
 import '../auth/login_page.dart';
 
 //======================================================================
@@ -84,7 +84,7 @@ class _ProfilePageHeader extends StatelessWidget {
     final primaryColor = Color(ConfigService().getColor('primary_color'));
 
     return Container(
-      height: 280,
+      constraints: const BoxConstraints(minHeight: 280),
       width: double.infinity,
       decoration: BoxDecoration(
         color: primaryColor,

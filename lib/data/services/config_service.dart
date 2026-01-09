@@ -29,6 +29,7 @@ class ConfigService {
   Map<String, dynamic> get user => _config['user'] ?? {};
   List<dynamic> get drivers => _config['drivers'] ?? [];
   List<dynamic> get routes => _config['routes'] ?? [];
+  List<dynamic> get buses => _config['buses'] ?? [];
 
   // Helper to get Color from hex string
   int getColor(String key, {int defaultColor = 0xFF2196F3}) {

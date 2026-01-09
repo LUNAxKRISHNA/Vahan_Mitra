@@ -103,6 +103,7 @@ flutter:
     - assets/logo.png
     - assets/app_config.json
     - assets/header_bg.png
+    - assets/bus_placeholder.png
 flutter_launcher_icons:
   android: true
   ios: true

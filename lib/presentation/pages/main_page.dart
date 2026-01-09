@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'tabs/home_tab.dart';
-import 'tabs/buses_page.dart';
-import 'tabs/profile_page.dart';
+import 'home/home_tab.dart';
+import 'buses/buses_page.dart';
+import 'profile/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,6 +12,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 1; // Start with Home (center item)
+  late PageController _pageController;
 
   static const List<Widget> _widgetOptions = <Widget>[
     BusesPage(),
@@ -19,7 +20,30 @@ class _HomePageState extends State<HomePage> {
     ProfilePage(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _selectedIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _onPageChanged(int index) {
     setState(() {
       _selectedIndex = index;
     });
@@ -28,8 +52,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        physics: const BouncingScrollPhysics(),
         children: _widgetOptions,
       ),
       bottomNavigationBar: CustomBottomNavBar(
@@ -61,14 +87,14 @@ class CustomBottomNavBar extends StatelessWidget {
 
     // Calculate the position for the moving line indicator
     final double indicatorLeftPosition =
-        (screenWidth / 3) * selectedIndex + (screenWidth / 6) - (indicatorWidth / 2);
+        (screenWidth / 3) * selectedIndex +
+        (screenWidth / 6) -
+        (indicatorWidth / 2);
 
     return Container(
       // A container to hold the Stack, allowing for a background color and shadow
       height: 80, // Standard height for a bottom nav bar
-      decoration: const BoxDecoration(
-        color: Colors.white,
-      ),
+      decoration: const BoxDecoration(color: Colors.white),
       child: Stack(
         children: [
           // The actual BottomNavigationBar with transparent indicator
@@ -79,10 +105,7 @@ class CustomBottomNavBar extends StatelessWidget {
                   icon: Icon(Icons.directions_bus),
                   label: 'Buses',
                 ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: 'Home',
-                ),
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person),
                   label: 'Profile',

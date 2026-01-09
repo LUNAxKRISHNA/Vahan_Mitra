@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../services/config_service.dart';
+import '../../../data/services/config_service.dart';
 
 class RoutesPage extends StatelessWidget {
   const RoutesPage({super.key});

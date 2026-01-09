@@ -34,6 +34,19 @@
       "allocatedBus": "Bus 102"
     }
   ],
+  "buses": [
+    {
+      "id": "101",
+      "route": "Kaloor - Chinmaya Vishwa Vidyapeeth",
+      "status": "active",
+      "nextStop": "Engineering Building",
+      "eta": 3,
+      "lat": 9.9095,
+      "lng": 76.4305,
+      "driverId": "D1",
+      "image": "assets/bus_placeholder.png"
+    }
+  ],
   "routes": [
     {
       "id": "R1",

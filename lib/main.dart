@@ -1,8 +1,8 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
-import 'pages/auth/splash_screen.dart';
-import 'services/config_service.dart';
+import 'presentation/pages/auth/splash_screen.dart';
+import 'data/services/config_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

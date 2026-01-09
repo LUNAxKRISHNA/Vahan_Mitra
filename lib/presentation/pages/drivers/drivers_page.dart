@@ -1,7 +1,7 @@
 // lib/pages/drivers_page.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../services/config_service.dart';
+import '../../../data/services/config_service.dart';
 
 //======================================================================
 class DriversPage extends StatelessWidget {
@@ -67,7 +67,7 @@ class _DriverListPageCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
