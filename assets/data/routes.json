@@ -1,0 +1,305 @@
+[
+    {
+        "routeId": "R1",
+        "routeName": "Aluva - CVV Campus",
+        "stops": [
+            {
+                "stopId": "R101",
+                "stopName": "Aluva",
+                "arrivalTime": "07:00"
+            },
+            {
+                "stopId": "R102",
+                "stopName": "Kalamassery-Premaire JTN-Metro JTN",
+                "arrivalTime": "07:15"
+            },
+            {
+                "stopId": "R103",
+                "stopName": "HMT",
+                "arrivalTime": "07:20"
+            },
+            {
+                "stopId": "R104",
+                "stopName": "Vallathol JTN",
+                "arrivalTime": "07:25"
+            },
+            {
+                "stopId": "R104",
+                "stopName": "BMC",
+                "arrivalTime": "07:27"
+            },
+            {
+                "stopId": "R105",
+                "stopName": "Tripunithura",
+                "arrivalTime": "08:15"
+            },
+            {
+                "stopId": "R106",
+                "stopName": "Kakkanad -Near Aryas",
+                "arrivalTime": "07:30"
+            },
+            {
+                "stopId": "R107",
+                "stopName": "Infopark Gate",
+                "arrivalTime": "07:35"
+            },
+            {
+                "stopId": "R108",
+                "stopName": "Irumpanam-Makiliyam Temple",
+                "arrivalTime": "07:40"
+            },
+            {
+                "stopId": "R109",
+                "stopName": "Irumpanam Bridge Near Chaithram",
+                "arrivalTime": "07:43"
+            },
+            {
+                "stopId": "R110",
+                "stopName": "Tripunithura",
+                "arrivalTime": "08:15"
+            },
+            {
+                "stopId": "R110",
+                "stopName": "Vilakku JTN",
+                "arrivalTime": "07:47"
+            },
+            {
+                "stopId": "R111",
+                "stopName": "Karingachira",
+                "arrivalTime": "07:50"
+            },
+            {
+                "stopId": "R112",
+                "stopName": "Hill Palace",
+                "arrivalTime": "07:50"
+            },
+            {
+                "stopId": "R113",
+                "stopName": "Thiruvankulam Panchayath",
+                "arrivalTime": "07:53"
+            },
+            {
+                "stopId": "R114",
+                "stopName": "Thiruvankulam",
+                "arrivalTime": "07:55"
+            },
+            {
+                "stopId": "R115",
+                "stopName": "Chottanikkara",
+                "arrivalTime": "08:00"
+            },
+            {
+                "stopId": "R116",
+                "stopName": "Eruveli",
+                "arrivalTime": "08:053"
+            },
+            {
+                "stopId": "R117",
+                "stopName": "Mulanthuruthy",
+                "arrivalTime": "08:08"
+            },
+            {
+                "stopId": "R118",
+                "stopName": "Aarakunnam",
+                "arrivalTime": "08:15"
+            },
+            {
+                "stopId": "R119",
+                "stopName": "CVV Campus",
+                "arrivalTime": "08:40"
+            }
+        ]
+    },
+    {
+        "routeId": "R2",
+        "routeName": "Edappally TO CVV Campus",
+        "stops": [
+            {
+                "stopId": "S201",
+                "stopName": "Edappally",
+                "arrivalTime": "07:00"
+            },
+            {
+                "stopId": "S202",
+                "stopName": "Kaloor",
+                "arrivalTime": "07:05"
+            },
+            {
+                "stopId": "S203",
+                "stopName": "M.G Road",
+                "arrivalTime": "07:10"
+            },
+            {
+                "stopId": "S204",
+                "stopName": "Kadavanthra",
+                "arrivalTime": "07:15"
+            },
+            {
+                "stopId": "S205",
+                "stopName": "Vyttila",
+                "arrivalTime": "07:20"
+            },
+            {
+                "stopId": "S206",
+                "stopName": "Petta",
+                "arrivalTime": "07:25"
+            },
+            {
+                "stopId": "S207",
+                "stopName": "Vadakkekotta",
+                "arrivalTime": "07:35"
+            },
+            {
+                "stopId": "S208",
+                "stopName": "S.N Junction",
+                "arrivalTime": "07:40"
+            },
+            {
+                "stopId": "S209",
+                "stopName": "Karingachira",
+                "arrivalTime": "07:50"
+            },
+            {
+                "stopId": "S210",
+                "stopName": "Thiruvankulam",
+                "arrivalTime": "07:55"
+            },
+            {
+                "stopId": "S211",
+                "stopName": "Thiruvaniyoor",
+                "arrivalTime": "08:05"
+            },
+            {
+                "stopId": "S212",
+                "stopName": "Maneed",
+                "arrivalTime": "08:15"
+            },
+            {
+                "stopId": "S213",
+                "stopName": "Kakkad",
+                "arrivalTime": "08:20"
+            },
+            {
+                "stopId": "S214",
+                "stopName": "Maneed",
+                "arrivalTime": "08:15"
+            },
+            {
+                "stopId": "S215",
+                "stopName": "Pallippadi",
+                "arrivalTime": "08:25"
+            },
+            {
+                "stopId": "S216",
+                "stopName": "Maneed",
+                "arrivalTime": "08:15"
+            },
+            {
+                "stopId": "S217",
+                "stopName": "Onakkoor Bridge",
+                "arrivalTime": "08:30"
+            },
+            {
+                "stopId": "S218",
+                "stopName": "CVV Campus",
+                "arrivalTime": "08:40"
+            }
+        ]
+    },
+    {
+        "routeId": "R3",
+        "routeName": "Edappally TO CVV Campus",
+        "stops": [
+            {
+                "stopId": "S201",
+                "stopName": "Edappally",
+                "arrivalTime": "07:00"
+            },
+            {
+                "stopId": "S202",
+                "stopName": "Kaloor",
+                "arrivalTime": "07:05"
+            },
+            {
+                "stopId": "S203",
+                "stopName": "M.G Road",
+                "arrivalTime": "07:10"
+            },
+            {
+                "stopId": "S204",
+                "stopName": "Kadavanthra",
+                "arrivalTime": "07:15"
+            },
+            {
+                "stopId": "S205",
+                "stopName": "Vyttila",
+                "arrivalTime": "07:20"
+            },
+            {
+                "stopId": "S206",
+                "stopName": "Petta",
+                "arrivalTime": "07:25"
+            },
+            {
+                "stopId": "S207",
+                "stopName": "Vadakkekotta",
+                "arrivalTime": "07:35"
+            },
+            {
+                "stopId": "S208",
+                "stopName": "S.N Junction",
+                "arrivalTime": "07:40"
+            },
+            {
+                "stopId": "S209",
+                "stopName": "Karingachira",
+                "arrivalTime": "07:50"
+            },
+            {
+                "stopId": "S210",
+                "stopName": "Thiruvankulam",
+                "arrivalTime": "07:55"
+            },
+            {
+                "stopId": "S211",
+                "stopName": "Thiruvaniyoor",
+                "arrivalTime": "08:05"
+            },
+            {
+                "stopId": "S212",
+                "stopName": "Maneed",
+                "arrivalTime": "08:15"
+            },
+            {
+                "stopId": "S213",
+                "stopName": "Kakkad",
+                "arrivalTime": "08:20"
+            },
+            {
+                "stopId": "S214",
+                "stopName": "Maneed",
+                "arrivalTime": "08:15"
+            },
+            {
+                "stopId": "S215",
+                "stopName": "Pallippadi",
+                "arrivalTime": "08:25"
+            },
+            {
+                "stopId": "S216",
+                "stopName": "Maneed",
+                "arrivalTime": "08:15"
+            },
+            {
+                "stopId": "S217",
+                "stopName": "Onakkoor Bridge",
+                "arrivalTime": "08:30"
+            },
+            {
+                "stopId": "S218",
+                "stopName": "CVV Campus",
+                "arrivalTime": "08:40"
+            }
+        ]
+    }
+]

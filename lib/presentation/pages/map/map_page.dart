@@ -1,13 +1,15 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import '../../../data/models/bus_model.dart';
-import 'package:location/location.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
-import 'package:mqtt_client/mqtt_client.dart';
-import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../../../data/models/bus_model.dart';
+import '../../../data/repositories/bus_repository.dart';
+import '../../../data/services/location_service.dart';
+import '../../../data/services/config_service.dart';
 
 class MapPage extends StatefulWidget {
   final Bus? bus;
@@ -19,111 +21,54 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final Completer<GoogleMapController> _mapController = Completer();
-  final Location _locationController = Location();
 
-  MqttServerClient? _mqttClient;
-  final String _mqttBroker = 'test.mosquitto.org';
-  final String _mqttTopic = 'bus/tracker/location';
+  // Services & Repositories
+  final BusRepository _busRepository = BusRepository();
+  final LocationService _locationService = LocationService();
+  late final PolylinePoints _polylinePoints;
 
-  final PolylinePoints _polylinePoints = PolylinePoints(
-    apiKey: 'AIzaSyBcIEYWuyKgOkGdMkRP68w99TCsu1qw25M',
-  );
-
+  // State
   LatLng? _userCurrentPosition;
-  LatLng? _busCurrentLocation;
+  BusLiveStatus? _busStatus; // Dynamic status
 
   final Set<Marker> _markers = {};
   final Set<Polyline> _polylines = {};
-
   BitmapDescriptor? _busIcon;
+
+  // Streams
+  StreamSubscription? _busSubscription;
+  StreamSubscription? _userLocationSubscription;
 
   @override
   void initState() {
     super.initState();
-    _busCurrentLocation = widget.bus?.location;
-    _getUserLocationAndSetupMap();
-    _setupMqttClient();
-  }
+    _polylinePoints = PolylinePoints(apiKey: ConfigService().googleMapsApiKey);
 
-  // ---------------- MQTT Setup ----------------
-  void _setupMqttClient() async {
-    _mqttClient = MqttServerClient(
-      _mqttBroker,
-      'bus_tracker_${DateTime.now().millisecondsSinceEpoch}',
-    );
-    _mqttClient!.port = 1883;
-    _mqttClient!.logging(on: false);
-    _mqttClient!.keepAlivePeriod = 20;
-    _mqttClient!.onConnected = _onMqttConnected;
-
-    try {
-      await _mqttClient!.connect();
-      _mqttClient!.updates!.listen(_onMqttMessage);
-      debugPrint('MQTT connected successfully');
-    } catch (e) {
-      debugPrint('MQTT Exception: $e');
-      _mqttClient!.disconnect();
-    }
-  }
-
-  void _onMqttConnected() {
-    debugPrint('MQTT Connected');
-    _mqttClient!.subscribe(_mqttTopic, MqttQos.atLeastOnce);
-  }
-
-  // ---------------- MQTT message handler ----------------
-  void _onMqttMessage(List<MqttReceivedMessage<MqttMessage>> event) {
-    final MqttPublishMessage recMessage =
-        event[0].payload as MqttPublishMessage;
-    final String payload = MqttPublishPayload.bytesToStringAsString(
-      recMessage.payload.message,
-    );
-
-    try {
-      final Map<String, dynamic> data = json.decode(payload);
-      final double? latitude = (data['lat'] as num?)?.toDouble();
-      final double? longitude = (data['lon'] as num?)?.toDouble();
-
-      if (latitude != null && longitude != null) {
-        final LatLng newBusLocation = LatLng(latitude, longitude);
-
-        if (_busCurrentLocation != newBusLocation) {
-          setState(() {
-            _busCurrentLocation = newBusLocation;
-          });
-          _updateMapUI();
-          _animateCameraToBus();
-        }
-      }
-    } catch (e) {
-      debugPrint('MQTT Parsing error: $e\nPayload: $payload');
-    }
-  }
-
-  // ---------------- Animate camera ----------------
-  Future<void> _animateCameraToBus() async {
-    if (_busCurrentLocation == null) return;
-    final GoogleMapController controller = await _mapController.future;
-    controller.animateCamera(CameraUpdate.newLatLng(_busCurrentLocation!));
-  }
-
-  // ---------------- User Location ----------------
-  Future<void> _getUserLocationAndSetupMap() async {
-    bool serviceEnabled = await _locationController.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await _locationController.requestService();
-      if (!serviceEnabled) return;
+    // Initialize status from repo if bus is provided
+    if (widget.bus != null) {
+      _busStatus = _busRepository.getBusStatus(widget.bus!.id);
+      _busSubscription = _busRepository.streamBusStatus(widget.bus!.id).listen((
+        status,
+      ) {
+        if (!mounted) return;
+        setState(() {
+          _busStatus = status;
+        });
+        _updateMapUI();
+        _animateCameraToBus();
+      });
     }
 
-    PermissionStatus permissionGranted =
-        await _locationController.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await _locationController.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) return;
-    }
+    _initLocation();
+  }
 
-    final locationData = await _locationController.getLocation();
-    if (locationData.latitude != null && locationData.longitude != null) {
+  void _initLocation() async {
+    // Get initial location
+    final locationData = await _locationService.getUserLocation();
+    if (locationData != null &&
+        locationData.latitude != null &&
+        locationData.longitude != null) {
+      if (!mounted) return;
       setState(() {
         _userCurrentPosition = LatLng(
           locationData.latitude!,
@@ -132,6 +77,38 @@ class _MapPageState extends State<MapPage> {
       });
       _updateMapUI();
     }
+
+    // Listen to updates
+    _userLocationSubscription = _locationService.getLocationStream().listen((
+      locationData,
+    ) {
+      if (locationData.latitude != null && locationData.longitude != null) {
+        if (!mounted) return;
+        setState(() {
+          _userCurrentPosition = LatLng(
+            locationData.latitude!,
+            locationData.longitude!,
+          );
+        });
+        _updateMapUI();
+      }
+    });
+
+    // Custom Icon loading could go here (omitted for brevity, or kept if essential)
+  }
+
+  @override
+  void dispose() {
+    _busSubscription?.cancel();
+    _userLocationSubscription?.cancel();
+    super.dispose();
+  }
+
+  // ---------------- Animate camera ----------------
+  Future<void> _animateCameraToBus() async {
+    if (_busStatus == null) return;
+    final GoogleMapController controller = await _mapController.future;
+    controller.animateCamera(CameraUpdate.newLatLng(_busStatus!.location));
   }
 
   // ---------------- Central UI Update Function ----------------
@@ -156,11 +133,11 @@ class _MapPageState extends State<MapPage> {
     }
 
     // 2. Add Bus Marker
-    if (_busCurrentLocation != null) {
+    if (_busStatus != null && _busStatus!.location.latitude != 0) {
       newMarkers.add(
         Marker(
           markerId: const MarkerId('bus_marker'),
-          position: _busCurrentLocation!,
+          position: _busStatus!.location,
           icon:
               _busIcon ??
               BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
@@ -171,19 +148,20 @@ class _MapPageState extends State<MapPage> {
     }
 
     // 3. Draw Polyline
-    if (_userCurrentPosition != null && _busCurrentLocation != null) {
+    if (_userCurrentPosition != null &&
+        _busStatus != null &&
+        _busStatus!.location.latitude != 0) {
       try {
         PolylineResult result = await _polylinePoints
             .getRouteBetweenCoordinates(
-              // ignore: deprecated_member_use
               request: PolylineRequest(
                 origin: PointLatLng(
                   _userCurrentPosition!.latitude,
                   _userCurrentPosition!.longitude,
                 ),
                 destination: PointLatLng(
-                  _busCurrentLocation!.latitude,
-                  _busCurrentLocation!.longitude,
+                  _busStatus!.location.latitude,
+                  _busStatus!.location.longitude,
                 ),
                 mode: TravelMode.driving,
               ),
@@ -222,6 +200,19 @@ class _MapPageState extends State<MapPage> {
   // ---------------- UI ----------------
   @override
   Widget build(BuildContext context) {
+    // If no bus is passed, we show 'Live Map' and finding logic might be different,
+    // but for refactor we keep existing behavior.
+    final routeName =
+        widget.bus != null
+            ? _busRepository.getRouteName(widget.bus!.routeId)
+            : '';
+    final status = _busStatus?.status ?? 'Unknown';
+    final eta = _busStatus?.eta ?? 0;
+
+    // Status Logic for Color
+    final isStatusActive = status.toLowerCase() == 'active';
+    final statusColor = isStatusActive ? Colors.green : Colors.orange;
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -251,7 +242,7 @@ class _MapPageState extends State<MapPage> {
             onMapCreated: (controller) => _mapController.complete(controller),
             initialCameraPosition: CameraPosition(
               target:
-                  _busCurrentLocation ??
+                  _busStatus?.location ??
                   _userCurrentPosition ??
                   const LatLng(9.9073, 76.4384),
               zoom: 14.5,
@@ -265,7 +256,7 @@ class _MapPageState extends State<MapPage> {
           ),
 
           // Bottom Info Card
-          if (widget.bus != null)
+          if (widget.bus != null && _busStatus != null)
             Positioned(
               left: 16,
               right: 16,
@@ -298,7 +289,7 @@ class _MapPageState extends State<MapPage> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  widget.bus!.route,
+                                  routeName,
                                   style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     color: Colors.black54,
@@ -316,25 +307,14 @@ class _MapPageState extends State<MapPage> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color:
-                                  widget.bus!.status == 'active'
-                                      ? Colors.green.withValues(alpha: 0.1)
-                                      : Colors.orange.withValues(alpha: 0.1),
+                              color: statusColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color:
-                                    widget.bus!.status == 'active'
-                                        ? Colors.green
-                                        : Colors.orange,
-                              ),
+                              border: Border.all(color: statusColor),
                             ),
                             child: Text(
-                              widget.bus!.eta > 5 ? 'On Time' : 'Arriving Soon',
+                              eta > 5 ? 'On Time' : 'Arriving Soon',
                               style: GoogleFonts.poppins(
-                                color:
-                                    widget.bus!.status == 'active'
-                                        ? Colors.green
-                                        : Colors.orange,
+                                color: statusColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
@@ -349,14 +329,10 @@ class _MapPageState extends State<MapPage> {
                           _buildInfoItem(
                             Icons.location_on,
                             'Next Stop',
-                            widget.bus!.nextStop,
+                            _busStatus!.nextStop,
                           ),
-                          _buildInfoItem(
-                            Icons.access_time,
-                            'ETA',
-                            '${widget.bus!.eta} min',
-                          ),
-                          _buildInfoItem(Icons.speed, 'Status', 'Moving'),
+                          _buildInfoItem(Icons.access_time, 'ETA', '$eta min'),
+                          _buildInfoItem(Icons.speed, 'Status', status),
                         ],
                       ),
                     ],

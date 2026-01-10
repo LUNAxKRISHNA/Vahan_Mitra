@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/bus_model.dart';
+import '../../../data/repositories/bus_repository.dart';
 import '../../../data/services/config_service.dart';
 
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import "../map/map_page.dart" as map_page;
 
@@ -15,6 +15,7 @@ class BusesPage extends StatefulWidget {
 }
 
 class _BusesPageState extends State<BusesPage> {
+  final BusRepository _busRepository = BusRepository();
   List<Bus> _buses = [];
 
   @override
@@ -24,24 +25,8 @@ class _BusesPageState extends State<BusesPage> {
   }
 
   void _loadBuses() {
-    final busData = ConfigService().buses;
     setState(() {
-      _buses =
-          busData.map((data) {
-            return Bus(
-              id: data['id'] ?? 'Unknown',
-              route: data['route'] ?? 'Unknown Route',
-              status: data['status'] ?? 'unknown',
-              nextStop: data['nextStop'] ?? 'Unknown',
-              eta: data['eta'] ?? 0,
-              driverId: data['driverId'] ?? '',
-              location: LatLng(
-                (data['lat'] as num?)?.toDouble() ?? 0.0,
-                (data['lng'] as num?)?.toDouble() ?? 0.0,
-              ),
-              image: data['image'] ?? 'assets/bus_placeholder.png',
-            );
-          }).toList();
+      _buses = _busRepository.getBuses();
     });
   }
 
@@ -60,7 +45,10 @@ class _BusesPageState extends State<BusesPage> {
                       padding: const EdgeInsets.all(16),
                       itemCount: _buses.length,
                       itemBuilder: (context, index) {
-                        return _BusInfoCard(bus: _buses[index]);
+                        return _BusInfoCard(
+                          bus: _buses[index],
+                          repository: _busRepository,
+                        );
                       },
                     ),
           ),
@@ -129,12 +117,17 @@ class _BusesPageHeader extends StatelessWidget {
 
 class _BusInfoCard extends StatelessWidget {
   final Bus bus;
-  const _BusInfoCard({required this.bus});
+  final BusRepository repository;
+
+  const _BusInfoCard({required this.bus, required this.repository});
 
   @override
   Widget build(BuildContext context) {
+    final liveStatus = repository.getBusStatus(bus.id);
     final statusColor =
-        bus.status == 'active' ? Colors.green.shade600 : Colors.orange.shade600;
+        liveStatus.status.toLowerCase() == 'active'
+            ? Colors.green.shade600
+            : Colors.orange.shade600;
     // Use the same primary color from the login page
     final Color primaryColor = Color(ConfigService().getColor('primary_color'));
 
@@ -177,7 +170,8 @@ class _BusInfoCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Bus ${bus.id}',
+                          // ignore: unnecessary_string_interpolations
+                          '${bus.id}',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
@@ -195,7 +189,7 @@ class _BusInfoCard extends StatelessWidget {
                             border: Border.all(color: statusColor),
                           ),
                           child: Text(
-                            bus.status.toUpperCase(),
+                            liveStatus.status.toUpperCase(),
                             style: GoogleFonts.poppins(
                               color: statusColor,
                               fontWeight: FontWeight.bold,
@@ -208,13 +202,13 @@ class _BusInfoCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     _InfoRow(
                       icon: Icons.location_on_outlined,
-                      text: bus.nextStop,
+                      text: liveStatus.nextStop,
                       primaryColor: primaryColor,
                     ),
                     const SizedBox(height: 4),
                     _InfoRow(
                       icon: Icons.schedule,
-                      text: 'ETA: ${bus.eta} min',
+                      text: 'ETA: ${liveStatus.eta} min',
                       primaryColor: primaryColor,
                     ),
                   ],

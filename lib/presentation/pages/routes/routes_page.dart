@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../data/services/config_service.dart';
+import '../../../data/models/route_model.dart';
 
 class RoutesPage extends StatelessWidget {
   const RoutesPage({super.key});
@@ -39,7 +40,7 @@ class RoutesPage extends StatelessWidget {
 }
 
 class _RouteCard extends StatelessWidget {
-  final Map<String, dynamic> routeData;
+  final RouteData routeData;
   final Color primaryColor;
   final Color backgroundColor;
 
@@ -51,8 +52,6 @@ class _RouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<dynamic> stops = routeData['stops'] ?? [];
-
     return Card(
       margin: const EdgeInsets.only(bottom: 24),
       elevation: 4,
@@ -77,21 +76,14 @@ class _RouteCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        routeData['name'] ?? 'Unknown Route',
+                        routeData.name,
                         style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (routeData['timings'] != null)
-                        Text(
-                          routeData['timings'],
-                          style: GoogleFonts.poppins(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
-                        ),
+                      // Timings removed from RouteData logic for now or needs derived property
                     ],
                   ),
                 ),
@@ -101,8 +93,11 @@ class _RouteCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: CustomPaint(
-              size: Size(double.infinity, stops.length * 60.0),
-              painter: _TimelinePainter(stops: stops, color: primaryColor),
+              size: Size(double.infinity, routeData.stops.length * 60.0),
+              painter: _TimelinePainter(
+                stops: routeData.stops,
+                color: primaryColor,
+              ),
             ),
           ),
         ],
@@ -112,7 +107,7 @@ class _RouteCard extends StatelessWidget {
 }
 
 class _TimelinePainter extends CustomPainter {
-  final List<dynamic> stops;
+  final List<Stop> stops;
   final Color color;
 
   _TimelinePainter({required this.stops, required this.color});
@@ -159,10 +154,10 @@ class _TimelinePainter extends CustomPainter {
 
       // Draw text
       paintText.text = TextSpan(
-        text: stops[i].toString(),
+        text: "${stops[i].name}\n${stops[i].time}",
         style: GoogleFonts.poppins(
           color: Colors.black87,
-          fontSize: 16,
+          fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
       );

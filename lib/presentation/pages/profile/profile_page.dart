@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../data/services/config_service.dart';
 import '../auth/login_page.dart';
+import '../../../data/models/student_model.dart';
 
 //======================================================================
 class ProfilePage extends StatefulWidget {
@@ -12,17 +13,28 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // Data is now fetched from ConfigService in build method
-
   @override
   Widget build(BuildContext context) {
-    final userConfig = ConfigService().user;
+    final user = ConfigService().currentUser;
+    // Find allocated bus
+    String busName = 'N/A';
+    if (user != null) {
+      final assignedBus =
+          ConfigService().buses
+              .where((b) => b.routeId == user.assignedRouteId)
+              .firstOrNull;
+      if (assignedBus != null) {
+        busName = assignedBus.name;
+      }
+    }
+
+    final isPaid = user?.paymentStatus.toLowerCase() == 'paid';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F7F7),
       body: Column(
         children: [
-          _ProfilePageHeader(userConfig: userConfig),
+          _ProfilePageHeader(user: user),
           Expanded(
             child: SingleChildScrollView(
               child: Padding(
@@ -30,13 +42,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   children: [
                     _BusAllocationCard(
-                      route: userConfig['allocatedRoute'] ?? 'N/A',
-                      bus: userConfig['allocatedBus'] ?? 'N/A',
+                      route: user?.assignedRouteId ?? 'N/A',
+                      bus: busName,
                     ),
                     const SizedBox(height: 16),
                     _FeeDetailsCard(
-                      rate: userConfig['feeRate'] ?? 'N/A',
-                      isPaid: userConfig['isFeePaid'] ?? false,
+                      rate: '₹ 5000', // Mock fee as not in Student model
+                      isPaid: isPaid,
                     ),
                     const SizedBox(height: 32),
                     ElevatedButton.icon(
@@ -74,10 +86,9 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-// --- Header Widget (Updated to Fall Header Style) ---
 class _ProfilePageHeader extends StatelessWidget {
-  final Map<String, dynamic> userConfig;
-  const _ProfilePageHeader({required this.userConfig});
+  final Student? user;
+  const _ProfilePageHeader({required this.user});
 
   @override
   Widget build(BuildContext context) {
@@ -120,14 +131,12 @@ class _ProfilePageHeader extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 40,
                   backgroundColor: Colors.white,
-                  backgroundImage: AssetImage(
-                    userConfig['profileImageUrl'] ?? 'assets/logo.png',
-                  ),
+                  backgroundImage: AssetImage('assets/logo.png'),
                 ),
               ),
               const SizedBox(height: 16),
               Text(
-                userConfig['name'] ?? 'User',
+                user?.name ?? 'Guest',
                 style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 24,
@@ -135,8 +144,9 @@ class _ProfilePageHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
+              // Email not in Student model, show ID or generic text
               Text(
-                userConfig['email'] ?? '',
+                user?.id ?? '',
                 style: GoogleFonts.poppins(color: Colors.white70, fontSize: 14),
               ),
               const SizedBox(height: 12),
@@ -153,7 +163,7 @@ class _ProfilePageHeader extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Reg No: ${userConfig['regNo'] ?? 'N/A'}',
+                  'Stop: ${user?.assignedStop ?? 'N/A'}',
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,

@@ -6,6 +6,14 @@
     "text_primary": "0xFF1A1A1A",
     "text_secondary": "0xFF757575"
   },
+  "api_keys": {
+    "google_maps": "AIzaSyBcIEYWuyKgOkGdMkRP68w99TCsu1qw25M"
+  },
+  "mqtt_config": {
+    "broker": "test.mosquitto.org",
+    "port": 1883,
+    "topic": "bus/tracker/location"
+  },
   "user": {
     "name": "Krishna K",
     "regNo": "231140015",
@@ -15,50 +23,5 @@
     "allocatedBus": "Mayura",
     "feeRate": "₹5,000 / Month",
     "isFeePaid": true
-  },
-  "drivers": [
-    {
-      "id": "D1",
-      "name": "Ramesh Kumar",
-      "phoneNumber": "+91 9876543210",
-      "license": "DL-123456",
-      "place": "Delhi",
-      "allocatedBus": "Bus 101"
-    },
-    {
-      "id": "D2",
-      "name": "Suresh Singh",
-      "phoneNumber": "+91 9123456780",
-      "license": "DL-654321",
-      "place": "Mumbai",
-      "allocatedBus": "Bus 102"
-    }
-  ],
-  "buses": [
-    {
-      "id": "101",
-      "route": "Kaloor - Chinmaya Vishwa Vidyapeeth",
-      "status": "active",
-      "nextStop": "Engineering Building",
-      "eta": 3,
-      "lat": 9.9095,
-      "lng": 76.4305,
-      "driverId": "D1",
-      "image": "assets/bus_placeholder.png"
-    }
-  ],
-  "routes": [
-    {
-      "id": "R1",
-      "name": "Route 1: Onakkoor - Aluva",
-      "stops": [
-        "Onakkoor",
-        "Piravom",
-        "Mulanthuruthy",
-        "Tripunithura",
-        "Aluva"
-      ],
-      "timings": "07:30 - 08:15"
-    }
-  ]
+  }
 }

@@ -1,0 +1,14 @@
+[
+    {
+        "driverId": "D1",
+        "driverName": "Ramesh Kumar",
+        "phoneNumber": "+91 9876543210",
+        "licenseNumber": "DL-123456"
+    },
+    {
+        "driverId": "D2",
+        "driverName": "Suresh Singh",
+        "phoneNumber": "+91 9123456780",
+        "licenseNumber": "DL-654321"
+    }
+]

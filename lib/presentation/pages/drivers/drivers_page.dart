@@ -31,12 +31,22 @@ class DriversPage extends StatelessWidget {
                 itemCount: driversData.length,
                 itemBuilder: (context, index) {
                   final data = driversData[index];
+                  // Find allocated bus
+                  final assignedBus =
+                      ConfigService().buses
+                          .where((b) => b.driverId == data.id)
+                          .firstOrNull;
+                  final busName =
+                      assignedBus != null
+                          ? '${assignedBus.name} (${assignedBus.routeId})'
+                          : 'Not Assigned';
+
                   return _DriverListPageCard(
-                    name: data['name'] ?? '',
-                    allocatedBus: data['allocatedBus'] ?? '',
-                    license: data['license'] ?? '',
-                    place: data['place'] ?? '',
-                    phoneNumber: data['phoneNumber'] ?? '',
+                    name: data.name,
+                    allocatedBus: busName,
+                    license: data.licenseNumber,
+                    place: 'Kerala', // Placeholder as not in schema
+                    phoneNumber: data.phoneNumber,
                   );
                 },
               ),

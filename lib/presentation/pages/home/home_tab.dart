@@ -92,8 +92,8 @@ class _FallHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final dateFormat = DateFormat('EEEE, d MMMM');
-    final userConfig = ConfigService().user;
-    final userName = userConfig['name'] ?? 'User';
+    final user = ConfigService().currentUser;
+    final userName = user?.name ?? 'User';
 
     return Container(
       height: 340,
@@ -156,9 +156,7 @@ class _FallHeader extends StatelessWidget {
                     ),
                     child: CircleAvatar(
                       radius: 24,
-                      backgroundImage: AssetImage(
-                        userConfig['profileImageUrl'] ?? 'assets/logo.png',
-                      ),
+                      backgroundImage: AssetImage('assets/logo.png'),
                     ),
                   ),
                 ],
@@ -318,7 +316,7 @@ class _DriversSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 250, // Increased height to prevent overflow
+          height: 250,
           child:
               driversData.isEmpty
                   ? const Center(child: Text("No drivers found"))
@@ -327,12 +325,22 @@ class _DriversSection extends StatelessWidget {
                     itemCount: driversData.length,
                     itemBuilder: (context, index) {
                       final data = driversData[index];
+                      // Find allocated bus
+                      final assignedBus =
+                          ConfigService().buses
+                              .where((b) => b.driverId == data.id)
+                              .firstOrNull;
+                      final busName =
+                          assignedBus != null
+                              ? '${assignedBus.name} (${assignedBus.routeId})'
+                              : 'Not Assigned';
+
                       return _DriverCarouselCard(
-                        name: data['name'] ?? '',
-                        allocatedBus: data['allocatedBus'] ?? '',
-                        license: data['license'] ?? '',
-                        place: data['place'] ?? '',
-                        phoneNumber: data['phoneNumber'] ?? '',
+                        name: data.name,
+                        allocatedBus: busName,
+                        license: data.licenseNumber,
+                        place: 'Kerala',
+                        phoneNumber: data.phoneNumber,
                       );
                     },
                   ),
