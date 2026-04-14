@@ -1,30 +1,23 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
-import 'presentation/pages/auth/splash_screen.dart';
-import 'data/services/config_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/theme.dart';
+import 'core/routes.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await ConfigService().loadConfig();
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: VahanMitraApp()));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class VahanMitraApp extends ConsumerWidget {
+  const VahanMitraApp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'Vahan Mitra',
-      theme: ThemeData(
-        brightness: Brightness.light,
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const Color.fromARGB(255, 246, 237, 222),
-        fontFamily: 'Roboto',
-      ),
-      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      routerConfig: AppRouter.router,
     );
   }
 }
