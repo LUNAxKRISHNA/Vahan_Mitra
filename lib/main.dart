@@ -9,7 +9,7 @@ void main() {
 }
 
 class VahanMitraApp extends ConsumerWidget {
-  const VahanMitraApp({Key? key}) : super(key: key);
+  const VahanMitraApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../controllers/mock_data_provider.dart';
+import '../components/wave_header.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -13,11 +14,16 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
-      body: userAsync.when(
-        data: (user) {
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const WaveHeader(
+            height: 140,
+            title: 'Profile',
+          ),
+          Expanded(
+            child: userAsync.when(
+              data: (user) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -71,10 +77,13 @@ class ProfileScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => const Center(child: Text('Failed to load user info')),
-      ),
-    );
-  }
+            error: (e, st) => const Center(child: Text('Failed to load user info')),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }
 
 class _InfoTile extends StatelessWidget {

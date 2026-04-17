@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../controllers/mock_data_provider.dart';
+import '../components/wave_header.dart';
 
 class BusesScreen extends ConsumerWidget {
   const BusesScreen({super.key});
@@ -13,32 +14,43 @@ class BusesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('Buses'),
-      ),
-      body: busesAsync.when(
-        data: (buses) {
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: buses.length,
-            itemBuilder: (context, index) {
-              final bus = buses[index];
-              return _BusCard(
-                busId: bus['id'],
-                name: bus['name'],
-                route: bus['route'],
-                driver: bus['driver_name'],
-                status: bus['status'],
-                eta: bus['eta'],
-                onTap: () {
-                  context.push('/map', extra: bus);
-                },
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => const Center(child: Text('Failed to load buses.')),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const WaveHeader(height: 140, title: 'Buses'),
+          Expanded(
+            child: busesAsync.when(
+              data: (buses) {
+                return ListView.builder(
+                  padding: const EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    top: 16,
+                    bottom: 120,
+                  ),
+                  itemCount: buses.length,
+                  itemBuilder: (context, index) {
+                    final bus = buses[index];
+                    return _BusCard(
+                      busId: bus['id'],
+                      name: bus['name'],
+                      route: bus['route'],
+                      driver: bus['driver_name'],
+                      status: bus['status'],
+                      eta: bus['eta'],
+                      onTap: () {
+                        context.push('/map', extra: bus);
+                      },
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error:
+                  (e, st) => const Center(child: Text('Failed to load buses.')),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -96,14 +108,36 @@ class _BusCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(route, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    route,
+                    style: const TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.person, size: 14, color: AppTheme.textSecondary),
+                      const Icon(
+                        Icons.person,
+                        size: 14,
+                        color: AppTheme.textSecondary,
+                      ),
                       const SizedBox(width: 4),
-                      Text(driver, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                      Text(
+                        driver,
+                        style: const TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -113,15 +147,24 @@ class _BusCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: status == 'In Transit' ? AppTheme.accent : AppTheme.surface,
+                    color:
+                        status == 'In Transit'
+                            ? AppTheme.accent
+                            : AppTheme.surface,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     status,
                     style: TextStyle(
-                      color: status == 'In Transit' ? Colors.white : AppTheme.textPrimary,
+                      color:
+                          status == 'In Transit'
+                              ? Colors.white
+                              : AppTheme.textPrimary,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -130,7 +173,11 @@ class _BusCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'ETA: $eta',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.primary),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: AppTheme.primary,
+                  ),
                 ),
               ],
             ),

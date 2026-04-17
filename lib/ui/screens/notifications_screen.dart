@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
+import '../components/wave_header.dart';
 
 class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({Key? key}) : super(key: key);
+  const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
       backgroundColor: AppTheme.background,
-      body: const Center(
-        child: Text('Notifications'),
+      body: Column(
+        children: [
+          const WaveHeader(
+            height: 140,
+            title: 'Notifications',
+          ),
+          const Expanded(
+            child: Center(
+              child: Text('Notifications'),
+            ),
+          ),
+        ],
       ),
     );
   }
