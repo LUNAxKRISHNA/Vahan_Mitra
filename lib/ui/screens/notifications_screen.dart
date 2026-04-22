@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme.dart';
 import '../components/wave_header.dart';
 
 class NotificationsScreen extends StatelessWidget {
@@ -7,21 +6,11 @@ class NotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Column(
-        children: [
-          const WaveHeader(
-            height: 140,
-            title: 'Notifications',
-          ),
-          const Expanded(
-            child: Center(
-              child: Text('Notifications'),
-            ),
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        const WaveHeader(height: 140, title: 'Notifications'),
+        const Expanded(child: Center(child: Text('Notifications'))),
+      ],
     );
   }
 }

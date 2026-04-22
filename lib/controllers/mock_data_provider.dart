@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final mockDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final jsonString = await rootBundle.loadString('assets/mock_data.json');
+  final jsonString = await rootBundle.loadString('app_assets/mock_data.json');
   return jsonDecode(jsonString);
 });
 
@@ -26,4 +26,8 @@ final busesProvider = FutureProvider<List<dynamic>>((ref) async {
 final routesProvider = FutureProvider<List<dynamic>>((ref) async {
   final data = await ref.watch(mockDataProvider.future);
   return data['routes'];
+});
+
+final currentTimeProvider = StreamProvider<DateTime>((ref) {
+  return Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now());
 });

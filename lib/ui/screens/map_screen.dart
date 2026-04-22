@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme.dart';
 
 class MapScreen extends StatefulWidget {
@@ -63,7 +64,7 @@ class _MapScreenState extends State<MapScreen> {
                 const SizedBox(width: 12),
                 Text(
                   widget.busData!['name'],
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
                 Container(
@@ -74,14 +75,14 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                   child: Text(
                     widget.busData!['status'],
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.inter(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 )
               ],
             ),
             const SizedBox(height: 8),
             Text('Route: ${widget.busData!['route']}',
-                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                style: GoogleFonts.inter(color: AppTheme.textSecondary, fontSize: 14)),
             const SizedBox(height: 24),
             Row(
               children: [
@@ -95,9 +96,9 @@ class _MapScreenState extends State<MapScreen> {
                   children: [
                     Text(
                       widget.busData!['driver_name'],
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
-                    const Text('Driver', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                    Text('Driver', style: GoogleFonts.inter(color: AppTheme.textSecondary, fontSize: 12)),
                   ],
                 ),
                 const Spacer(),

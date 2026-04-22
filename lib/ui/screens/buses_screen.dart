@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme.dart';
 import '../../controllers/mock_data_provider.dart';
 import '../components/wave_header.dart';
@@ -12,46 +13,43 @@ class BusesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final busesAsync = ref.watch(busesProvider);
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const WaveHeader(height: 140, title: 'Buses'),
-          Expanded(
-            child: busesAsync.when(
-              data: (buses) {
-                return ListView.builder(
-                  padding: const EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 16,
-                    bottom: 120,
-                  ),
-                  itemCount: buses.length,
-                  itemBuilder: (context, index) {
-                    final bus = buses[index];
-                    return _BusCard(
-                      busId: bus['id'],
-                      name: bus['name'],
-                      route: bus['route'],
-                      driver: bus['driver_name'],
-                      status: bus['status'],
-                      eta: bus['eta'],
-                      onTap: () {
-                        context.push('/map', extra: bus);
-                      },
-                    );
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error:
-                  (e, st) => const Center(child: Text('Failed to load buses.')),
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const WaveHeader(height: 140, title: 'Buses'),
+        Expanded(
+          child: busesAsync.when(
+            data: (buses) {
+              return ListView.builder(
+                padding: const EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 16,
+                  bottom: 120,
+                ),
+                itemCount: buses.length,
+                itemBuilder: (context, index) {
+                  final bus = buses[index];
+                  return _BusCard(
+                    busId: bus['id'],
+                    name: bus['name'],
+                    route: bus['route'],
+                    driver: bus['driver_name'],
+                    status: bus['status'],
+                    eta: bus['eta'],
+                    onTap: () {
+                      context.push('/map', extra: bus);
+                    },
+                  );
+                },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error:
+                (e, st) => const Center(child: Text('Failed to load buses.')),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -110,14 +108,14 @@ class _BusCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
+                    style: GoogleFonts.poppins(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
                   Text(
                     route,
-                    style: const TextStyle(
+                    style: GoogleFonts.inter(
                       color: AppTheme.textSecondary,
                       fontSize: 13,
                     ),
@@ -133,7 +131,7 @@ class _BusCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         driver,
-                        style: const TextStyle(
+                        style: GoogleFonts.inter(
                           color: AppTheme.textSecondary,
                           fontSize: 12,
                         ),
@@ -160,7 +158,7 @@ class _BusCard extends StatelessWidget {
                   ),
                   child: Text(
                     status,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       color:
                           status == 'In Transit'
                               ? Colors.white
@@ -173,7 +171,7 @@ class _BusCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'ETA: $eta',
-                  style: const TextStyle(
+                  style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
                     color: AppTheme.primary,
