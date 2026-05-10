@@ -441,8 +441,8 @@ class _ModernQuickActionCard extends StatelessWidget {
                         color: Colors.redAccent,
                         blurRadius: 8,
                         offset: Offset(0, 2),
-                      )
-                    ]
+                      ),
+                    ],
                   ),
                   child: const Text(
                     '1',
@@ -517,7 +517,10 @@ class _AnnouncementCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             message,
-            style: GoogleFonts.inter(color: AppTheme.textSecondary, fontSize: 13),
+            style: GoogleFonts.inter(
+              color: AppTheme.textSecondary,
+              fontSize: 13,
+            ),
           ),
         ],
       ),

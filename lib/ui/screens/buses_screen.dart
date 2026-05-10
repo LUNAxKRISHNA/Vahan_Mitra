@@ -22,9 +22,9 @@ class BusesScreen extends ConsumerWidget {
             data: (buses) {
               return ListView.builder(
                 padding: const EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  top: 16,
+                  left: 20,
+                  right: 20,
+                  top: 20,
                   bottom: 120,
                 ),
                 itemCount: buses.length,
@@ -33,10 +33,9 @@ class BusesScreen extends ConsumerWidget {
                   return _BusCard(
                     busId: bus['id'],
                     name: bus['name'],
+                    regNumber: bus['reg_number'] ?? 'N/A',
                     route: bus['route'],
-                    driver: bus['driver_name'],
-                    status: bus['status'],
-                    eta: bus['eta'],
+                    currentStop: bus['current_stop'] ?? 'Unknown',
                     onTap: () {
                       context.push('/map', extra: bus);
                     },
@@ -57,127 +56,201 @@ class BusesScreen extends ConsumerWidget {
 class _BusCard extends StatelessWidget {
   final String busId;
   final String name;
+  final String regNumber;
   final String route;
-  final String driver;
-  final String status;
-  final String eta;
+  final String currentStop;
   final VoidCallback onTap;
 
   const _BusCard({
     required this.busId,
     required this.name,
+    required this.regNumber,
     required this.route,
-    required this.driver,
-    required this.status,
-    required this.eta,
+    required this.currentStop,
     required this.onTap,
   });
 
+
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primaryDark.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primary.withValues(alpha: 0.07),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppTheme.surface.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
+            // Decorative background accent
+            Positioned(
+              right: -30,
+              top: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  color: AppTheme.actionBlueBg.withValues(alpha: 0.7),
+                  shape: BoxShape.circle,
+                ),
               ),
-              child: const Icon(Icons.directions_bus, color: AppTheme.primary),
             ),
-            const SizedBox(width: 16),
-            Expanded(
+            Padding(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    name,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                  // Top Row: Bus icon + name + status pill
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: AppTheme.actionBlueBg,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.directions_bus_rounded,
+                          color: AppTheme.actionBlueIcon,
+                          size: 26,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              regNumber,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppTheme.textSecondary,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Current Stop pill (Top Right)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.primary.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.location_on_rounded,
+                              size: 14,
+                              color: AppTheme.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              currentStop,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    route,
-                    style: GoogleFonts.inter(
-                      color: AppTheme.textSecondary,
-                      fontSize: 13,
-                    ),
+                  const SizedBox(height: 16),
+                  // Divider
+                  Divider(
+                    color: AppTheme.textSecondary.withValues(alpha: 0.12),
+                    height: 1,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
+                  // Bottom row: route + current stop pill + map button
                   Row(
                     children: [
                       const Icon(
-                        Icons.person,
-                        size: 14,
-                        color: AppTheme.textSecondary,
+                        Icons.route_rounded,
+                        size: 16,
+                        color: AppTheme.primary,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Text(
-                        driver,
+                        route,
                         style: GoogleFonts.inter(
-                          color: AppTheme.textSecondary,
-                          fontSize: 12,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primary,
+                        ),
+                      ),
+                      const Spacer(),
+
+
+                      // Track button
+                      Material(
+                        color: AppTheme.primary,
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          onTap: onTap,
+                          borderRadius: BorderRadius.circular(14),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.my_location_rounded,
+                                  size: 13,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  'Track',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        status == 'In Transit'
-                            ? AppTheme.accent
-                            : AppTheme.surface,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    status,
-                    style: GoogleFonts.inter(
-                      color:
-                          status == 'In Transit'
-                              ? Colors.white
-                              : AppTheme.textPrimary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'ETA: $eta',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                    color: AppTheme.primary,
-                  ),
-                ),
-              ],
             ),
           ],
         ),

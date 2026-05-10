@@ -26,31 +26,37 @@
     {
       "id": "bus1",
       "name": "Bus #101",
+      "reg_number": "KA 01 F 1234",
       "route": "Route A",
       "driver_name": "Ramesh Kumar",
       "driver_contact": "+918888888880",
       "status": "In Transit",
-      "current_location": {"lat": 12.9716, "lng": 77.5946},
+      "current_stop": "Cubbon Park",
+      "current_location": {"lat": 9.882134, "lng": 76.525878},
       "eta": "10 Mins"
     },
     {
       "id": "bus2",
       "name": "Bus #202",
+      "reg_number": "KA 01 F 2345",
       "route": "Route B",
       "driver_name": "Suresh Singhania",
       "driver_contact": "+918888888881",
       "status": "Boarding",
-      "current_location": {"lat": 12.9750, "lng": 77.5900},
+      "current_stop": "Campus Gate",
+      "current_location": {"lat": 9.882134, "lng": 76.525878},
       "eta": "0 Mins"
     },
     {
       "id": "bus3",
       "name": "Bus #303",
+      "reg_number": "KA 01 F 3456",
       "route": "Route C",
       "driver_name": "Mahesh Babu",
       "driver_contact": "+918888888882",
       "status": "Scheduled",
-      "current_location": {"lat": 12.9800, "lng": 77.6000},
+      "current_stop": "Koramangala",
+      "current_location": {"lat": 9.882134, "lng": 76.525878},
       "eta": "15 Mins"
     }
   ],
