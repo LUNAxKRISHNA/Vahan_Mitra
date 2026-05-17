@@ -14,8 +14,8 @@ Future<void> main() async {
 
   // Initialize Supabase
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_PUBLISHABLE_KEY']!,
+    url: dotenv.env['VITE_SUPABASE_URL']!,
+    anonKey: dotenv.env['VITE_SUPABASE_PUBLISHABLE_KEY']!,
   );
 
   runApp(const ProviderScope(child: VahanMitraApp()));

@@ -5,7 +5,7 @@ import '../ui/screens/login_screen.dart';
 import '../ui/screens/main_layout.dart';
 import '../ui/screens/map_screen.dart';
 import '../ui/screens/notifications_screen.dart';
-
+import '../ui/screens/routes_screen.dart';
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
@@ -29,6 +29,10 @@ class AppRouter {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/routes',
+        builder: (context, state) => const RoutesScreen(),
       ),
     ],
   );

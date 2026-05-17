@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../controllers/mock_data_provider.dart';
 import '../components/wave_header.dart';
@@ -117,7 +118,9 @@ class HomeScreen extends ConsumerWidget {
                             description: 'View schedule',
                             bg: AppTheme.actionGreenBg,
                             iconColor: AppTheme.actionGreenIcon,
-                            onTap: () {},
+                            onTap: () {
+                              context.push('/routes');
+                            },
                           ),
                         ),
                       ],
@@ -151,17 +154,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 32),
-                Text(
-                  'Schedule',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _ScheduleList(),
+
                 const SizedBox(height: 32),
                 Text(
                   'Announcements',
@@ -209,137 +202,6 @@ class HomeScreen extends ConsumerWidget {
     } else {
       return 'Good Night';
     }
-  }
-}
-
-class _ScheduleList extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final busesAsync = ref.watch(busesProvider);
-
-    return busesAsync.when(
-      data: (buses) {
-        if (buses.isEmpty) return const Text('No schedules currently.');
-
-        return Column(
-          children: [
-            _ScheduleCard(
-              title: 'Central Campus Loop',
-              time: '08:30 AM',
-              status: 'Boarding Soon',
-              isGreen: true,
-            ),
-            const SizedBox(height: 12),
-            _ScheduleCard(
-              title: 'Central Campus',
-              time: '08:30 AM',
-              status: 'Boarding Soon',
-              isGreen: false,
-            ),
-          ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => const Text('Failed to load schedule.'),
-    );
-  }
-}
-
-class _ScheduleCard extends StatelessWidget {
-  final String title;
-  final String time;
-  final String status;
-  final bool isGreen;
-
-  const _ScheduleCard({
-    required this.title,
-    required this.time,
-    required this.status,
-    required this.isGreen,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final decorColor = isGreen ? AppTheme.gradientLight : AppTheme.gradientDark;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -20,
-              top: -20,
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: decorColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        time,
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      const SizedBox(height: 24),
-                      Text(
-                        status,
-                        style: TextStyle(
-                          color:
-                              isGreen
-                                  ? AppTheme.gradientLight
-                                  : AppTheme.gradientDark,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
