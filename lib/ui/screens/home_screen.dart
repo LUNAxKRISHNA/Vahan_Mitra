@@ -13,7 +13,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(userProvider);
-    final announcementsAsync = ref.watch(announcementsProvider);
+    final notificationsAsync = ref.watch(notificationsProvider);
     final nowAsync = ref.watch(currentTimeProvider);
     final now = nowAsync.value ?? DateTime.now();
 
@@ -103,11 +103,11 @@ class HomeScreen extends ConsumerWidget {
                         Expanded(
                           child: _ModernQuickActionCard(
                             icon: Icons.directions_bus_rounded,
-                            label: 'Track Bus',
+                            label: 'Track All Buses',
                             description: 'Live location',
                             bg: AppTheme.actionBlueBg,
                             iconColor: AppTheme.actionBlueIcon,
-                            onTap: () {},
+                            onTap: () => context.push('/map'),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -125,63 +125,52 @@ class HomeScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _ModernQuickActionCard(
-                            icon: Icons.confirmation_num_rounded,
-                            label: 'Bus Pass',
-                            description: 'Renew or view',
-                            bg: const Color(0xFFF3E5F5),
-                            iconColor: const Color(0xFF8E24AA),
-                            onTap: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _ModernQuickActionCard(
-                            icon: Icons.notifications_active_rounded,
-                            label: 'Alerts',
-                            description: 'Important updates',
-                            bg: AppTheme.actionOrangeBg,
-                            iconColor: AppTheme.actionOrangeIcon,
-                            hasBadge: true,
-                            onTap: () {},
-                          ),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
 
                 const SizedBox(height: 32),
-                Text(
-                  'Announcements',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Alerts',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh_rounded, color: AppTheme.primary),
+                      onPressed: () {
+                        ref.invalidate(notificationsProvider);
+                      },
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
-                announcementsAsync.when(
-                  data:
-                      (announcements) => Column(
-                        children:
-                            announcements
-                                .map(
-                                  (a) => _AnnouncementCard(
-                                    title: a['title'],
-                                    message: a['message'],
-                                    time: a['timestamp'],
-                                  ),
-                                )
-                                .toList(),
-                      ),
-                  loading:
-                      () => const Center(child: CircularProgressIndicator()),
-                  error: (e, st) => const Text('Failed to load announcements.'),
+                notificationsAsync.when(
+                  data: (notifications) {
+                    if (notifications.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: Text(
+                            'No new alerts.',
+                            style: GoogleFonts.inter(color: AppTheme.textSecondary),
+                          ),
+                        ),
+                      );
+                    }
+                    return Column(
+                      children: notifications.map((n) => _AlertCard(
+                        title: n['msg_title'] ?? 'Alert',
+                        message: n['msg_content'] ?? '',
+                      )).toList(),
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, st) => const Text('Failed to load alerts.'),
                 ),
               ],
             ),
@@ -212,7 +201,6 @@ class _ModernQuickActionCard extends StatelessWidget {
   final Color bg;
   final Color iconColor;
   final VoidCallback onTap;
-  final bool hasBadge;
 
   const _ModernQuickActionCard({
     required this.icon,
@@ -221,7 +209,6 @@ class _ModernQuickActionCard extends StatelessWidget {
     required this.bg,
     required this.iconColor,
     required this.onTap,
-    this.hasBadge = false,
   });
 
   @override
@@ -289,33 +276,6 @@ class _ModernQuickActionCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (hasBadge)
-              Positioned(
-                top: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.redAccent,
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Text(
-                    '1',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
             Positioned.fill(
               child: Material(
                 color: Colors.transparent,
@@ -333,15 +293,13 @@ class _ModernQuickActionCard extends StatelessWidget {
   }
 }
 
-class _AnnouncementCard extends StatelessWidget {
+class _AlertCard extends StatelessWidget {
   final String title;
   final String message;
-  final String time;
 
-  const _AnnouncementCard({
+  const _AlertCard({
     required this.title,
     required this.message,
-    required this.time,
   });
 
   @override
@@ -360,19 +318,19 @@ class _AnnouncementCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
-              Text(
-                DateFormat('MMM d, hh:mm a').format(DateTime.parse(time)),
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  color: AppTheme.textSecondary,
-                ),
+              const Icon(
+                Icons.notifications_active_rounded,
+                color: AppTheme.actionOrangeIcon,
+                size: 20,
               ),
             ],
           ),

@@ -5,21 +5,22 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
+import '../../controllers/mock_data_provider.dart';
 
-class MapScreen extends StatefulWidget {
+class MapScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? busData;
 
   const MapScreen({super.key, this.busData});
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
+class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateMixin {
   final MapController _mapController = MapController();
 
-  late LatLng _busLocation;
   LatLng? _currentLocation;
   bool _loadingLocation = false;
   bool _showBusInfo = false;
@@ -29,15 +30,6 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    if (widget.busData != null && widget.busData!['current_location'] != null) {
-      _busLocation = LatLng(
-        widget.busData!['current_location']['lat'],
-        widget.busData!['current_location']['lng'],
-      );
-    } else {
-      _busLocation = const LatLng(9.882134, 76.525878);
-    }
-
     _infoSheetController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -72,12 +64,16 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
           accuracy: LocationAccuracy.high,
         ),
       );
-      setState(() {
-        _currentLocation = LatLng(pos.latitude, pos.longitude);
-        _loadingLocation = false;
-      });
+      if (mounted) {
+        setState(() {
+          _currentLocation = LatLng(pos.latitude, pos.longitude);
+          _loadingLocation = false;
+        });
+      }
     } catch (_) {
-      setState(() => _loadingLocation = false);
+      if (mounted) {
+        setState(() => _loadingLocation = false);
+      }
     }
   }
 
@@ -92,9 +88,9 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _callDriver() async {
-    if (widget.busData != null && widget.busData!['driver_contact'] != null) {
-      final url = Uri.parse('tel:${widget.busData!['driver_contact']}');
+  void _callDriver(Map<String, dynamic> activeBus) async {
+    if (activeBus['driver_contact'] != null) {
+      final url = Uri.parse('tel:${activeBus['driver_contact']}');
       if (await canLaunchUrl(url)) await launchUrl(url);
     }
   }
@@ -110,193 +106,262 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final busesAsync = ref.watch(busesProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          // ── Map ──────────────────────────────────────────────────
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(initialCenter: _busLocation, initialZoom: 15.0),
+      body: busesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+        data: (buses) {
+          Map<String, dynamic>? activeBus;
+          if (widget.busData != null) {
+            final id = widget.busData!['id'];
+            activeBus = buses.firstWhere(
+              (b) => b['id'] == id,
+              orElse: () => widget.busData!,
+            );
+          }
+
+          final List<Marker> markers = [];
+          final List<Polyline> polylines = [];
+
+          if (activeBus != null) {
+            final lat = activeBus['current_location']['lat'];
+            final lng = activeBus['current_location']['lng'];
+            final busLoc = LatLng(lat, lng);
+            markers.add(Marker(
+              point: busLoc,
+              width: 120,
+              height: 80,
+              child: _BusMarker(busName: activeBus['name']),
+            ));
+
+            // Polyline for specific bus
+            final stops = activeBus['route_stops'] as List<dynamic>? ?? [];
+            final points = stops.map((s) {
+              if (s['lat'] != null && s['long'] != null) {
+                return LatLng((s['lat'] as num).toDouble(), (s['long'] as num).toDouble());
+              }
+              return null;
+            }).whereType<LatLng>().toList();
+
+            if (points.length > 1) {
+              polylines.add(
+                Polyline(
+                  points: points,
+                  color: AppTheme.primary,
+                  strokeWidth: 4.0,
+                ),
+              );
+            }
+          } else {
+            // All buses view
+            for (var b in buses) {
+              final lat = b['current_location']['lat'];
+              final lng = b['current_location']['lng'];
+              markers.add(Marker(
+                point: LatLng(lat, lng),
+                width: 120,
+                height: 80,
+                child: _BusMarker(busName: b['name']),
+              ));
+            }
+          }
+
+          if (_currentLocation != null) {
+            markers.add(Marker(
+              point: _currentLocation!,
+              width: 50,
+              height: 50,
+              child: _CurrentLocationMarker(),
+            ));
+          }
+
+          LatLng center = activeBus != null
+              ? LatLng(activeBus['current_location']['lat'], activeBus['current_location']['lng'])
+              : (buses.isNotEmpty
+                  ? LatLng(buses.first['current_location']['lat'], buses.first['current_location']['lng'])
+                  : const LatLng(9.882134, 76.525878));
+
+          return Stack(
             children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.vahan_mitra',
-              ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: _busLocation,
-                    width: 60,
-                    height: 60,
-                    child: _BusMarker(),
+              // ── Map ──────────────────────────────────────────────────
+              FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(initialCenter: center, initialZoom: 15.0),
+                children: [
+                  TileLayer(
+                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.example.vahan_mitra',
                   ),
-                  if (_currentLocation != null)
-                    Marker(
-                      point: _currentLocation!,
-                      width: 50,
-                      height: 50,
-                      child: _CurrentLocationMarker(),
-                    ),
+                  PolylineLayer(polylines: polylines),
+                  MarkerLayer(markers: markers),
                 ],
               ),
-            ],
-          ),
 
-          // ── Top gradient overlay ──────────────────────────────────
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 140,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppTheme.gradientDark.withValues(alpha: 0.85),
-                    AppTheme.gradientDark.withValues(alpha: 0.0),
+              // ── Top gradient overlay ──────────────────────────────────
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 140,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppTheme.gradientDark.withValues(alpha: 0.85),
+                        AppTheme.gradientDark.withValues(alpha: 0.0),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // ── Top bar ──────────────────────────────────────────────
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      _GlassButton(
+                        onTap: () => context.pop(),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.directions_bus_rounded,
+                                color: Colors.white.withValues(alpha: 0.9),
+                                size: 18,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                activeBus != null ? (activeBus['name'] ?? 'Bus Tracker') : 'All Buses',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const Spacer(),
+                              if (activeBus != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.accent,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    activeBus['status'] ?? 'Live',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── Right-side control buttons ────────────────────────────
+              Positioned(
+                right: 16,
+                bottom: activeBus != null ? 240 : 100,
+                child: Column(
+                  children: [
+                    _MapControlButton(
+                      icon: Icons.add,
+                      onTap: () {
+                        final zoom = _mapController.camera.zoom;
+                        _mapController.move(_mapController.camera.center, zoom + 1);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _MapControlButton(
+                      icon: Icons.remove,
+                      onTap: () {
+                        final zoom = _mapController.camera.zoom;
+                        _mapController.move(_mapController.camera.center, zoom - 1);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    _MapControlButton(
+                      icon: _loadingLocation ? null : Icons.my_location_rounded,
+                      isLoading: _loadingLocation,
+                      highlighted: true,
+                      onTap: _goToCurrentLocation,
+                    ),
+                    const SizedBox(height: 8),
+                    _MapControlButton(
+                      icon: Icons.directions_bus_rounded,
+                      onTap: () {
+                        if (activeBus != null) {
+                          final loc = LatLng(activeBus['current_location']['lat'], activeBus['current_location']['lng']);
+                          _mapController.move(loc, 15.0);
+                        } else if (buses.isNotEmpty) {
+                          final loc = LatLng(buses.first['current_location']['lat'], buses.first['current_location']['lng']);
+                          _mapController.move(loc, 14.0);
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
-            ),
-          ),
 
-          // ── Top bar ──────────────────────────────────────────────
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  _GlassButton(
-                    onTap: () => context.pop(),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+              // ── Bottom info panel ─────────────────────────────────────
+              if (activeBus != null)
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: _BusInfoPanel(
+                    busData: activeBus,
+                    isExpanded: _showBusInfo,
+                    animation: _infoSheetAnimation,
+                    onToggle: _toggleBusInfo,
+                    onCall: () => _callDriver(activeBus!),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.directions_bus_rounded,
-                            color: Colors.white.withValues(alpha: 0.9),
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            widget.busData != null
-                                ? widget.busData!['name'] ?? 'Bus Tracker'
-                                : 'Bus Tracker',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (widget.busData != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.accent,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                widget.busData!['status'] ?? 'Live',
-                                style: GoogleFonts.inter(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Right-side control buttons ────────────────────────────
-          Positioned(
-            right: 16,
-            bottom: widget.busData != null ? 240 : 100,
-            child: Column(
-              children: [
-                _MapControlButton(
-                  icon: Icons.add,
-                  onTap: () {
-                    final zoom = _mapController.camera.zoom;
-                    _mapController.move(_mapController.camera.center, zoom + 1);
-                  },
                 ),
-                const SizedBox(height: 8),
-                _MapControlButton(
-                  icon: Icons.remove,
-                  onTap: () {
-                    final zoom = _mapController.camera.zoom;
-                    _mapController.move(_mapController.camera.center, zoom - 1);
-                  },
-                ),
-                const SizedBox(height: 8),
-                _MapControlButton(
-                  icon: _loadingLocation ? null : Icons.my_location_rounded,
-                  isLoading: _loadingLocation,
-                  highlighted: true,
-                  onTap: _goToCurrentLocation,
-                ),
-                const SizedBox(height: 8),
-                _MapControlButton(
-                  icon: Icons.directions_bus_rounded,
-                  onTap: () => _mapController.move(_busLocation, 15.0),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Bottom info panel ─────────────────────────────────────
-          if (widget.busData != null)
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: _BusInfoPanel(
-                busData: widget.busData!,
-                isExpanded: _showBusInfo,
-                animation: _infoSheetAnimation,
-                onToggle: _toggleBusInfo,
-                onCall: _callDriver,
-              ),
-            ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -305,6 +370,10 @@ class _MapScreenState extends State<MapScreen> with TickerProviderStateMixin {
 // ── Widgets ─────────────────────────────────────────────────────────────────
 
 class _BusMarker extends StatefulWidget {
+  final String? busName;
+
+  const _BusMarker({this.busName});
+
   @override
   State<_BusMarker> createState() => _BusMarkerState();
 }
@@ -332,49 +401,82 @@ class _BusMarkerState extends State<_BusMarker>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _pulse,
-      builder:
-          (_, _) => Stack(
-            alignment: Alignment.center,
-            children: [
-              Transform.scale(
-                scale: _pulse.value,
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (widget.busName != null) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(6),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
+              ],
+            ),
+            child: Text(
+              widget.busName!,
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
               ),
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppTheme.primary, AppTheme.accent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primary.withValues(alpha: 0.4),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.directions_bus_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
+          const SizedBox(height: 4),
+        ],
+        AnimatedBuilder(
+          animation: _pulse,
+          builder:
+              (_, _) => Stack(
+                alignment: Alignment.center,
+                children: [
+                  Transform.scale(
+                    scale: _pulse.value,
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppTheme.primary, AppTheme.accent],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primary.withValues(alpha: 0.4),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.directions_bus_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+        ),
+      ],
     );
   }
 }
@@ -661,13 +763,7 @@ class _BusInfoPanel extends StatelessWidget {
                 children: [
                   const Divider(),
                   const SizedBox(height: 12),
-                  _InfoRow(
-                    icon: Icons.access_time_rounded,
-                    label: 'ETA',
-                    value: busData['eta'] ?? '~8 min',
-                    iconColor: AppTheme.accent,
-                  ),
-                  const SizedBox(height: 10),
+
                   _InfoRow(
                     icon: Icons.route_rounded,
                     label: 'Route',

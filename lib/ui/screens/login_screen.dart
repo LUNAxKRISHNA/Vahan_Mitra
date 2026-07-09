@@ -28,13 +28,13 @@ class _LoginScreenState extends State<LoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _fadeAnim =
-        CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.12),
       end: Offset.zero,
     ).animate(
-        CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic));
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+    );
     _animController.forward();
   }
 
@@ -58,39 +58,41 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Full-screen campus background image
-          Image.asset(
-            'app_assets/fall_bg.jpg',
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) =>
-                Container(color: AppTheme.primaryDark),
-          ),
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Full-screen campus background image
+        Image.asset(
+          'app_assets/fall_bg.jpg',
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => Container(color: AppTheme.primaryDark),
+        ),
 
-          // Gradient overlay — lighter at top, deeper dark at bottom
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppTheme.primary.withValues(alpha: 0.55),
-                  AppTheme.primaryDark.withValues(alpha: 0.95),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.85],
-              ),
+        // Gradient overlay — lighter at top, deeper dark at bottom
+        Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppTheme.primary.withValues(alpha: 0.55),
+                AppTheme.primaryDark.withValues(alpha: 0.95),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.0, 0.85],
             ),
           ),
+        ),
 
-          // Foreground content
-          SafeArea(
+        // Foreground content
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 child: FadeTransition(
                   opacity: _fadeAnim,
                   child: SlideTransition(
@@ -99,34 +101,12 @@ class _LoginScreenState extends State<LoginScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Brand mark
-                        Container(
-                          width: 84,
-                          height: 84,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              width: 2,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.directions_bus_rounded,
-                            color: Colors.white,
-                            size: 44,
-                          ),
+                        Image.asset(
+                          'app_assets/vmlogo.png',
+                          height: 100,
+                          fit: BoxFit.contain,
                         ),
                         const SizedBox(height: 20),
-                        Text(
-                          'Vahan Mitra',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
                         Text(
                           'Your campus transport companion',
                           style: GoogleFonts.inter(
@@ -141,22 +121,19 @@ class _LoginScreenState extends State<LoginScreen>
                         ClipRRect(
                           borderRadius: BorderRadius.circular(28),
                           child: BackdropFilter(
-                            filter:
-                                ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                             child: Container(
                               padding: const EdgeInsets.all(28),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(28),
                                 border: Border.all(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.22),
+                                  color: Colors.white.withValues(alpha: 0.22),
                                   width: 1.5,
                                 ),
                               ),
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.stretch,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   const Text(
                                     'Welcome Back',
@@ -170,8 +147,9 @@ class _LoginScreenState extends State<LoginScreen>
                                   Text(
                                     'Sign in to your account',
                                     style: GoogleFonts.inter(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.6),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.6,
+                                      ),
                                       fontSize: 14,
                                     ),
                                   ),
@@ -182,8 +160,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     controller: _emailController,
                                     hint: 'Email Address',
                                     icon: Icons.email_outlined,
-                                    keyboardType:
-                                        TextInputType.emailAddress,
+                                    keyboardType: TextInputType.emailAddress,
                                   ),
                                   const SizedBox(height: 14),
 
@@ -194,9 +171,12 @@ class _LoginScreenState extends State<LoginScreen>
                                     icon: Icons.lock_outline_rounded,
                                     obscureText: _obscurePassword,
                                     suffixIcon: IconButton(
-                                      onPressed: () => setState(() =>
-                                          _obscurePassword =
-                                              !_obscurePassword),
+                                      onPressed:
+                                          () => setState(
+                                            () =>
+                                                _obscurePassword =
+                                                    !_obscurePassword,
+                                          ),
                                       icon: Icon(
                                         _obscurePassword
                                             ? Icons.visibility_off_outlined
@@ -225,37 +205,37 @@ class _LoginScreenState extends State<LoginScreen>
                                   SizedBox(
                                     height: 54,
                                     child: ElevatedButton(
-                                      onPressed: _isLoading
-                                          ? null
-                                          : _handleLogin,
+                                      onPressed:
+                                          _isLoading ? null : _handleLogin,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.white,
                                         foregroundColor: AppTheme.primary,
-                                        disabledBackgroundColor:
-                                            Colors.white38,
+                                        disabledBackgroundColor: Colors.white38,
                                         elevation: 0,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(16),
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
                                         ),
                                       ),
-                                      child: _isLoading
-                                          ? const SizedBox(
-                                              width: 22,
-                                              height: 22,
-                                              child:
-                                                  CircularProgressIndicator(
-                                                color: AppTheme.primary,
-                                                strokeWidth: 2.5,
+                                      child:
+                                          _isLoading
+                                              ? const SizedBox(
+                                                width: 22,
+                                                height: 22,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: AppTheme.primary,
+                                                      strokeWidth: 2.5,
+                                                    ),
+                                              )
+                                              : Text(
+                                                'Sign In',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
-                                            )
-                                          : Text(
-                                              'Sign In',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
                                     ),
                                   ),
                                 ],
@@ -279,9 +259,9 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
           ),
+        ),
         ],
-      ),
-    );
+      );
   }
 }
 
@@ -322,12 +302,16 @@ class _GlassTextField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: GoogleFonts.inter(
-              color: Colors.white.withValues(alpha: 0.48), fontSize: 15),
+            color: Colors.white.withValues(alpha: 0.48),
+            fontSize: 15,
+          ),
           prefixIcon: Icon(icon, color: Colors.white60, size: 20),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 16,
+            horizontal: 12,
+          ),
         ),
       ),
     );

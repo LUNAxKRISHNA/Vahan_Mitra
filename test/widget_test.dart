@@ -6,7 +6,6 @@ void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
     await tester.pumpWidget(const ProviderScope(child: VahanMitraApp()));
     await tester.pumpAndSettle();
-    // Simply ensuring it boots up without exceptions
     expect(true, isTrue);
   });
 }
