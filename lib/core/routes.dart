@@ -5,6 +5,7 @@ import '../ui/screens/main_layout.dart';
 import '../ui/screens/map_screen.dart';
 import '../ui/screens/notifications_screen.dart';
 import '../ui/screens/routes_screen.dart';
+
 class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/login',

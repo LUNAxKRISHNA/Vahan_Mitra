@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme.dart';
 import '../../controllers/mock_data_provider.dart';
-import '../components/wave_header.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -104,74 +103,104 @@ class ProfileScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: 120),
           child: Column(
             children: [
-              WaveHeader(
-                height: 320,
-                child: Stack(
-                  children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 4,
-                              ),
-                            ),
-                            child: CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.white,
-                              backgroundImage: user['image_url'] != null && user['image_url'].toString().isNotEmpty
-                                  ? NetworkImage(user['image_url'])
-                                  : null,
-                              child: user['image_url'] != null && user['image_url'].toString().isNotEmpty
-                                  ? null
-                                  : const Icon(Icons.person, size: 50, color: AppTheme.primaryDark),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            user['name'],
-                            style: GoogleFonts.poppins(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            (user['role'] as String).toUpperCase(),
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.8),
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+              // Flat Header
+              SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Profile',
+                        style: GoogleFonts.poppins(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimary,
+                        ),
                       ),
-                    ),
-                    Positioned(
-                      top: -5,
-                      right: -10,
-                      child: IconButton(
-                        icon: const Icon(Icons.settings, color: Colors.white),
-                        onPressed: () => _showEditProfileDialog(context, ref, user),
+                      Container(
+                        decoration: AppTheme.neuBoxDecoration(radius: 20),
+                        child: IconButton(
+                          icon: const Icon(Icons.settings, color: AppTheme.textPrimary),
+                          onPressed: () => _showEditProfileDialog(context, ref, user),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+
+              // Avatar Section
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: AppTheme.neuBoxDecoration(radius: 80),
+                    child: CircleAvatar(
+                      radius: 72,
+                      backgroundColor: AppTheme.neuBg,
+                      backgroundImage: user['image_url'] != null && user['image_url'].toString().isNotEmpty
+                          ? NetworkImage(user['image_url'])
+                          : null,
+                      child: user['image_url'] != null && user['image_url'].toString().isNotEmpty
+                          ? null
+                          : const Icon(Icons.person, size: 70, color: AppTheme.textSecondary),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    user['name']?.toString() ?? 'User',
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if ((user['role']?.toString() ?? '').isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: AppTheme.neuBoxDecoration(radius: 12, inset: true),
+                    child: Text(
+                      (user['role']?.toString() ?? 'Student').toUpperCase(),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
-                    const SizedBox(height: 16),
-                    _buildBusDetailsCard(user),
                     const SizedBox(height: 32),
+                    // Stats chips row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatChip(
+                            label: 'Assigned Route',
+                            value: user['default_route'] ?? 'Not Assigned',
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _StatChip(
+                            label: 'Bus Number',
+                            value: user['bus_number'] ?? 'TBD',
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 40),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
@@ -185,17 +214,8 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.03),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
+                      decoration: AppTheme.neuBoxDecoration(radius: 20),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(
                         children: [
                           _ActionTile(
@@ -203,14 +223,11 @@ class ProfileScreen extends ConsumerWidget {
                             title: 'Privacy Policy',
                             onTap: () {},
                           ),
-                          const Divider(height: 1, indent: 56),
                           _ActionTile(
                             icon: Icons.support_agent_rounded,
                             title: 'Contact Transport Team',
                             onTap: () {},
                           ),
-
-                          const Divider(height: 1, indent: 56),
                           _ActionTile(
                             icon: Icons.help_outline_rounded,
                             title: 'Help & Support',
@@ -220,17 +237,28 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    OutlinedButton.icon(
-                      onPressed: () => _showLogoutDialog(context),
-                      icon: const Icon(Icons.logout_rounded, color: Colors.red),
-                      label: const Text('Logout', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red, width: 1.5),
-                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    GestureDetector(
+                      onTap: () => _showLogoutDialog(context),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: AppTheme.neuBoxDecoration(radius: 16),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.logout_rounded, color: AppTheme.redAccent),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Logout',
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.redAccent,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
                         ),
-                        minimumSize: const Size(double.infinity, 50),
                       ),
                     ),
                   ],
@@ -244,79 +272,37 @@ class ProfileScreen extends ConsumerWidget {
       error: (e, st) => const Center(child: Text('Failed to load user info')),
     );
   }
+}
 
-  Widget _buildBusDetailsCard(Map<String, dynamic> user) {
+class _StatChip extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _StatChip({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
-      ),
+      padding: const EdgeInsets.all(16),
+      decoration: AppTheme.neuBoxDecoration(radius: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.directions_bus_rounded, color: AppTheme.primary),
-              ),
-              const SizedBox(width: 16),
-              Text(
-                'Assigned Route',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-            ],
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              color: AppTheme.textSecondary,
+              fontSize: 12,
+            ),
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Route Name', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-                    const SizedBox(height: 4),
-                    Text(
-                      user['default_route'] ?? 'Not Assigned',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-              Container(width: 1, height: 40, color: AppTheme.textSecondary.withValues(alpha: 0.2)),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Bus Number', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
-                    const SizedBox(height: 4),
-                    Text(
-                      user['bus_number'] ?? 'TBD',
-                      style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+              color: AppTheme.textPrimary,
+            ),
           ),
         ],
       ),
@@ -340,11 +326,8 @@ class _ActionTile extends StatelessWidget {
     return ListTile(
       onTap: onTap,
       leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppTheme.textPrimary.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(10),
-        ),
+        padding: const EdgeInsets.all(10),
+        decoration: AppTheme.neuBoxDecoration(radius: 12, inset: true),
         child: Icon(icon, color: AppTheme.textPrimary, size: 20),
       ),
       title: Text(title, style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),

@@ -1,9 +1,12 @@
 {
   "user": {
-    "name": "Jane Doe",
+    "name": "Krishna K",
     "role": "student",
     "default_route": "Route C",
-    "sos_contacts": ["+919876543210", "+919876543211"],
+    "sos_contacts": [
+      "+919876543210",
+      "+919876543211"
+    ],
     "preferences": {
       "notifications": true
     }

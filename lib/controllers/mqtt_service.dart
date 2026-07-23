@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
@@ -59,7 +59,7 @@ class MqttService {
       StreamController<Map<String, BusLocation>>.broadcast();
   final Map<String, BusLocation> _locations = {};
 
-  late final MqttServerClient _client;
+  MqttServerClient? _client;
   StreamSubscription? _messageSubscription;
 
   final _statusController =
@@ -70,59 +70,92 @@ class MqttService {
   Stream<MqttConnectionStatus> get statusStream => _statusController.stream;
   MqttConnectionStatus get status => _status;
 
-  // ── Parse .env mappings ───────────────────────────────────────────────────
+  // ── Parse config mappings ───────────────────────────────────────────────────
   void _buildTopicMap() {
-    for (final entry in dotenv.env.entries) {
-      if (entry.key.startsWith('MQTT_BUS_')) {
-        final busKey = entry.key.substring('MQTT_BUS_'.length);
-        _topicToBusKey[entry.value] = busKey;
-        debugPrint('[MQTT] Mapped topic "${entry.value}" → busKey "$busKey"');
+    const configStr = String.fromEnvironment('MQTT_BUS_CONFIG');
+    if (configStr.isEmpty) {
+      debugPrint('[MQTT] Warning: MQTT_BUS_CONFIG is empty or not provided.');
+      return;
+    }
+
+    try {
+      final config = jsonDecode(configStr) as Map<String, dynamic>;
+      for (final entry in config.entries) {
+        final busKey = entry.key;
+        final data = entry.value as Map<String, dynamic>;
+        
+        final topic = data['topic'] as String?;
+        final busNo = data['bus_no']?.toString();
+
+        if (topic != null) {
+          _topicToBusKey[topic] = busKey;
+          debugPrint('[MQTT] Mapped topic "$topic" → busKey "$busKey"');
+        }
+        if (busNo != null) {
+          _busKeyToNo[busKey] = busNo;
+          debugPrint('[MQTT] BusKey "$busKey" → Supabase bus_no "$busNo"');
+        }
       }
-      if (entry.key.startsWith('MQTT_BUSNO_')) {
-        final busKey = entry.key.substring('MQTT_BUSNO_'.length);
-        _busKeyToNo[busKey] = entry.value;
-        debugPrint('[MQTT] BusKey "$busKey" → Supabase bus_no "${entry.value}"');
-      }
+    } catch (e) {
+      debugPrint('[MQTT] Error parsing MQTT_BUS_CONFIG: $e');
     }
   }
 
   // ── Initialise the MQTT client (TLS, port 8883) ──────────────────────────
   void _initClient() {
-    final broker = dotenv.env['MQTT_BROKER'] ?? '';
-    // HiveMQ Cloud supports TLS on port 8883 only.
-    final port = int.tryParse(dotenv.env['MQTT_PORT'] ?? '8883') ?? 8883;
-    final clientId =
-        'vahan_mitra_${DateTime.now().millisecondsSinceEpoch}';
+    try {
+      if (kIsWeb) {
+        debugPrint('[MQTT] Web target detected — TCP sockets (SecurityContext) unsupported on web browsers.');
+        _setStatus(MqttConnectionStatus.disconnected);
+        return;
+      }
 
-    debugPrint('[MQTT] Initialising client → mqtts://$broker:$port');
+      const broker = String.fromEnvironment('MQTT_BROKER');
+      // HiveMQ Cloud supports TLS on port 8883 only.
+      const portStr = String.fromEnvironment('MQTT_PORT', defaultValue: '8883');
+      final port = int.tryParse(portStr) ?? 8883;
+      final clientId =
+          'vahan_mitra_${DateTime.now().millisecondsSinceEpoch}';
 
-    _client = MqttServerClient.withPort(broker, clientId, port);
-    _client.setProtocolV311();
+      debugPrint('[MQTT] Initialising client → mqtts://$broker:$port');
 
-    // ── TLS (raw, not WebSocket) ────────────────────────────────────────────
-    _client.secure = true;
-    // Uses the device's trusted CA store — sufficient for HiveMQ Cloud certs.
-    _client.securityContext = SecurityContext.defaultContext;
+      if (broker.isEmpty) {
+        debugPrint('[MQTT] Error: MQTT_BROKER is empty or not provided.');
+        _setStatus(MqttConnectionStatus.error);
+        return;
+      }
 
-    _client.keepAlivePeriod = 30;
-    _client.autoReconnect = true;
-    _client.logging(on: false);
+      _client = MqttServerClient.withPort(broker, clientId, port);
+      _client?.setProtocolV311();
 
-    _client.onConnected = _onConnected;
-    _client.onDisconnected = _onDisconnected;
-    _client.onAutoReconnect = _onAutoReconnect;
-    _client.onAutoReconnected = _onAutoReconnected;
+      // ── TLS (raw, not WebSocket) ────────────────────────────────────────────
+      _client?.secure = true;
+      // Uses the device's trusted CA store — sufficient for HiveMQ Cloud certs.
+      _client?.securityContext = SecurityContext.defaultContext;
 
-    _setStatus(MqttConnectionStatus.connecting);
-    _connect();
+      _client?.keepAlivePeriod = 30;
+      _client?.autoReconnect = true;
+      _client?.logging(on: false);
+
+      _client?.onConnected = _onConnected;
+      _client?.onDisconnected = _onDisconnected;
+      _client?.onAutoReconnect = _onAutoReconnect;
+      _client?.onAutoReconnected = _onAutoReconnected;
+
+      _setStatus(MqttConnectionStatus.connecting);
+      _connect();
+    } catch (e, st) {
+      debugPrint('[MQTT] Exception initializing client: $e\n$st');
+      _setStatus(MqttConnectionStatus.error);
+    }
   }
 
   Future<void> _connect() async {
     try {
-      final user = dotenv.env['MQTT_USER'] ?? '';
-      final password = dotenv.env['MQTT_PASSWORD'] ?? '';
+      const user = String.fromEnvironment('MQTT_USER');
+      const password = String.fromEnvironment('MQTT_PASSWORD');
       
-      final result = await _client.connect(user, password);
+      final result = await _client?.connect(user, password);
       debugPrint('[MQTT] Connect result: ${result?.state}');
     } catch (e, st) {
       debugPrint('[MQTT] Connect error: $e\n$st');
@@ -135,14 +168,26 @@ class MqttService {
     debugPrint('[MQTT] Connected ✓');
     _setStatus(MqttConnectionStatus.connected);
 
-    for (final topic in _topicToBusKey.keys) {
-      _client.subscribe(topic, MqttQos.atLeastOnce);
-      debugPrint('[MQTT] Subscribed to "$topic"');
+    const envTopic = String.fromEnvironment('MQTT_TOPIC');
+    if (envTopic.isEmpty && _topicToBusKey.isEmpty) {
+      debugPrint('[MQTT] Warning: MQTT_TOPIC is empty or not provided in .env.');
+    }
+
+    final topicsToSubscribe = <String>{
+      if (envTopic.isNotEmpty) envTopic,
+      ..._topicToBusKey.keys,
+    };
+
+    for (final topic in topicsToSubscribe) {
+      if (topic.isNotEmpty) {
+        _client?.subscribe(topic, MqttQos.atLeastOnce);
+        debugPrint('[MQTT] Subscribed to "$topic"');
+      }
     }
 
     // Cancel any previous subscription before adding a new one
     _messageSubscription?.cancel();
-    _messageSubscription = _client.updates?.listen(_handleMessage);
+    _messageSubscription = _client?.updates?.listen(_handleMessage);
   }
 
   void _onDisconnected() {
@@ -160,13 +205,43 @@ class MqttService {
     _onConnected(); // re-subscribe after reconnect
   }
 
+  // ── Extract busKey from topic ─────────────────────────────────────────────
+  String? _extractBusKey(String topic) {
+    // 1. Direct lookup in static config mapping
+    if (_topicToBusKey.containsKey(topic)) {
+      return _topicToBusKey[topic];
+    }
+
+    // 2. Wildcard pattern matching based strictly on MQTT_TOPIC from env
+    const envTopic = String.fromEnvironment('MQTT_TOPIC');
+    if (envTopic.isNotEmpty) {
+      final escaped = RegExp.escape(envTopic)
+          .replaceAll(r'\+', '([^/]+)')
+          .replaceAll(r'\#', '(.*)');
+      final regexString = '^$escaped\$';
+      final regex = RegExp(regexString);
+      final match = regex.firstMatch(topic);
+      if (match != null && match.groupCount >= 1) {
+        return match.group(1);
+      }
+    }
+
+    // 3. Fallback: split topic segments if topic format is multi-segment
+    final parts = topic.split('/');
+    if (parts.length >= 3) {
+      return parts[parts.length - 2];
+    }
+
+    return null;
+  }
+
   // ── Parse incoming MQTT message ───────────────────────────────────────────
   void _handleMessage(List<MqttReceivedMessage<MqttMessage>> messages) {
     for (final msg in messages) {
       final topic = msg.topic;
-      final busKey = _topicToBusKey[topic];
+      final busKey = _extractBusKey(topic);
       if (busKey == null) {
-        debugPrint('[MQTT] Received message on unknown topic: $topic');
+        debugPrint('[MQTT] Received message on unknown topic structure: $topic');
         continue;
       }
 
@@ -174,12 +249,12 @@ class MqttService {
       final raw = MqttPublishPayload.bytesToStringAsString(
           pubMsg.payload.message);
 
-      debugPrint('[MQTT] [$topic] payload: $raw');
+      debugPrint('[MQTT] [$topic] (busKey: $busKey) payload: $raw');
 
       try {
         final json = jsonDecode(raw) as Map<String, dynamic>;
-        final lat = (json['lat'] as num?)?.toDouble();
-        final lng = (json['lng'] as num?)?.toDouble();
+        final lat = (json['lat'] as num? ?? json['latitude'] as num?)?.toDouble();
+        final lng = (json['lng'] as num? ?? json['longitude'] as num? ?? json['long'] as num?)?.toDouble();
         if (lat == null || lng == null) {
           debugPrint('[MQTT] Skipping — missing lat/lng in payload');
           continue;
@@ -189,11 +264,11 @@ class MqttService {
           lat: lat,
           lng: lng,
           speed: (json['speed'] as num?)?.toDouble() ?? 0,
-          sat: (json['sat'] as num?)?.toInt() ?? 0,
+          sat: (json['sat'] as num? ?? json['satellites'] as num?)?.toInt() ?? 0,
         );
 
         _controller.add(Map.unmodifiable(_locations));
-        debugPrint('[MQTT] Location updated for "$busKey": $lat, $lng');
+        debugPrint('[MQTT] Location updated for busKey "$busKey": $lat, $lng');
       } catch (e) {
         debugPrint('[MQTT] Failed to parse payload: $e  raw="$raw"');
       }
@@ -213,7 +288,7 @@ class MqttService {
   // ── Cleanup ───────────────────────────────────────────────────────────────
   void dispose() {
     _messageSubscription?.cancel();
-    _client.disconnect();
+    _client?.disconnect();
     _controller.close();
     _statusController.close();
   }

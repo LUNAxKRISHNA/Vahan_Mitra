@@ -20,6 +20,7 @@ class _LoginScreenState extends State<LoginScreen>
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
+  late Animation<double> _scaleAnim;
 
   @override
   void initState() {
@@ -34,6 +35,12 @@ class _LoginScreenState extends State<LoginScreen>
       end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+    );
+    _scaleAnim = Tween<double>(
+      begin: 0.85,
+      end: 1.0,
+    ).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
     );
     _animController.forward();
   }
@@ -73,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppTheme.primary.withValues(alpha: 0.55),
+                AppTheme.redAccent.withValues(alpha: 0.4),
                 AppTheme.primaryDark.withValues(alpha: 0.95),
               ],
               begin: Alignment.topCenter,
@@ -101,10 +108,13 @@ class _LoginScreenState extends State<LoginScreen>
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Brand mark
-                        Image.asset(
-                          'app_assets/vmlogo.png',
-                          height: 100,
-                          fit: BoxFit.contain,
+                        ScaleTransition(
+                          scale: _scaleAnim,
+                          child: Image.asset(
+                            'app_assets/vmlogo.png',
+                            height: 100,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         Text(
@@ -128,16 +138,23 @@ class _LoginScreenState extends State<LoginScreen>
                                 color: Colors.white.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(28),
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.22),
+                                  color: Colors.white.withValues(alpha: 0.18),
                                   width: 1.5,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppTheme.redAccent.withValues(alpha: 0.15),
+                                    blurRadius: 30,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Welcome Back',
-                                    style: TextStyle(
+                                    style: GoogleFonts.poppins(
                                       color: Colors.white,
                                       fontSize: 24,
                                       fontWeight: FontWeight.bold,
@@ -193,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen>
                                     child: Text(
                                       'Forgot Password?',
                                       style: GoogleFonts.inter(
-                                        color: AppTheme.accent,
+                                        color: AppTheme.redAccent,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -209,7 +226,7 @@ class _LoginScreenState extends State<LoginScreen>
                                           _isLoading ? null : _handleLogin,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.white,
-                                        foregroundColor: AppTheme.primary,
+                                        foregroundColor: AppTheme.redAccent,
                                         disabledBackgroundColor: Colors.white38,
                                         elevation: 0,
                                         shape: RoundedRectangleBorder(
@@ -225,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen>
                                                 height: 22,
                                                 child:
                                                     CircularProgressIndicator(
-                                                      color: AppTheme.primary,
+                                                      color: AppTheme.redAccent,
                                                       strokeWidth: 2.5,
                                                     ),
                                               )
@@ -260,8 +277,8 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ),
         ),
-        ],
-      );
+      ],
+    );
   }
 }
 
@@ -308,6 +325,10 @@ class _GlassTextField extends StatelessWidget {
           prefixIcon: Icon(icon, color: Colors.white60, size: 20),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: AppTheme.redAccent, width: 2),
+            borderRadius: BorderRadius.circular(14),
+          ),
           contentPadding: const EdgeInsets.symmetric(
             vertical: 16,
             horizontal: 12,
