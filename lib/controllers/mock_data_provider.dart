@@ -177,6 +177,8 @@ final busesProvider = Provider<AsyncValue<List<dynamic>>>((ref) {
     final mqttService = ref.watch(mqttServiceProvider);
     final mqttLocations =
         ref.watch(mqttLocationsProvider).asData?.value ?? {};
+    // Periodic time tick so status staleness (>15 min) updates automatically in real-time
+    final now = ref.watch(currentTimeProvider).asData?.value ?? DateTime.now();
 
     if (staticDataAsync.isLoading) {
       return const AsyncValue.loading();
@@ -187,8 +189,6 @@ final busesProvider = Provider<AsyncValue<List<dynamic>>>((ref) {
     }
 
     final staticBuses = List<Map<String, dynamic>>.from(staticDataAsync.asData?.value ?? []);
-    if (mqttLocations.isEmpty) return AsyncValue.data(staticBuses);
-
     final matched = List<bool>.filled(staticBuses.length, false);
     final mergedBuses = List<dynamic>.from(staticBuses);
 
@@ -238,7 +238,29 @@ final busesProvider = Provider<AsyncValue<List<dynamic>>>((ref) {
       }
     }
 
-    return AsyncValue.data(mergedBuses);
+    // Dynamic status determination:
+    // If the last update was received less than 15 minutes ago, mark bus as 'In Transit'.
+    // Otherwise (or if no update received), mark as 'Offline'.
+    final finalBuses = mergedBuses.map((b) {
+      final busMap = Map<String, dynamic>.from(b as Map<String, dynamic>);
+      final lastUpdatedStr = busMap['last_updated'] as String?;
+      String calculatedStatus = 'Offline';
+
+      if (lastUpdatedStr != null) {
+        final lastUpdated = DateTime.tryParse(lastUpdatedStr);
+        if (lastUpdated != null) {
+          final diff = now.difference(lastUpdated);
+          if (diff.inMinutes < 15 && !diff.isNegative) {
+            calculatedStatus = 'In Transit';
+          }
+        }
+      }
+
+      busMap['status'] = calculatedStatus;
+      return busMap;
+    }).toList();
+
+    return AsyncValue.data(finalBuses);
   } catch (e, st) {
     debugPrint('[busesProvider] Error: $e\n$st');
     return AsyncValue.error(e, st);

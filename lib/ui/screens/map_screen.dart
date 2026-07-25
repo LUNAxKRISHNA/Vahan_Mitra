@@ -546,10 +546,11 @@ class _FloatingBusPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final routeName = busData['route']?.toString() ?? 'College Route';
     final regNo = busData['reg_number']?.toString() ?? busData['bus_no']?.toString() ?? 'KL 07 BD 2345';
-    final status = busData['status']?.toString() ?? 'Running';
+    final status = busData['status']?.toString() ?? 'Offline';
     final driverName = busData['driver_name']?.toString() ?? 'Driver';
     final lastUpdatedRaw = busData['last_updated'] ?? busData['ts'] ?? busData['timestamp'];
     final formattedTime = _formatLastUpdated(lastUpdatedRaw);
+    final bool isLive = status.toLowerCase() == 'in transit' || status.toLowerCase() == 'running';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -620,7 +621,7 @@ class _FloatingBusPanel extends StatelessWidget {
                 child: Text(
                   status.toUpperCase(),
                   style: GoogleFonts.inter(
-                    color: AppTheme.redAccent,
+                    color: isLive ? const Color(0xFF2B8A3E) : AppTheme.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,

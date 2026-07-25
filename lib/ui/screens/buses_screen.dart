@@ -61,7 +61,7 @@ class BusesScreen extends ConsumerWidget {
                     regNumber: bus['reg_number']?.toString() ?? 'KL 07 BD 2345',
                     route: bus['route']?.toString() ?? 'Unknown Route',
                     driverName: bus['driver_name']?.toString() ?? 'Unassigned',
-                    status: bus['status']?.toString() ?? 'Running',
+                    status: bus['status']?.toString() ?? 'Offline',
                     onTap: () {
                       context.push('/map', extra: bus);
                     },
@@ -108,7 +108,7 @@ class _BusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isRunning = status.toLowerCase() == 'running';
+    final bool isRunning = status.toLowerCase() == 'running' || status.toLowerCase() == 'in transit';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 24),

@@ -281,7 +281,7 @@ class _LiveTransportCardState extends ConsumerState<_LiveTransportCard>
 
   @override
   Widget build(BuildContext context) {
-    final busesAsync = ref.watch(staticBusesProvider);
+    final busesAsync = ref.watch(busesProvider);
     final routesAsync = ref.watch(routesProvider);
 
     final buses = busesAsync.asData?.value ?? [];
