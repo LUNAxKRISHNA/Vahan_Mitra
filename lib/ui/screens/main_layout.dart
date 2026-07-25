@@ -4,7 +4,7 @@ import 'home_screen.dart';
 import 'buses_screen.dart';
 import 'profile_screen.dart';
 import '../components/floating_nav_bar.dart';
-import '../components/sos_components.dart';
+import '../components/route_background_painter.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -51,31 +51,24 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.neuBg,
       extendBody: true,
-      body: PageView(
-        controller: pageController,
-        onPageChanged: (index) {
-          if (index != _currentIndex) {
-            setState(() {
-              _currentIndex = index;
-            });
-          }
-        },
-        children: _screens,
+      body: SubtleRouteBackground(
+        child: PageView(
+          controller: pageController,
+          onPageChanged: (index) {
+            if (index != _currentIndex) {
+              setState(() {
+                _currentIndex = index;
+              });
+            }
+          },
+          children: _screens,
+        ),
       ),
       bottomNavigationBar: FloatingNavBar(
         currentIndex: _currentIndex,
         onTap: _onTabChanged,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showSOSDialog(context),
-        backgroundColor: Colors.redAccent,
-        icon: const Icon(Icons.warning_amber_rounded, color: Colors.white),
-        label: const Text(
-          'SOS',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
       ),
     );
   }

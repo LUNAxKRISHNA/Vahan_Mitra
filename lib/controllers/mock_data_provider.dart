@@ -1,17 +1,28 @@
 import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bus/controllers/mqtt_service.dart';
 
 // ─── SUPABASE CLIENT ────────────────────────────────────────────────────────
 final _supabase = Supabase.instance.client;
 
-// ─── MOCK DATA (user & announcements — kept as-is) ──────────────────────────
-final mockDataProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final jsonString = await rootBundle.loadString('app_assets/mock_data.json');
-  return jsonDecode(jsonString) as Map<String, dynamic>;
-});
+Future<Map<String, dynamic>> _loadMockUser() async {
+  final user = _supabase.auth.currentUser;
+  if (user != null) {
+    return {
+      'name': user.userMetadata?['name'] ?? user.email?.split('@').first ?? 'Student',
+      'email': user.email ?? '',
+      'image_url': user.userMetadata?['avatar_url'],
+    };
+  }
+  return {
+    'name': 'Student User',
+    'email': 'student@college.edu',
+    'image_url': null,
+  };
+}
 
 // ─── USER PROVIDER (mock + SharedPreferences) ────────────────────────────────
 class UserNotifier extends AsyncNotifier<Map<String, dynamic>> {
@@ -22,13 +33,12 @@ class UserNotifier extends AsyncNotifier<Map<String, dynamic>> {
     if (savedUser != null) {
       return jsonDecode(savedUser) as Map<String, dynamic>;
     }
-    // Fallback to mock data
-    final data = await ref.watch(mockDataProvider.future);
-    return data['user'] as Map<String, dynamic>;
+    // Fallback to bundled mock user profile
+    return _loadMockUser();
   }
 
   Future<void> updateProfile(Map<String, dynamic> updatedData) async {
-    final current = state.value ?? {};
+    final current = state.asData?.value ?? {};
     final newData = {...current, ...updatedData};
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_profile', jsonEncode(newData));
@@ -40,10 +50,73 @@ final userProvider = AsyncNotifierProvider<UserNotifier, Map<String, dynamic>>((
   return UserNotifier();
 });
 
-// ─── ANNOUNCEMENTS PROVIDER (mock) ───────────────────────────────────────────
-final announcementsProvider = FutureProvider<List<dynamic>>((ref) async {
-  final data = await ref.watch(mockDataProvider.future);
-  return data['announcements'];
+// ─── NOTIFICATIONS PROVIDER (live Supabase) ───────────────────────────────
+class NotificationsNotifier extends AsyncNotifier<List<dynamic>> {
+  @override
+  Future<List<dynamic>> build() async {
+    try {
+      final response = await _supabase
+          .from('notifications')
+          .select('*, admin(name, role)');
+      return (response as List<dynamic>?) ?? [];
+    } catch (e) {
+      debugPrint('Error fetching notifications with admin join: $e');
+      try {
+        final response = await _supabase
+            .from('notifications')
+            .select('*');
+        final fallbackList = (response as List<dynamic>?) ?? [];
+        if (fallbackList.isNotEmpty) {
+          fallbackList[0] = {
+            ...fallbackList[0] as Map<String, dynamic>,
+            'msg_content': '${fallbackList[0]['msg_content']}\n\n[System Error Details: $e]'
+          };
+        }
+        return fallbackList;
+      } catch (e2) {
+        debugPrint('Fallback error fetching notifications: $e2');
+        return [];
+      }
+    }
+  }
+
+  Future<void> markAllAsRead() async {
+    final currentNotifications = state.asData?.value ?? [];
+    if (currentNotifications.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final allIds = currentNotifications.map((n) => n['id'].toString()).toList();
+    await prefs.setStringList('seen_notification_ids', allIds);
+    
+    // Invalidate the unread state so UI updates immediately
+    ref.invalidate(unseenNotificationsProvider);
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => build());
+    ref.invalidate(unseenNotificationsProvider);
+  }
+}
+
+final notificationsProvider = AsyncNotifierProvider<NotificationsNotifier, List<dynamic>>(() {
+  return NotificationsNotifier();
+});
+
+final unseenNotificationsProvider = FutureProvider<bool>((ref) async {
+  final notificationsAsync = ref.watch(notificationsProvider);
+  
+  if (notificationsAsync.isLoading || notificationsAsync.hasError) {
+    return false;
+  }
+  
+  final notifications = notificationsAsync.asData?.value ?? [];
+  if (notifications.isEmpty) return false;
+  
+  final prefs = await SharedPreferences.getInstance();
+  final seenIds = prefs.getStringList('seen_notification_ids') ?? [];
+  
+  return notifications.any((n) => !seenIds.contains(n['id'].toString()));
 });
 
 // ─── BUSES PROVIDER (live Supabase via assignments relational join) ───────────
@@ -54,10 +127,10 @@ final announcementsProvider = FutureProvider<List<dynamic>>((ref) async {
 //   id, name, reg_number, route, driver_name, driver_contact,
 //   status, current_stop, current_location {lat, lng}, eta
 //
-final busesProvider = FutureProvider<List<dynamic>>((ref) async {
+final staticBusesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final response = await _supabase
       .from('assignments')
-      .select('id, buses(id, name, bus_no, reg_number), drivers(name, phone), routes(route_name, route_stops(stop_name, stop_order, lat, long))');
+      .select('id, buses(id, name, bus_no, reg_number, current_location, status), drivers(name, phone), routes(route_name, route_stops(stop_name, stop_order, lat, long))');
 
   final List<dynamic> assignments = response as List<dynamic>;
 
@@ -66,52 +139,136 @@ final busesProvider = FutureProvider<List<dynamic>>((ref) async {
     final driver  = assignment['drivers']  as Map<String, dynamic>?  ?? {};
     final route   = assignment['routes']   as Map<String, dynamic>?  ?? {};
 
-    // Sort stops by stop_order and pick the first as the "current" stop
     final stops = List<Map<String, dynamic>>.from(route['route_stops'] ?? []);
     stops.sort((a, b) => ((a['stop_order'] ?? 0) as int).compareTo((b['stop_order'] ?? 0) as int));
 
     final currentStop = stops.isNotEmpty ? (stops.first['stop_name'] ?? 'Unknown') : 'Unknown';
-    final stopLat     = stops.isNotEmpty ? (stops.first['lat']  ?? 9.882134) : 9.882134;
-    final stopLng     = stops.isNotEmpty ? (stops.first['long'] ?? 76.525878) : 76.525878;
+    double stopLat     = stops.isNotEmpty ? (stops.first['lat']  ?? 9.882134) : 9.882134;
+    double stopLng     = stops.isNotEmpty ? (stops.first['long'] ?? 76.525878) : 76.525878;
 
-    return {
+    final locStr = bus['current_location'];
+    if (locStr != null && locStr is String && locStr.contains(',')) {
+      final parts = locStr.split(',');
+      stopLat = double.tryParse(parts[0]) ?? stopLat;
+      stopLng = double.tryParse(parts[1]) ?? stopLng;
+    }
+
+    return <String, dynamic>{
       'id'             : bus['id']        ?? assignment['id'],
+      'bus_no'         : bus['bus_no'],
       'name'           : bus['name']      ?? 'Bus #${bus['bus_no'] ?? '—'}',
       'reg_number'     : bus['reg_number'] ?? '—',
       'route'          : route['route_name'] ?? 'Unknown Route',
       'driver_name'    : driver['name']   ?? 'Unknown Driver',
       'driver_contact' : driver['phone']  ?? '—',
-      'status'         : 'In Transit',
+      'status'         : bus['status'] ?? 'Offline',
       'current_stop'   : currentStop,
       'current_location': {'lat': stopLat, 'lng': stopLng},
       'eta'            : '—',
+      'route_stops'    : stops,
     };
   }).toList();
 });
 
+// ─── BUSES PROVIDER (merges Supabase static data + MQTT live location) ────────
+final busesProvider = Provider<AsyncValue<List<dynamic>>>((ref) {
+  try {
+    final staticDataAsync = ref.watch(staticBusesProvider);
+    final mqttService = ref.watch(mqttServiceProvider);
+    final mqttLocations =
+        ref.watch(mqttLocationsProvider).asData?.value ?? {};
+
+    if (staticDataAsync.isLoading) {
+      return const AsyncValue.loading();
+    }
+    if (staticDataAsync.hasError) {
+      return AsyncValue.error(
+          staticDataAsync.error!, staticDataAsync.stackTrace ?? StackTrace.current);
+    }
+
+    final staticBuses = List<Map<String, dynamic>>.from(staticDataAsync.asData?.value ?? []);
+    if (mqttLocations.isEmpty) return AsyncValue.data(staticBuses);
+
+    final matched = List<bool>.filled(staticBuses.length, false);
+    final mergedBuses = List<dynamic>.from(staticBuses);
+
+    for (final entry in mqttLocations.entries) {
+      final busKey = entry.key;
+      final location = entry.value;
+
+      int targetIndex = -1;
+
+      final explicitBusNo = mqttService.busNoForKey(busKey);
+      if (explicitBusNo != null) {
+        targetIndex = staticBuses.indexWhere(
+          (b) => b['bus_no']?.toString() == explicitBusNo,
+        );
+      }
+
+      if (targetIndex == -1) {
+        targetIndex = staticBuses.indexWhere(
+          (b) =>
+              b['bus_no']?.toString() == busKey ||
+              b['id']?.toString() == busKey,
+        );
+      }
+
+      if (targetIndex == -1) {
+        targetIndex = staticBuses.indexWhere(
+          (b) => (b['name'] as String?)?.toLowerCase() == busKey.toLowerCase(),
+        );
+      }
+
+      if (targetIndex == -1) {
+        targetIndex = matched.indexOf(false);
+      }
+
+      if (targetIndex != -1) {
+        matched[targetIndex] = true;
+        mergedBuses[targetIndex] = <String, dynamic>{
+          ...staticBuses[targetIndex],
+          'current_location': <String, dynamic>{
+            'lat': location.lat,
+            'lng': location.lng,
+          },
+          'speed': location.speed,
+          'satellites': location.sat,
+          'last_updated': location.timestamp?.toIso8601String(),
+        };
+      }
+    }
+
+    return AsyncValue.data(mergedBuses);
+  } catch (e, st) {
+    debugPrint('[busesProvider] Error: $e\n$st');
+    return AsyncValue.error(e, st);
+  }
+});
+
 // ─── ROUTES PROVIDER (live Supabase with stops) ───────────────────────────────
-//
-// Fetches all routes along with their stops. Maps to the shape expected by
-// the UI: { id, name, stops: [String] }
-//
 final routesProvider = FutureProvider<List<dynamic>>((ref) async {
   final response = await _supabase
       .from('routes')
       .select('id, route_name, route_stops(stop_name, stop_order)')
-      .order('id', ascending: true);
+      .order('route_name', ascending: true);
 
   final List<dynamic> routes = response as List<dynamic>;
 
-  return routes.map((route) {
+  final result = routes.map((route) {
     final stops = List<Map<String, dynamic>>.from(route['route_stops'] ?? []);
     stops.sort((a, b) => ((a['stop_order'] ?? 0) as int).compareTo((b['stop_order'] ?? 0) as int));
 
-    return {
+    return <String, dynamic>{
       'id'   : route['id'],
       'name' : route['route_name'] ?? 'Unnamed Route',
       'stops': stops.map((s) => s['stop_name'] as String? ?? '').toList(),
     };
   }).toList();
+
+  result.sort((a, b) =>
+      (a['name'] as String).toLowerCase().compareTo((b['name'] as String).toLowerCase()));
+
+  return result;
 });
 
 // ─── CURRENT TIME PROVIDER ───────────────────────────────────────────────────

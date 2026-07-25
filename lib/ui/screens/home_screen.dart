@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../controllers/mock_data_provider.dart';
-import '../components/wave_header.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -13,175 +11,225 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(userProvider);
-    final announcementsAsync = ref.watch(announcementsProvider);
     final nowAsync = ref.watch(currentTimeProvider);
-    final now = nowAsync.value ?? DateTime.now();
-
-    final timeStr = DateFormat('h:mm a').format(now);
-    final dateStr = DateFormat('d MMMM y').format(now);
+    final now = nowAsync.asData?.value ?? DateTime.now();
+    final hasUnseen = ref.watch(unseenNotificationsProvider).value ?? false;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 120), // Padding for bottom nav
+      padding: const EdgeInsets.only(bottom: 160),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          WaveHeader(
-            height: 280,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    userAsync.when(
-                      data:
-                          (user) => Text(
-                            '${_getGreeting(now)},\n${user['name'].split(' ')[0]} 👋',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
+          // Header
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  userAsync.when(
+                    data:
+                        (user) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${_getGreeting(now)},',
+                              style: GoogleFonts.inter(
+                                color: AppTheme.textSecondary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                      loading: () => const Text('Loading...'),
-                      error: (e, st) => const Text('Error'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 50),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          timeStr,
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${user['name'].split(' ')[0]}',
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.textPrimary,
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                height: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Welcome to Vahan Mitra',
+                              style: GoogleFonts.inter(
+                                color: AppTheme.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          dateStr,
-                          style: GoogleFonts.inter(
-                            color: Colors.white70,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+                    loading: () => const Text('Loading...'),
+                    error: (e, st) => const Text('Error'),
+                  ),
+                  Row(
+                    children: [
+                      userAsync.when(
+                        data:
+                            (user) => CircleAvatar(
+                              radius: 24,
+                              backgroundColor: AppTheme.neuBg,
+                              backgroundImage:
+                                  user['image_url'] != null &&
+                                          user['image_url']
+                                              .toString()
+                                              .isNotEmpty
+                                      ? NetworkImage(user['image_url'])
+                                      : null,
+                              child:
+                                  user['image_url'] == null ||
+                                          user['image_url'].toString().isEmpty
+                                      ? const Icon(
+                                        Icons.person,
+                                        color: AppTheme.textPrimary,
+                                      )
+                                      : null,
+                            ),
+                        loading: () => const CircleAvatar(radius: 24),
+                        error: (e, st) => const CircleAvatar(radius: 24),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
+
+          // Hero Card
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: const _LiveTransportCard(),
+          ),
+
+          // 2x2 Action Grid
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Quick Actions',
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Column(
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _ModernQuickActionCard(
-                            icon: Icons.directions_bus_rounded,
-                            label: 'Track Bus',
-                            description: 'Live location',
-                            bg: AppTheme.actionBlueBg,
-                            iconColor: AppTheme.actionBlueIcon,
-                            onTap: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _ModernQuickActionCard(
-                            icon: Icons.map_rounded,
-                            label: 'Routes',
-                            description: 'View schedule',
-                            bg: AppTheme.actionGreenBg,
-                            iconColor: AppTheme.actionGreenIcon,
-                            onTap: () {
-                              context.push('/routes');
-                            },
-                          ),
-                        ),
-                      ],
+                    Expanded(
+                      child: _ActionCard(
+                        icon: Icons.directions_bus_rounded,
+                        title: 'Track Buses',
+                        subtitle: 'Live locations of all buses.',
+                        onTap: () => context.push('/map'),
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _ModernQuickActionCard(
-                            icon: Icons.confirmation_num_rounded,
-                            label: 'Bus Pass',
-                            description: 'Renew or view',
-                            bg: const Color(0xFFF3E5F5),
-                            iconColor: const Color(0xFF8E24AA),
-                            onTap: () {},
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _ModernQuickActionCard(
-                            icon: Icons.notifications_active_rounded,
-                            label: 'Alerts',
-                            description: 'Important updates',
-                            bg: AppTheme.actionOrangeBg,
-                            iconColor: AppTheme.actionOrangeIcon,
-                            hasBadge: true,
-                            onTap: () {},
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _ActionCard(
+                        icon: Icons.route_rounded,
+                        title: 'Routes',
+                        subtitle: 'View all campus routes.',
+                        onTap: () => context.push('/routes'),
+                      ),
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 32),
-                Text(
-                  'Announcements',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
                 const SizedBox(height: 16),
-                announcementsAsync.when(
-                  data:
-                      (announcements) => Column(
-                        children:
-                            announcements
-                                .map(
-                                  (a) => _AnnouncementCard(
-                                    title: a['title'],
-                                    message: a['message'],
-                                    time: a['timestamp'],
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ActionCard(
+                        icon: Icons.calendar_month_rounded,
+                        title: 'Timetable',
+                        subtitle: "View College Bus Timings.",
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            barrierColor: Colors.black.withValues(alpha: 0.4),
+                            builder:
+                                (ctx) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  elevation: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 28,
+                                      vertical: 28,
+                                    ),
+                                    decoration: AppTheme.neuBoxDecoration(
+                                      radius: 28,
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.redAccent
+                                                .withValues(alpha: 0.1),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.calendar_month_rounded,
+                                            color: AppTheme.redAccent,
+                                            size: 32,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'Coming Soon',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Timetable details will be\nupdated soon.',
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 13,
+                                            color: AppTheme.textSecondary,
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 22),
+                                        GestureDetector(
+                                          onTap: () => Navigator.of(ctx).pop(),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 28,
+                                              vertical: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.redAccent,
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              'Got it',
+                                              style: GoogleFonts.inter(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                )
-                                .toList(),
+                                ),
+                          );
+                        },
                       ),
-                  loading:
-                      () => const Center(child: CircularProgressIndicator()),
-                  error: (e, st) => const Text('Failed to load announcements.'),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _ActionCard(
+                        icon: Icons.campaign_rounded,
+                        title: 'Alerts',
+                        subtitle: 'Latest transport updates.',
+                        hasBadge: hasUnseen,
+                        onTap: () => context.push('/notifications'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -205,186 +253,341 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-class _ModernQuickActionCard extends StatelessWidget {
+class _LiveTransportCard extends ConsumerStatefulWidget {
+  const _LiveTransportCard();
+
+  @override
+  ConsumerState<_LiveTransportCard> createState() => _LiveTransportCardState();
+}
+
+class _LiveTransportCardState extends ConsumerState<_LiveTransportCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _animController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final busesAsync = ref.watch(staticBusesProvider);
+    final routesAsync = ref.watch(routesProvider);
+
+    final buses = busesAsync.asData?.value ?? [];
+    final busCount = buses.length;
+    final routeCount = routesAsync.asData?.value.length ?? 0;
+
+    // Only show LIVE badge if at least one bus is actively running
+    final anyBusLive = buses.any((bus) {
+      final status = (bus['status'] as String? ?? '').toLowerCase();
+      return status == 'running' || status == 'in transit';
+    });
+
+    return Container(
+      decoration: AppTheme.neuBoxDecoration(radius: 28),
+      padding: const EdgeInsets.all(24),
+      child: Stack(
+        children: [
+          // Graphic Background (Right Side)
+          Positioned(
+            right: -20,
+            top: 0,
+            bottom: 0,
+            width: 120,
+            child: AnimatedBuilder(
+              animation: _animController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _RouteLinePainter(progress: _animController.value),
+                );
+              },
+            ),
+          ),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // LIVE Badge — only shown when buses are actively running
+              if (anyBusLive)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.redAccent,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'LIVE',
+                        style: GoogleFonts.inter(
+                          color: AppTheme.redAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                const SizedBox(height: 16),
+
+              Text(
+                'Transport Services',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 32),
+
+              // Stats dynamically fetched from Supabase
+              Row(
+                children: [
+                  _StatItem(
+                    icon: Icons.directions_bus_rounded,
+                    count: busesAsync.isLoading ? '…' : '$busCount',
+                    label: 'College Buses\nOperating',
+                  ),
+                  const SizedBox(width: 32),
+                  _StatItem(
+                    icon: Icons.route_rounded,
+                    count: routesAsync.isLoading ? '…' : '$routeCount',
+                    label: 'Active\nRoutes',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RouteLinePainter extends CustomPainter {
+  final double progress;
+
+  _RouteLinePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = AppTheme.redAccent.withValues(alpha: 0.6)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    path.moveTo(size.width * 0.8, 10);
+    path.quadraticBezierTo(
+      size.width * 0.2,
+      size.height * 0.5,
+      size.width * 0.5,
+      size.height - 10,
+    );
+
+    // Draw dashed path
+    final dashWidth = 5.0;
+    final dashSpace = 5.0;
+    var distance = 0.0;
+    for (var pathMetric in path.computeMetrics()) {
+      while (distance < pathMetric.length) {
+        canvas.drawPath(
+          pathMetric.extractPath(distance, distance + dashWidth),
+          paint,
+        );
+        distance += dashWidth + dashSpace;
+      }
+    }
+
+    // Bus position indicator
+    final busPosition =
+        path
+            .computeMetrics()
+            .first
+            .extractPath(
+              0,
+              path.computeMetrics().first.length * (0.3 + (progress * 0.4)),
+            )
+            .computeMetrics()
+            .last
+            .getTangentForOffset(
+              path.computeMetrics().first.length * (0.3 + (progress * 0.4)),
+            )
+            ?.position;
+
+    if (busPosition != null) {
+      final busPaint =
+          Paint()
+            ..color = AppTheme.textPrimary
+            ..style = PaintingStyle.fill;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: busPosition, width: 14, height: 14),
+          const Radius.circular(4),
+        ),
+        busPaint,
+      );
+    }
+
+    // Pins
+    canvas.drawCircle(
+      Offset(size.width * 0.8, 10),
+      6,
+      Paint()..color = AppTheme.textPrimary,
+    );
+    canvas.drawCircle(
+      Offset(size.width * 0.5, size.height - 10),
+      6,
+      Paint()..color = AppTheme.redAccent,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _RouteLinePainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class _StatItem extends StatelessWidget {
   final IconData icon;
+  final String count;
   final String label;
-  final String description;
-  final Color bg;
-  final Color iconColor;
+
+  const _StatItem({
+    required this.icon,
+    required this.count,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: AppTheme.neuBoxDecoration(radius: 12, inset: true),
+          child: Icon(icon, color: AppTheme.textPrimary, size: 20),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          count,
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
   final VoidCallback onTap;
   final bool hasBadge;
 
-  const _ModernQuickActionCard({
+  const _ActionCard({
     required this.icon,
-    required this.label,
-    required this.description,
-    required this.bg,
-    required this.iconColor,
+    required this.title,
+    required this.subtitle,
     required this.onTap,
     this.hasBadge = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: bg.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: AppTheme.neuBoxDecoration(radius: 20),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Positioned(
-              right: -24,
-              top: -24,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: bg.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: AppTheme.neuBoxDecoration(
+                    radius: 12,
+                    inset: true,
+                  ),
+                  child: Icon(icon, color: AppTheme.textPrimary, size: 24),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                if (hasBadge)
                   Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: bg,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(icon, color: iconColor, size: 28),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    label,
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                      color: AppTheme.textPrimary,
-                      letterSpacing: -0.5,
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.redAccent,
+                      shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                ],
+              ],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppTheme.textPrimary,
               ),
             ),
-            if (hasBadge)
-              Positioned(
-                top: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.redAccent,
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Text(
-                    '1',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AppTheme.textSecondary,
               ),
-            Positioned.fill(
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onTap,
-                  splashColor: bg.withValues(alpha: 0.3),
-                  highlightColor: bg.withValues(alpha: 0.1),
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: AppTheme.neuBoxDecoration(radius: 20),
+                child: const Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: AppTheme.textPrimary,
                 ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _AnnouncementCard extends StatelessWidget {
-  final String title;
-  final String message;
-  final String time;
-
-  const _AnnouncementCard({
-    required this.title,
-    required this.message,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.surface.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-              Text(
-                DateFormat('MMM d, hh:mm a').format(DateTime.parse(time)),
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: GoogleFonts.inter(
-              color: AppTheme.textSecondary,
-              fontSize: 13,
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
-import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 
@@ -12,33 +13,28 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+  late AnimationController _animController;
+  late Animation<double> _scaleAnim;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _animController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1200),
     );
 
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    // Hardware-accelerated scale pulse
+    _scaleAnim = Tween<double>(begin: 0.95, end: 1.05).animate(
+      CurvedAnimation(parent: _animController, curve: Curves.easeInOutSine),
+    );
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.5,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+    _animController.repeat(reverse: true);
 
-    _controller.forward();
-
-    // Navigate to Login after 3 seconds
-    Timer(const Duration(seconds: 3), () {
+    // Navigate to login quickly, stopping heavy animation first
+    Future.delayed(const Duration(milliseconds: 1800), () {
       if (mounted) {
+        _animController.stop(); // CRITICAL: Stop CPU/GPU work before page transition
         context.go('/login');
       }
     });
@@ -46,33 +42,58 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _controller.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: AppTheme.neuBg,
       body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+        child: ScaleTransition(
+          scale: _scaleAnim,
+          child: SizedBox(
+            width: 320,
+            height: 200,
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                Icon(
-                  Icons.directions_bus_rounded,
-                  size: 100,
-                  color: AppTheme.primary,
+                // Dark Shadow Layer (Static, so Flutter caches the raster layer)
+                Transform.translate(
+                  offset: const Offset(6, 6),
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: SvgPicture.asset(
+                      'app_assets/svglogo.svg',
+                      width: 240,
+                      colorFilter: const ColorFilter.mode(AppTheme.neuShadowDark, BlendMode.srcIn),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Vahan Mitra',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: AppTheme.primaryDark,
-                    fontWeight: FontWeight.bold,
+                // Light Shadow Layer (Static cacheable layer)
+                Transform.translate(
+                  offset: const Offset(-6, -6),
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                    child: SvgPicture.asset(
+                      'app_assets/svglogo.svg',
+                      width: 240,
+                      colorFilter: const ColorFilter.mode(AppTheme.neuShadowLight, BlendMode.srcIn),
+                    ),
+                  ),
+                ),
+                // Foreground Vector
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [AppTheme.redAccent, AppTheme.primaryDark],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds),
+                  child: SvgPicture.asset(
+                    'app_assets/svglogo.svg',
+                    width: 240,
+                    colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                   ),
                 ),
               ],
