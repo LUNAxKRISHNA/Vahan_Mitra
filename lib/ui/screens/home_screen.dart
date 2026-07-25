@@ -13,9 +13,10 @@ class HomeScreen extends ConsumerWidget {
     final userAsync = ref.watch(userProvider);
     final nowAsync = ref.watch(currentTimeProvider);
     final now = nowAsync.asData?.value ?? DateTime.now();
+    final hasUnseen = ref.watch(unseenNotificationsProvider).value ?? false;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 120),
+      padding: const EdgeInsets.only(bottom: 160),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -135,74 +136,85 @@ class HomeScreen extends ConsumerWidget {
                       child: _ActionCard(
                         icon: Icons.calendar_month_rounded,
                         title: 'Timetable',
-                        subtitle: "Bus Schedules.",
+                        subtitle: "View College Bus Timings.",
                         onTap: () {
                           showDialog(
                             context: context,
                             barrierColor: Colors.black.withValues(alpha: 0.4),
-                            builder: (ctx) => Dialog(
-                              backgroundColor: Colors.transparent,
-                              elevation: 0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
-                                decoration: AppTheme.neuBoxDecoration(radius: 28),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.redAccent.withValues(alpha: 0.1),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.calendar_month_rounded,
-                                        color: AppTheme.redAccent,
-                                        size: 32,
-                                      ),
+                            builder:
+                                (ctx) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  elevation: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 28,
+                                      vertical: 28,
                                     ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Coming Soon',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppTheme.textPrimary,
-                                      ),
+                                    decoration: AppTheme.neuBoxDecoration(
+                                      radius: 28,
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Timetable details will be\nupdated soon.',
-                                      textAlign: TextAlign.center,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 13,
-                                        color: AppTheme.textSecondary,
-                                        height: 1.5,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 22),
-                                    GestureDetector(
-                                      onTap: () => Navigator.of(ctx).pop(),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.redAccent,
-                                          borderRadius: BorderRadius.circular(20),
-                                        ),
-                                        child: Text(
-                                          'Got it',
-                                          style: GoogleFonts.inter(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 13,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.redAccent
+                                                .withValues(alpha: 0.1),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.calendar_month_rounded,
+                                            color: AppTheme.redAccent,
+                                            size: 32,
                                           ),
                                         ),
-                                      ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'Coming Soon',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Timetable details will be\nupdated soon.',
+                                          textAlign: TextAlign.center,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 13,
+                                            color: AppTheme.textSecondary,
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 22),
+                                        GestureDetector(
+                                          onTap: () => Navigator.of(ctx).pop(),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 28,
+                                              vertical: 12,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.redAccent,
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              'Got it',
+                                              style: GoogleFonts.inter(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            ),
                           );
                         },
                       ),
@@ -213,7 +225,8 @@ class HomeScreen extends ConsumerWidget {
                         icon: Icons.campaign_rounded,
                         title: 'Alerts',
                         subtitle: 'Latest transport updates.',
-                        onTap: () {},
+                        hasBadge: hasUnseen,
+                        onTap: () => context.push('/notifications'),
                       ),
                     ),
                   ],
@@ -500,12 +513,14 @@ class _ActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool hasBadge;
 
   const _ActionCard({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.hasBadge = false,
   });
 
   @override
@@ -518,10 +533,28 @@ class _ActionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: AppTheme.neuBoxDecoration(radius: 12, inset: true),
-              child: Icon(icon, color: AppTheme.textPrimary, size: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: AppTheme.neuBoxDecoration(
+                    radius: 12,
+                    inset: true,
+                  ),
+                  child: Icon(icon, color: AppTheme.textPrimary, size: 24),
+                ),
+                if (hasBadge)
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.redAccent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
             Text(

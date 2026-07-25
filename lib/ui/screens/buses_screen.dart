@@ -50,7 +50,7 @@ class BusesScreen extends ConsumerWidget {
                   left: 24,
                   right: 24,
                   top: 8,
-                  bottom: 120,
+                  bottom: 160,
                 ),
                 itemCount: buses.length,
                 itemBuilder: (context, index) {
@@ -280,42 +280,6 @@ class _BusCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       driverName.isEmpty ? 'Unassigned' : driverName,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Vertical Divider
-              Container(
-                width: 1,
-                height: 28,
-                color: Colors.grey.withValues(alpha: 0.2),
-                margin: const EdgeInsets.symmetric(horizontal: 12),
-              ),
-
-              // Registration Column
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Registration',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      regNumber,
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,

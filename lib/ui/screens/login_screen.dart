@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme.dart';
@@ -13,14 +13,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with SingleTickerProviderStateMixin {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _obscurePassword = true;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
   late Animation<double> _scaleAnim;
+
+  bool _isGoogleBtnPressed = false;
 
   @override
   void initState() {
@@ -36,17 +35,15 @@ class _LoginScreenState extends State<LoginScreen>
     ).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
     );
-    _scaleAnim = Tween<double>(
-      begin: 0.85,
-      end: 1.0,
-    ).animate(
+    _scaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOutBack),
     );
     _animController.forward();
   }
 
-  void _handleLogin() {
+  void _handleGoogleLogin() {
     setState(() => _isLoading = true);
+    // Simulate login network delay
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -58,48 +55,43 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _animController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        // Full-screen campus background image
-        Image.asset(
-          'app_assets/fall_bg.jpg',
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => Container(color: AppTheme.primaryDark),
-        ),
-
-        // Gradient overlay — lighter at top, deeper dark at bottom
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppTheme.redAccent.withValues(alpha: 0.4),
-                AppTheme.primaryDark.withValues(alpha: 0.95),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: const [0.0, 0.85],
+    return Scaffold(
+      backgroundColor: AppTheme.neuBg,
+      body: Stack(
+        children: [
+          // Background transit graphic with grayscale filter
+          Positioned.fill(
+            child: ColorFiltered(
+              colorFilter: const ColorFilter.matrix(<double>[
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0,      0,      0,      1, 0,
+              ]),
+              child: Image.asset(
+                'app_assets/transit_mono_bg.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-        ),
 
-        // Foreground content
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
+          // Neumorphic blend overlay
+          Positioned.fill(
+            child: Container(
+              color: AppTheme.neuBg.withValues(alpha: 0.82),
+            ),
+          ),
+
+          // Foreground Content
+          SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 32,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
                 child: FadeTransition(
                   opacity: _fadeAnim,
                   child: SlideTransition(
@@ -107,234 +99,161 @@ class _LoginScreenState extends State<LoginScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Brand mark
+                        // Optimized static shadow logo with entrance scale animation
                         ScaleTransition(
                           scale: _scaleAnim,
-                          child: Image.asset(
-                            'app_assets/vmlogo.png',
-                            height: 100,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Your campus transport companion',
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.72),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        const SizedBox(height: 52),
-
-                        // Glassmorphism login card
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                            child: Container(
-                              padding: const EdgeInsets.all(28),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(28),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.18),
-                                  width: 1.5,
+                          child: SizedBox(
+                            width: 280,
+                            height: 180,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Transform.translate(
+                                  offset: const Offset(4, 4),
+                                  child: SvgPicture.asset(
+                                    'app_assets/svglogo.svg',
+                                    width: 220,
+                                    colorFilter: const ColorFilter.mode(AppTheme.neuShadowDark, BlendMode.srcIn),
+                                  ),
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.redAccent.withValues(alpha: 0.15),
-                                    blurRadius: 30,
-                                    offset: const Offset(0, 10),
+                                Transform.translate(
+                                  offset: const Offset(-2, -2),
+                                  child: SvgPicture.asset(
+                                    'app_assets/svglogo.svg',
+                                    width: 220,
+                                    colorFilter: const ColorFilter.mode(AppTheme.neuShadowLight, BlendMode.srcIn),
                                   ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    'Welcome Back',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                ),
+                                ShaderMask(
+                                  shaderCallback: (bounds) => const LinearGradient(
+                                    colors: [AppTheme.redAccent, AppTheme.primaryDark],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ).createShader(bounds),
+                                  child: SvgPicture.asset(
+                                    'app_assets/svglogo.svg',
+                                    width: 220,
+                                    colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Sign in to your account',
-                                    style: GoogleFonts.inter(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.6,
-                                      ),
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 28),
-
-                                  // Email field
-                                  _GlassTextField(
-                                    controller: _emailController,
-                                    hint: 'Email Address',
-                                    icon: Icons.email_outlined,
-                                    keyboardType: TextInputType.emailAddress,
-                                  ),
-                                  const SizedBox(height: 14),
-
-                                  // Password field
-                                  _GlassTextField(
-                                    controller: _passwordController,
-                                    hint: 'Password',
-                                    icon: Icons.lock_outline_rounded,
-                                    obscureText: _obscurePassword,
-                                    suffixIcon: IconButton(
-                                      onPressed:
-                                          () => setState(
-                                            () =>
-                                                _obscurePassword =
-                                                    !_obscurePassword,
-                                          ),
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
-                                        color: Colors.white60,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 14),
-
-                                  Align(
-                                    alignment: Alignment.centerRight,
-                                    child: Text(
-                                      'Forgot Password?',
-                                      style: GoogleFonts.inter(
-                                        color: AppTheme.redAccent,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 28),
-
-                                  // Sign In button
-                                  SizedBox(
-                                    height: 54,
-                                    child: ElevatedButton(
-                                      onPressed:
-                                          _isLoading ? null : _handleLogin,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: AppTheme.redAccent,
-                                        disabledBackgroundColor: Colors.white38,
-                                        elevation: 0,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                        ),
-                                      ),
-                                      child:
-                                          _isLoading
-                                              ? const SizedBox(
-                                                width: 22,
-                                                height: 22,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      color: AppTheme.redAccent,
-                                                      strokeWidth: 2.5,
-                                                    ),
-                                              )
-                                              : Text(
-                                                'Sign In',
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-
-                        const SizedBox(height: 36),
+                        const SizedBox(height: 16),
                         Text(
-                          'Managed by Transport Department',
+                          'Your campus transport companion',
                           style: GoogleFonts.inter(
-                            color: Colors.white.withValues(alpha: 0.4),
-                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                      ],
+                        const SizedBox(height: 60),
+
+                    // Neumorphic Google Login Button
+                    GestureDetector(
+                      onTapDown:
+                          (_) => setState(() => _isGoogleBtnPressed = true),
+                      onTapUp: (_) {
+                        setState(() => _isGoogleBtnPressed = false);
+                        if (!_isLoading) _handleGoogleLogin();
+                      },
+                      onTapCancel:
+                          () => setState(() => _isGoogleBtnPressed = false),
+                      child: AnimatedScale(
+                        scale: _isGoogleBtnPressed ? 0.95 : 1.0,
+                        duration: const Duration(milliseconds: 100),
+                        curve: Curves.easeOut,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          decoration: AppTheme.neuBoxDecoration(
+                            radius: 30,
+                            inset: _isGoogleBtnPressed,
+                          ),
+                          child:
+                              _isLoading
+                                  ? const Center(
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        color: AppTheme.redAccent,
+                                        strokeWidth: 2.5,
+                                      ),
+                                    ),
+                                  )
+                                  : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      // Simulated Google Icon
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black12,
+                                              blurRadius: 4,
+                                              offset: Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Text(
+                                          ' G ',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.blueAccent,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Continue with Google',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                        ),
+                      ),
                     ),
-                  ),
+
+                    const SizedBox(height: 80),
+
+                    // Footers
+                    Text(
+                      'Made by School of STEM',
+                      style: GoogleFonts.inter(
+                        color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Managed by Transport department',
+                      style: GoogleFonts.inter(
+                        color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
         ),
-      ],
-    );
-  }
-}
-
-class _GlassTextField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final IconData icon;
-  final bool obscureText;
-  final TextInputType keyboardType;
-  final Widget? suffixIcon;
-
-  const _GlassTextField({
-    required this.controller,
-    required this.hint,
-    required this.icon,
-    this.obscureText = false,
-    this.keyboardType = TextInputType.text,
-    this.suffixIcon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.2),
-          width: 1.2,
-        ),
       ),
-      child: TextField(
-        controller: controller,
-        obscureText: obscureText,
-        keyboardType: keyboardType,
-        style: GoogleFonts.inter(color: Colors.white, fontSize: 15),
-        cursorColor: Colors.white,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: GoogleFonts.inter(
-            color: Colors.white.withValues(alpha: 0.48),
-            fontSize: 15,
-          ),
-          prefixIcon: Icon(icon, color: Colors.white60, size: 20),
-          suffixIcon: suffixIcon,
-          border: InputBorder.none,
-          focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: AppTheme.redAccent, width: 2),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 16,
-            horizontal: 12,
-          ),
-        ),
-      ),
-    );
+    ],
+  ),
+);
   }
 }

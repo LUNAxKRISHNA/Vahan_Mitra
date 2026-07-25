@@ -17,17 +17,19 @@ class BusLocation {
   final double lng;
   final double speed;
   final int sat;
+  final DateTime? timestamp;
 
   const BusLocation({
     required this.lat,
     required this.lng,
     this.speed = 0,
     this.sat = 0,
+    this.timestamp,
   });
 
   @override
   String toString() =>
-      'BusLocation(lat: $lat, lng: $lng, speed: $speed, sat: $sat)';
+      'BusLocation(lat: $lat, lng: $lng, speed: $speed, sat: $sat, timestamp: $timestamp)';
 }
 
 // ─── SERVICE ─────────────────────────────────────────────────────────────────
@@ -260,11 +262,25 @@ class MqttService {
           continue;
         }
 
+        DateTime? parsedTime;
+        final tsRaw = json['ts'] ?? json['timestamp'] ?? json['last_updated'];
+        if (tsRaw != null) {
+          if (tsRaw is num) {
+            parsedTime = tsRaw > 10000000000
+                ? DateTime.fromMillisecondsSinceEpoch(tsRaw.toInt(), isUtc: true)
+                : DateTime.fromMillisecondsSinceEpoch((tsRaw * 1000).toInt(), isUtc: true);
+          } else if (tsRaw is String) {
+            parsedTime = DateTime.tryParse(tsRaw);
+          }
+        }
+        parsedTime ??= DateTime.now();
+
         _locations[busKey] = BusLocation(
           lat: lat,
           lng: lng,
           speed: (json['speed'] as num?)?.toDouble() ?? 0,
           sat: (json['sat'] as num? ?? json['satellites'] as num?)?.toInt() ?? 0,
+          timestamp: parsedTime,
         );
 
         _controller.add(Map.unmodifiable(_locations));

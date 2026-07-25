@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -18,45 +19,29 @@ class MapScreen extends ConsumerStatefulWidget {
   ConsumerState<MapScreen> createState() => _MapScreenState();
 }
 
-class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateMixin {
+class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
 
   LatLng? _currentLocation;
-  bool _loadingLocation = false;
-  bool _showBusInfo = false;
-  late AnimationController _infoSheetController;
-  late Animation<double> _infoSheetAnimation;
 
   @override
   void initState() {
     super.initState();
-    _infoSheetController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 400),
-    );
-    _infoSheetAnimation = CurvedAnimation(
-      parent: _infoSheetController,
-      curve: Curves.easeOutQuint,
-    );
-
     _getCurrentLocation();
   }
 
   @override
   void dispose() {
-    _infoSheetController.dispose();
     super.dispose();
   }
 
   Future<void> _getCurrentLocation() async {
-    setState(() => _loadingLocation = true);
     try {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.deniedForever) {
-        setState(() => _loadingLocation = false);
         return;
       }
       final pos = await Geolocator.getCurrentPosition(
@@ -67,14 +52,9 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
       if (mounted) {
         setState(() {
           _currentLocation = LatLng(pos.latitude, pos.longitude);
-          _loadingLocation = false;
         });
       }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _loadingLocation = false);
-      }
-    }
+    } catch (_) {}
   }
 
   void _goToCurrentLocation() async {
@@ -95,13 +75,30 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
     }
   }
 
-  void _toggleBusInfo() {
-    setState(() => _showBusInfo = !_showBusInfo);
-    if (_showBusInfo) {
-      _infoSheetController.forward();
-    } else {
-      _infoSheetController.reverse();
+
+
+  int _calculateEffectiveSpeed(Map<String, dynamic> busData) {
+    final rawSpeed = ((busData['speed'] ?? busData['current_location']?['speed'] ?? 0) as num).toDouble();
+    final rawTs = busData['last_updated'] ?? busData['ts'] ?? busData['timestamp'];
+
+    if (rawTs == null) return 0;
+
+    DateTime? dt;
+    if (rawTs is DateTime) {
+      dt = rawTs;
+    } else if (rawTs is String) {
+      dt = DateTime.tryParse(rawTs);
     }
+
+    if (dt == null) return 0;
+
+    // If timestamp hasn't updated for > 15 seconds, treat speed as 0 km/h
+    final ageInSeconds = DateTime.now().difference(dt.toLocal()).inSeconds.abs();
+    if (ageInSeconds > 15) {
+      return 0;
+    }
+
+    return rawSpeed.toInt();
   }
 
   @override
@@ -111,7 +108,13 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
     return Scaffold(
       backgroundColor: AppTheme.background,
       extendBodyBehindAppBar: true,
-      body: busesAsync.when(
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        child: busesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
         error: (err, stack) => Center(child: Text('Error: $err')),
         data: (buses) {
@@ -201,38 +204,23 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                 ],
               ),
 
-              // ── Top gradient overlay ──────────────────────────────────
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 140,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        AppTheme.gradientDark.withValues(alpha: 0.85),
-                        AppTheme.gradientDark.withValues(alpha: 0.0),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
               // ── Top bar ──────────────────────────────────────────────
               SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
-                      _GlassButton(
+                      GestureDetector(
                         onTap: () => context.pop(),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          color: Colors.white,
-                          size: 18,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: AppTheme.neuBoxDecoration(radius: 14),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: AppTheme.textPrimary,
+                            size: 18,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -240,53 +228,40 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 16,
-                            vertical: 10,
+                            vertical: 12,
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
+                          decoration: AppTheme.neuBoxDecoration(radius: 18),
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.directions_bus_rounded,
-                                color: Colors.white.withValues(alpha: 0.9),
-                                size: 18,
+                                color: AppTheme.redAccent,
+                                size: 20,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               Text(
                                 activeBus != null ? (activeBus['name'] ?? 'Bus Tracker') : 'All Buses',
                                 style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                               const Spacer(),
                               if (activeBus != null)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 3,
+                                  width: 28,
+                                  height: 28,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black,
+                                    shape: BoxShape.circle,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.accent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                                  alignment: Alignment.center,
                                   child: Text(
-                                    activeBus['status'] ?? 'Live',
-                                    style: GoogleFonts.inter(
+                                    activeBus['bus_no']?.toString() ?? activeBus['id']?.toString() ?? '1',
+                                    style: GoogleFonts.poppins(
                                       color: Colors.white,
-                                      fontSize: 10,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -300,71 +275,66 @@ class _MapScreenState extends ConsumerState<MapScreen> with TickerProviderStateM
                 ),
               ),
 
-              // ── Right-side control buttons ────────────────────────────
-              Positioned(
-                right: 16,
-                bottom: activeBus != null ? 240 : 100,
-                child: Column(
-                  children: [
-                    _MapControlButton(
-                      icon: Icons.add,
-                      onTap: () {
-                        final zoom = _mapController.camera.zoom;
-                        _mapController.move(_mapController.camera.center, zoom + 1);
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _MapControlButton(
-                      icon: Icons.remove,
-                      onTap: () {
-                        final zoom = _mapController.camera.zoom;
-                        _mapController.move(_mapController.camera.center, zoom - 1);
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    _MapControlButton(
-                      icon: _loadingLocation ? null : Icons.my_location_rounded,
-                      isLoading: _loadingLocation,
-                      highlighted: true,
-                      onTap: _goToCurrentLocation,
-                    ),
-                    const SizedBox(height: 8),
-                    _MapControlButton(
-                      icon: Icons.directions_bus_rounded,
-                      onTap: () {
-                        if (activeBus != null) {
-                          final loc = LatLng(activeBus['current_location']['lat'], activeBus['current_location']['lng']);
-                          _mapController.move(loc, 15.0);
-                        } else if (buses.isNotEmpty) {
-                          final loc = LatLng(buses.first['current_location']['lat'], buses.first['current_location']['lng']);
-                          _mapController.move(loc, 14.0);
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-
-              // ── Bottom info panel ─────────────────────────────────────
+              // ── Floating Bottom Info Panel & Speed Badge ─────────────────────
               if (activeBus != null)
                 Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: _BusInfoPanel(
-                    busData: activeBus,
-                    isExpanded: _showBusInfo,
-                    animation: _infoSheetAnimation,
-                    onToggle: _toggleBusInfo,
-                    onCall: () => _callDriver(activeBus!),
+                  bottom: 24,
+                  left: 16,
+                  right: 16,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Floating Speed Pill on Top-Left of Panel
+                      Builder(
+                        builder: (context) {
+                          final speed = _calculateEffectiveSpeed(activeBus!);
+                          final isMoving = speed > 0;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: AppTheme.neuBoxDecoration(radius: 20),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.speed_rounded,
+                                  color: isMoving ? AppTheme.redAccent : AppTheme.textSecondary,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  '$speed km/h',
+                                  style: GoogleFonts.poppins(
+                                    color: isMoving ? AppTheme.textPrimary : AppTheme.textSecondary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      _FloatingBusPanel(
+                        busData: activeBus,
+                        onFocusBus: () {
+                          final loc = LatLng(activeBus!['current_location']['lat'], activeBus['current_location']['lng']);
+                          _mapController.move(loc, 15.0);
+                        },
+                        onMyLocation: _goToCurrentLocation,
+                        onCall: () => _callDriver(activeBus!),
+                      ),
+                    ],
                   ),
                 ),
             ],
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ── Widgets ─────────────────────────────────────────────────────────────────
@@ -441,10 +411,10 @@ class _BusMarkerState extends State<_BusMarker>
                   Transform.scale(
                     scale: _pulse.value,
                     child: Container(
-                      width: 50,
-                      height: 50,
+                      width: 48,
+                      height: 48,
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.15),
+                        color: AppTheme.redAccent.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -452,24 +422,10 @@ class _BusMarkerState extends State<_BusMarker>
                   Container(
                     width: 38,
                     height: 38,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppTheme.primary, AppTheme.accent],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.primary.withValues(alpha: 0.4),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
+                    decoration: AppTheme.neuBoxDecoration(radius: 20),
                     child: const Icon(
                       Icons.directions_bus_rounded,
-                      color: Colors.white,
+                      color: AppTheme.redAccent,
                       size: 20,
                     ),
                   ),
@@ -550,392 +506,280 @@ class _CurrentLocationMarkerState extends State<_CurrentLocationMarker>
   }
 }
 
-class _GlassButton extends StatelessWidget {
-  final VoidCallback onTap;
-  final Widget child;
 
-  const _GlassButton({required this.onTap, required this.child});
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-            ),
-          ],
-        ),
-        child: Center(child: child),
-      ),
-    );
-  }
-}
 
-class _MapControlButton extends StatelessWidget {
-  final IconData? icon;
-  final VoidCallback onTap;
-  final bool highlighted;
-  final bool isLoading;
 
-  const _MapControlButton({
-    this.icon,
-    required this.onTap,
-    this.highlighted = false,
-    this.isLoading = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: highlighted ? AppTheme.primary : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Center(
-          child:
-              isLoading
-                  ? SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: highlighted ? Colors.white : AppTheme.primary,
-                    ),
-                  )
-                  : Icon(
-                    icon,
-                    color: highlighted ? Colors.white : AppTheme.primary,
-                    size: 20,
-                  ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BusInfoPanel extends StatelessWidget {
+class _FloatingBusPanel extends StatelessWidget {
   final Map<String, dynamic> busData;
-  final bool isExpanded;
-  final Animation<double> animation;
-  final VoidCallback onToggle;
+  final VoidCallback onFocusBus;
+  final VoidCallback onMyLocation;
   final VoidCallback onCall;
 
-  const _BusInfoPanel({
+  const _FloatingBusPanel({
     required this.busData,
-    required this.isExpanded,
-    required this.animation,
-    required this.onToggle,
+    required this.onFocusBus,
+    required this.onMyLocation,
     required this.onCall,
   });
 
+  String? _formatLastUpdated(dynamic rawTs) {
+    if (rawTs == null) return null;
+    DateTime? dt;
+    if (rawTs is DateTime) {
+      dt = rawTs;
+    } else if (rawTs is String) {
+      dt = DateTime.tryParse(rawTs);
+    }
+    if (dt == null) return null;
+
+    final local = dt.toLocal();
+    final hour = local.hour;
+    final minute = local.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final hour12 = hour % 12 == 0 ? 12 : hour % 12;
+
+    return '$hour12:$minute $period';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final routeName = busData['route']?.toString() ?? 'College Route';
+    final regNo = busData['reg_number']?.toString() ?? busData['bus_no']?.toString() ?? 'KL 07 BD 2345';
+    final status = busData['status']?.toString() ?? 'Running';
+    final driverName = busData['driver_name']?.toString() ?? 'Driver';
+    final lastUpdatedRaw = busData['last_updated'] ?? busData['ts'] ?? busData['timestamp'];
+    final formattedTime = _formatLastUpdated(lastUpdatedRaw);
+
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 24,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(20),
+      decoration: AppTheme.neuBoxDecoration(radius: 24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onTap: onToggle,
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-              child: Column(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(4),
+          // Route Title & Bus Status Header
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      routeName,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppTheme.primary, AppTheme.accent],
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.directions_bus_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              busData['name'] ?? 'Bus',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                            Text(
-                              busData['route'] ?? '',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          busData['status'] ?? 'Live',
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Text(
+                          'Reg: $regNo',
                           style: GoogleFonts.inter(
-                            color: AppTheme.accent,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.textSecondary,
                           ),
                         ),
+                        if (formattedTime != null) ...[
+                          Text(
+                            ' • ',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          const Icon(
+                            Icons.access_time_rounded,
+                            size: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            formattedTime,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: AppTheme.neuBoxDecoration(radius: 12, inset: true),
+                child: Text(
+                  status.toUpperCase(),
+                  style: GoogleFonts.inter(
+                    color: AppTheme.redAccent,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Driver Call Card
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: AppTheme.neuBoxDecoration(radius: 16, inset: true),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: AppTheme.neuBoxDecoration(radius: 12),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    color: AppTheme.redAccent,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        driverName,
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: AppTheme.textPrimary,
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      AnimatedRotation(
-                        turns: isExpanded ? 0.5 : 0,
-                        duration: const Duration(milliseconds: 300),
-                        child: const Icon(
-                          Icons.keyboard_arrow_up_rounded,
+                      Text(
+                        'Bus Driver',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
                           color: AppTheme.textSecondary,
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                GestureDetector(
+                  onTap: onCall,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: AppTheme.neuBoxDecoration(radius: 12),
+                    child: const Icon(
+                      Icons.call_rounded,
+                      color: AppTheme.redAccent,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // Expanded section
-          SizeTransition(
-            sizeFactor: animation,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Column(
-                children: [
-                  const Divider(),
-                  const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          Divider(color: Colors.grey.withValues(alpha: 0.2)),
+          const SizedBox(height: 12),
 
-                  _InfoRow(
-                    icon: Icons.route_rounded,
-                    label: 'Route',
-                    value: busData['route'] ?? 'N/A',
-                    iconColor: AppTheme.primary,
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(14),
+          // Bottom Action Row with 2 black pills distributed equally from the center
+          Row(
+            children: [
+              // Bus Location Black Pill
+              Expanded(
+                child: GestureDetector(
+                  onTap: onFocusBus,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppTheme.background,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: AppTheme.primary.withValues(
-                            alpha: 0.1,
-                          ),
-                          child: const Icon(
-                            Icons.person_rounded,
-                            color: AppTheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                busData['driver_name'] ?? 'Driver',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: AppTheme.textPrimary,
-                                ),
-                              ),
-                              Text(
-                                'Bus Driver',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: AppTheme.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: onCall,
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [AppTheme.primary, AppTheme.accent],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppTheme.primary.withValues(
-                                    alpha: 0.3,
-                                  ),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.call_rounded,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppTheme.primary.withValues(alpha: 0.08),
-                          AppTheme.accent.withValues(alpha: 0.08),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: AppTheme.primary.withValues(alpha: 0.15),
-                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.green,
-                            shape: BoxShape.circle,
-                          ),
+                        const Icon(
+                          Icons.directions_bus_rounded,
+                          color: Colors.white,
+                          size: 18,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Live tracking active',
-                          style: GoogleFonts.inter(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.w600,
+                          'Bus Location',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
                             fontSize: 13,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
-            ),
-          ),
 
-          if (!isExpanded) const SizedBox(height: 20),
+              const SizedBox(width: 12),
+
+              // My Location Black Pill
+              Expanded(
+                child: GestureDetector(
+                  onTap: onMyLocation,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.my_location_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'My Location',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color iconColor;
 
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: iconColor, size: 16),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          label,
-          style: GoogleFonts.inter(color: AppTheme.textSecondary, fontSize: 13),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: GoogleFonts.poppins(
-            color: AppTheme.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-          ),
-        ),
-      ],
-    );
-  }
-}

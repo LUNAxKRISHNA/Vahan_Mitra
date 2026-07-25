@@ -51,11 +51,72 @@ final userProvider = AsyncNotifierProvider<UserNotifier, Map<String, dynamic>>((
 });
 
 // ─── NOTIFICATIONS PROVIDER (live Supabase) ───────────────────────────────
-final notificationsProvider = FutureProvider<List<dynamic>>((ref) async {
-  final response = await _supabase
-      .from('notifications')
-      .select('*');
-  return response as List<dynamic>;
+class NotificationsNotifier extends AsyncNotifier<List<dynamic>> {
+  @override
+  Future<List<dynamic>> build() async {
+    try {
+      final response = await _supabase
+          .from('notifications')
+          .select('*, admin(name, role)');
+      return (response as List<dynamic>?) ?? [];
+    } catch (e) {
+      debugPrint('Error fetching notifications with admin join: $e');
+      try {
+        final response = await _supabase
+            .from('notifications')
+            .select('*');
+        final fallbackList = (response as List<dynamic>?) ?? [];
+        if (fallbackList.isNotEmpty) {
+          fallbackList[0] = {
+            ...fallbackList[0] as Map<String, dynamic>,
+            'msg_content': '${fallbackList[0]['msg_content']}\n\n[System Error Details: $e]'
+          };
+        }
+        return fallbackList;
+      } catch (e2) {
+        debugPrint('Fallback error fetching notifications: $e2');
+        return [];
+      }
+    }
+  }
+
+  Future<void> markAllAsRead() async {
+    final currentNotifications = state.asData?.value ?? [];
+    if (currentNotifications.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final allIds = currentNotifications.map((n) => n['id'].toString()).toList();
+    await prefs.setStringList('seen_notification_ids', allIds);
+    
+    // Invalidate the unread state so UI updates immediately
+    ref.invalidate(unseenNotificationsProvider);
+  }
+
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => build());
+    ref.invalidate(unseenNotificationsProvider);
+  }
+}
+
+final notificationsProvider = AsyncNotifierProvider<NotificationsNotifier, List<dynamic>>(() {
+  return NotificationsNotifier();
+});
+
+final unseenNotificationsProvider = FutureProvider<bool>((ref) async {
+  final notificationsAsync = ref.watch(notificationsProvider);
+  
+  if (notificationsAsync.isLoading || notificationsAsync.hasError) {
+    return false;
+  }
+  
+  final notifications = notificationsAsync.asData?.value ?? [];
+  if (notifications.isEmpty) return false;
+  
+  final prefs = await SharedPreferences.getInstance();
+  final seenIds = prefs.getStringList('seen_notification_ids') ?? [];
+  
+  return notifications.any((n) => !seenIds.contains(n['id'].toString()));
 });
 
 // ─── BUSES PROVIDER (live Supabase via assignments relational join) ───────────
@@ -172,6 +233,7 @@ final busesProvider = Provider<AsyncValue<List<dynamic>>>((ref) {
           },
           'speed': location.speed,
           'satellites': location.sat,
+          'last_updated': location.timestamp?.toIso8601String(),
         };
       }
     }

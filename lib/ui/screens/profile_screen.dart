@@ -34,7 +34,7 @@ class ProfileScreen extends ConsumerWidget {
 
   void _showEditProfileDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> user) {
     String selectedRoute = user['default_route'] ?? 'Route A';
-    final phoneController = TextEditingController(text: (user['sos_contacts'] != null && (user['sos_contacts'] as List).isNotEmpty) ? user['sos_contacts'][0] : '');
+    final phoneController = TextEditingController(text: user['phone']?.toString() ?? user['phone_no']?.toString() ?? '');
     final List<String> availableRoutes = ['Route A', 'Route B', 'Route C'];
 
     showDialog(
@@ -80,7 +80,7 @@ class ProfileScreen extends ConsumerWidget {
                 onPressed: () {
                   ref.read(userProvider.notifier).updateProfile({
                     'default_route': selectedRoute,
-                    'sos_contacts': [phoneController.text],
+                    'phone': phoneController.text,
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -100,7 +100,7 @@ class ProfileScreen extends ConsumerWidget {
     return userAsync.when(
       data: (user) {
         return SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 120),
+          padding: const EdgeInsets.only(bottom: 160),
           child: Column(
             children: [
               // Flat Header

@@ -15,17 +15,33 @@ class RoutesScreen extends ConsumerStatefulWidget {
 class _RoutesScreenState extends ConsumerState<RoutesScreen> {
   int _selectedRouteIndex = 0;
   late PageController _pageController;
+  late ScrollController _chipScrollController;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _selectedRouteIndex);
+    _chipScrollController = ScrollController();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _chipScrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToChip(int index) {
+    if (!_chipScrollController.hasClients) return;
+    final double targetOffset = (index * 110.0 - 100.0).clamp(
+      0.0,
+      _chipScrollController.position.maxScrollExtent,
+    );
+    _chipScrollController.animateTo(
+      targetOffset,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
@@ -63,6 +79,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
               if (routes.length > 1) ...[
                 const SizedBox(height: 4),
                 SingleChildScrollView(
+                  controller: _chipScrollController,
                   scrollDirection: Axis.horizontal,
                   clipBehavior: Clip.none,
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
@@ -80,6 +97,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
                               duration: const Duration(milliseconds: 350),
                               curve: Curves.easeOutCubic,
                             );
+                            _scrollToChip(index);
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -114,6 +132,7 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
                     setState(() {
                       _selectedRouteIndex = index;
                     });
+                    _scrollToChip(index);
                   },
                   itemCount: routes.length,
                   itemBuilder: (context, index) {
@@ -172,124 +191,93 @@ class _RoutesScreenState extends ConsumerState<RoutesScreen> {
 
   Widget _buildInfoCard(String routeName, String busNo, String regNumber, String busName) {
     return Container(
-      decoration: AppTheme.neuBoxDecoration(radius: 28),
-      padding: const EdgeInsets.all(22),
+      decoration: AppTheme.neuBoxDecoration(radius: 24),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Route Name Heading ───────────────────────────────────────────────
+          // ── Header: Bus No Circle + Route Name & Bus Name ────────────────────
           Row(
             children: [
-              const Icon(
-                Icons.location_on_outlined,
-                size: 20,
-                color: AppTheme.redAccent,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
+              Container(
+                width: 38,
+                height: 38,
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
                 child: Text(
-                  routeName,
+                  busNo.isEmpty ? '—' : busNo,
                   style: GoogleFonts.poppins(
-                    fontSize: 18,
+                    color: Colors.white,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          Divider(
-            color: Colors.grey.withValues(alpha: 0.15),
-            height: 1,
-          ),
-
-          const SizedBox(height: 16),
-
-          // ── Bottom Details: Bus No., Registration & Bus Name ─────────────────
-          Row(
-            children: [
-              // Column 1: Bus Number
+              const SizedBox(width: 12),
               Expanded(
-                flex: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Bus No.',
-                      style: GoogleFonts.inter(fontSize: 10, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      busNo.isEmpty ? '—' : busNo,
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                      routeName,
+                      style: GoogleFonts.poppins(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
-              ),
-
-              Container(
-                width: 1,
-                height: 30,
-                color: Colors.grey.withValues(alpha: 0.2),
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-              ),
-
-              // Column 2: Registration Number
-              Expanded(
-                flex: 4,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Registration',
-                      style: GoogleFonts.inter(fontSize: 10, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      regNumber.isEmpty ? '—' : regNumber,
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              Container(
-                width: 1,
-                height: 30,
-                color: Colors.grey.withValues(alpha: 0.2),
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-              ),
-
-              // Column 3: Bus Name
-              Expanded(
-                flex: 5,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Bus Name',
-                      style: GoogleFonts.inter(fontSize: 10, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 2),
                     Text(
                       busName.isEmpty ? 'Unassigned' : busName,
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
+          ),
+
+          const SizedBox(height: 16),
+          Divider(color: Colors.grey.withValues(alpha: 0.15), height: 1),
+          const SizedBox(height: 14),
+
+          // ── Registration Number Section (Full Width, Unclipped) ──────────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: AppTheme.neuBoxDecoration(radius: 14, inset: true),
+            child: Row(
+              children: [
+                const Icon(Icons.badge_outlined, size: 16, color: AppTheme.redAccent),
+                const SizedBox(width: 8),
+                Text(
+                  'Registration: ',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    regNumber.isEmpty ? '—' : regNumber,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -317,8 +305,8 @@ class _SerpentineTimeline extends StatelessWidget {
         final double width = constraints.maxWidth;
         final int totalStops = stops.length;
 
-        const int rowStops = 4;
-        const double rowHeight = 110.0;
+        const int rowStops = 3;
+        const double rowHeight = 130.0;
         const double vMargin = 40.0;
         const double hMargin = 20.0;
         const double radius = rowHeight / 2;
@@ -461,6 +449,8 @@ class _SerpentineTimeline extends StatelessWidget {
           Text(
             name,
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: (isStart || isEnd || isJunction) ? FontWeight.bold : FontWeight.w500,
