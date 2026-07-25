@@ -67,73 +67,6 @@ Whether you are a student tracking your morning shuttle, a commuter checking bus
 | **Typography** | [Google Fonts](https://pub.dev/packages/google_fonts) | Poppins & Inter font family loaded dynamically |
 
 ---
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-Before building and running the project, ensure you have the following installed on your machine:
-- **Flutter SDK**: `v3.19.0` or higher ([Installation Guide](https://docs.flutter.dev/get-started/install))
-- **Dart SDK**: Included with Flutter (`^3.3.0`)
-- **Android Studio** / **Xcode** (for device simulators & native builds)
-- **Git**
-
-### Installation
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/your-org/Vahan_Mitra.git
-   cd Vahan_Mitra
-   ```
-
-2. **Install Flutter Dependencies**:
-   ```bash
-   flutter pub get
-   ```
-
-3. **Configure Environment Variables**:
-   Create a `.env` file in the root of the project (or copy `.env.example` if available):
-   ```env
-   SUPABASE_URL=https://your-supabase-project.supabase.co
-   SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
-
-   MQTT_BROKER=your-hivemq-broker.hivemq.cloud
-   MQTT_USER=your_mqtt_username
-   MQTT_PASSWORD=your_mqtt_password
-   MQTT_TOPIC=vahan_mitra/buses/+/location
-   ```
-
-4. **Run the Application**:
-   Pass the environment file via `--dart-define-from-file`:
-   ```bash
-   flutter run --dart-define-from-file=.env
-   ```
-
-5. **Build Release Artifacts**:
-   - **Android APK**:
-     ```bash
-     flutter build apk --release --dart-define-from-file=.env
-     ```
-   - **Android App Bundle (AAB)**:
-     ```bash
-     flutter build appbundle --release --dart-define-from-file=.env
-     ```
-
----
-
-## ⚙️ Environment Variables Reference
-
-| Variable | Required | Description |
-| :--- | :---: | :--- |
-| `SUPABASE_URL` | Yes | Your Supabase project endpoint URL |
-| `SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase publishable/anon API key |
-| `MQTT_BROKER` | Yes | HiveMQ Cloud broker hostname (e.g. `xyz.s1.eu.hivemq.cloud`) |
-| `MQTT_USER` | Yes | Authenticated MQTT client username |
-| `MQTT_PASSWORD` | Yes | Authenticated MQTT client password |
-| `MQTT_TOPIC` | Yes | Topic wildcard path for bus location streaming (e.g. `vahan_mitra/buses/+/location`) |
-
----
-
 ## 📁 Repository Architecture
 
 ```text
@@ -164,11 +97,10 @@ lib/
 ## 🔒 Security & Best Practices
 
 - **Row-Level Security (RLS):** Backend queries strictly adhere to Supabase Postgres RLS policies.
-- **Environment Isolation:** Sensitive tokens and MQTT credentials are never hardcoded in source files; they are compiled securely via `--dart-define-from-file=.env`.
 - **TLS Encryption:** MQTT telemetry communicates over secure WebSockets (WSS) and TLS Port 8883.
 
 ---
 
 <p align="center">
-  Crafted with ❤️ by the <b>Vahan Mitra Engineering Team</b>
+  Crafted with ❤️ by the <b>School of STEM</b>
 </p>
