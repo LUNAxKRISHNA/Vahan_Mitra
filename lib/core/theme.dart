@@ -1,15 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Custom Color Palette (Synchronized with Wave Header)
-  static const Color primary = Color(0xFF1656B9); // Deep Blue from Clipper
+  // Custom Color Palette
+  static const Color primary = Color(0xFF1656B9); 
   static const Color primaryDark = Color(0xFF0F3D83); 
   static const Color background = Color(0xFFF0F5F9); 
   static const Color surface = Color(0xFF9CB7C7);
-  static const Color accent = Color(0xFF4ACFC0); // Bright Teal from Clipper
+  static const Color accent = Color(0xFF4ACFC0); 
   static const Color textPrimary = Color(0xFF1F2D33);
   static const Color textSecondary = Color(0xFF5A7381);
+  
+  // Neumorphic Additions
+  static const Color neuBg = Color(0xFFF2F4F8);
+  static const Color neuShadowLight = Colors.white;
+  static const Color neuShadowDark = Color(0xFFC8D0E7);
+  static const Color redAccent = Color(0xFFEE3838);
+
+  static BoxDecoration neuBoxDecoration({double radius = 20, bool inset = false}) {
+    if (inset) {
+      return BoxDecoration(
+        color: neuBg,
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: [
+          BoxShadow(
+            color: neuShadowDark,
+            offset: const Offset(3, 3),
+            blurRadius: 6,
+          ),
+          const BoxShadow(
+            color: neuShadowLight,
+            offset: Offset(-3, -3),
+            blurRadius: 6,
+          ),
+        ],
+      );
+    }
+    return BoxDecoration(
+      color: neuBg,
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        BoxShadow(
+          color: neuShadowDark,
+          offset: const Offset(5, 5),
+          blurRadius: 10,
+        ),
+        const BoxShadow(
+          color: neuShadowLight,
+          offset: Offset(-5, -5),
+          blurRadius: 10,
+        ),
+      ],
+    );
+  }
   
   // Custom Gradient Colors for Wave Header
   static const Color gradientDark = primary;
@@ -29,7 +73,7 @@ class AppTheme {
     return ThemeData(
       primaryColor: primary,
       fontFamily: GoogleFonts.inter().fontFamily,
-      scaffoldBackgroundColor: background,
+      scaffoldBackgroundColor: neuBg,
       colorScheme: const ColorScheme.light(
         primary: primary,
         secondary: accent,
@@ -78,8 +122,15 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: background,
+        backgroundColor: neuBg,
         elevation: 0,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+          systemNavigationBarColor: neuBg,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
         iconTheme: const IconThemeData(color: primary),
         titleTextStyle: GoogleFonts.poppins(
           color: primary,
@@ -89,7 +140,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
+          backgroundColor: redAccent,
           foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
