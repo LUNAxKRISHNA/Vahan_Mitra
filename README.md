@@ -1,13 +1,6 @@
 <p align="center">
   <img src="app_assets/vmlogo.png" alt="Vahan Mitra Logo" width="220"/>
 </p>
-
-<h1 align="center">Vahan Mitra — Real-Time Campus Transit & Fleet Telematics</h1>
-
-<p align="center">
-  A state-of-the-art Flutter application for sub-second GPS bus tracking, interactive serpentine route visualization, and real-time fleet operations.
-</p>
-
 <p align="center">
   <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/></a>
   <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart"/></a>
