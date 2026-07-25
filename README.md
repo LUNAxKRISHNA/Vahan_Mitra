@@ -1,89 +1,174 @@
 <p align="center">
-  <img src="app_assets/vmlogo.png" alt="Vahan Mitra Logo" width="180"/>
+  <img src="app_assets/vmlogo.png" alt="Vahan Mitra Logo" width="220"/>
 </p>
+
+<h1 align="center">Vahan Mitra — Real-Time Campus Transit & Fleet Telematics</h1>
+
 <p align="center">
-  <img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter Badge"/>
-  <img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart Badge"/>
-  <img src="https://img.shields.io/badge/Riverpod-3.x-8A2BE2?style=for-the-badge&logo=riverpod&logoColor=white" alt="Riverpod Badge"/>
-  <img src="https://img.shields.io/badge/HiveMQ_MQTT-TLS_8883-FF6600?style=for-the-badge&logo=hivemq&logoColor=white" alt="HiveMQ Badge"/>
-  <img src="https://img.shields.io/badge/Supabase-Database_&_RLS-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase Badge"/>
+  A state-of-the-art Flutter application for sub-second GPS bus tracking, interactive serpentine route visualization, and real-time fleet operations.
+</p>
+
+<p align="center">
+  <a href="https://flutter.dev"><img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter"/></a>
+  <a href="https://dart.dev"><img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart"/></a>
+  <a href="https://riverpod.dev"><img src="https://img.shields.io/badge/Riverpod-3.x-8A2BE2?style=for-the-badge&logo=riverpod&logoColor=white" alt="Riverpod"/></a>
+  <a href="https://www.hivemq.com"><img src="https://img.shields.io/badge/HiveMQ_MQTT-TLS_8883-FF6600?style=for-the-badge&logo=hivemq&logoColor=white" alt="HiveMQ"/></a>
+  <a href="https://supabase.com"><img src="https://img.shields.io/badge/Supabase-Database_&_Auth-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase"/></a>
+  <a href="https://pub.dev/packages/go_router"><img src="https://img.shields.io/badge/GoRouter-Declarative_Routing-00599C?style=for-the-badge&logo=flutter&logoColor=white" alt="GoRouter"/></a>
 </p>
 
 ---
 
-## Overview
+## 📌 Overview
 
-**Vahan Mitra** is a state-of-the-art Flutter mobile application designed for real-time campus transit tracking, fleet telematics, and route navigation. Built with a signature **Neumorphic UI Design System**, the app offers sub-second GPS tracking powered by **HiveMQ Cloud MQTT**, seamless backend syncing with **Supabase**, and an intuitive user interface tailored for students, commuters, and fleet managers.
+**Vahan Mitra** is a modern, high-performance mobile application engineered to solve campus transit tracking challenges. Built with a signature **Soft-Neumorphic UI Design System**, the application streams live vehicle coordinates with sub-second latency using **HiveMQ Cloud MQTT (WSS/TLS)** and integrates with **Supabase** for backend authentication, real-time database triggers, and route manifests.
 
----
-
-## Key Features
-
-### Real-Time Interactive Live Map
-- **Live Vehicle Telemetry:** Tracks dynamic bus positions over OpenStreetMap (`flutter_map`) with animated pulse markers.
-- **Floating Speed Pill:** Calculates live speed in real time (`km/h`) and intelligently sets speed to `0 km/h` when stationary or when payload timestamps cease.
-- **Top Bus Badge:** Round black indicator displaying the vehicle unit number.
-- **1-Tap Focus Controls:** Equal-width floating black action pills ("Bus Location" & "My Location") to smoothly re-center the map view.
-- **Payload Timestamp:** Real-time display of the latest MQTT packet timestamp formatted as `HH:MM AM/PM`.
-
-### Serpentine Campus Routes & Timelines
-- **Interactive Route Selector:** Horizontal route chips that dynamically auto-scroll into view when swiping through routes.
-- **Route Cards:** Displays route title, bus assignment, and full vehicle registration number (`KL 07 BD 2345`).
-- **Serpentine Timeline:** Custom Canvas painter (`_SerpentinePathPainter`) visualizing multi-row bus stops, current position highlights, and destination endpoints.
-
-### Alerts & Announcements
-- **Notification Feed:** Categorized system alerts (General, Schedule, Delay, Route Updates).
-- **Admin Metadata:** Displays post author name, admin role, and formatted release timestamp.
-- **Subtle Pull-to-Refresh:** Integrated `RefreshIndicator` for pull-down feed updates.
-
-### Neumorphic Design System
-- Custom soft-shadow box decorations (`AppTheme.neuBoxDecoration`), inset input fields, and vibrant `AppTheme.redAccent` highlights.
-- Modern typography integrated with `GoogleFonts.poppins` and `GoogleFonts.inter`.
-- Optimized status bar visibility via `SystemChrome.setSystemUIOverlayStyle` and `AnnotatedRegion` for dark, high-contrast system icons.
+Whether you are a student tracking your morning shuttle, a commuter checking bus arrival timelines, or a fleet manager supervising vehicle operational states, Vahan Mitra delivers an effortless and visually stunning experience.
 
 ---
 
-## Technology Stack
+## ✨ Key Features
 
-| Component | Technology | Description |
+### 🗺️ Real-Time Interactive Live Map
+- **Live Vehicle Telemetry:** Tracks dynamic bus positions over OpenStreetMap (`flutter_map`) with animated pulse location markers.
+- **Floating Speed Pill:** Calculates live speed in real time (`km/h`) and intelligently resets to `0 km/h` when stationary or when payload telemetry pings pause.
+- **Top Bus Badge:** High-contrast round black unit indicator displaying the specific vehicle ID.
+- **1-Tap Focus Controls:** Floating action pills ("Bus Location" & "My Location") to instantly center and zoom the map view.
+- **Telemetry Payload Timestamp:** Displays the latest MQTT packet timestamp formatted cleanly as `HH:MM AM/PM`.
+
+### 🚏 Serpentine Campus Routes & Timelines
+- **Interactive Route Selector:** Horizontal route chips with smooth auto-scroll synchronization when swiping through routes.
+- **Detailed Route Cards:** Visual summary of route name, designated vehicle unit, and full vehicle registration plate.
+- **Serpentine Timeline Painter:** Custom Canvas painter (`_SerpentinePathPainter`) visualizing multi-row campus bus stops, intermediate arrival times, active vehicle highlights, and final destination endpoints.
+
+### 🔔 System Announcements & Alerts
+- **Categorized Notification Feed:** Real-time stream of broadcast alerts categorized by priority (General, Schedule Change, Delay Warning, Route Update).
+- **Admin Metadata & Badges:** Displays post author identity, administrator role badge, and human-readable release timestamp.
+- **Pull-to-Refresh:** Integrated `RefreshIndicator` for manual background feed synchronization.
+
+### 🎨 Neumorphic Design System & Micro-Interactions
+- **Custom Depth Tokens:** Custom soft-shadow box decorations (`AppTheme.neuBoxDecoration`), inset input fields, and vibrant `AppTheme.redAccent` highlights.
+- **Modern Typography:** Integrated Google Fonts (`Poppins` for headings & titles, `Inter` for body copy and timestamps).
+- **Adaptive System Overlays:** Dynamically configured `SystemChrome.setSystemUIOverlayStyle` for high-contrast dark status bar icons and translucent system navigation.
+
+---
+
+## 🛠️ Technology Stack
+
+| Category | Component / Tool | Purpose & Usage |
 | :--- | :--- | :--- |
-| **Core Framework** | [Flutter](https://flutter.dev) | Cross-platform mobile development (SDK `^3.7.2`) |
-| **State Management** | [Flutter Riverpod](https://riverpod.dev) | Reactive state management & provider dependency injection |
-| **Routing** | [GoRouter](https://pub.dev/packages/go_router) | Declarative route management and smooth page transitions |
-| **Live Telemetry** | [MQTT Client](https://pub.dev/packages/mqtt_client) | WSS & TLS 8883 connection to HiveMQ Cloud broker |
-| **Backend & Auth** | [Supabase](https://supabase.com) | PostgreSQL relational database with Row-Level Security (RLS) |
-| **Mapping Engine** | [Flutter Map](https://pub.dev/packages/flutter_map) | OpenStreetMap tile rendering & geospatial marker layers |
-| **Typography** | [Google Fonts](https://pub.dev/packages/google_fonts) | Poppins & Inter modern font families |
+| **Framework** | [Flutter 3.x](https://flutter.dev) | Cross-platform UI toolkit targeting iOS & Android |
+| **Language** | [Dart 3.x](https://dart.dev) | Strongly-typed, asynchronous client programming |
+| **State Management** | [Flutter Riverpod](https://riverpod.dev) | Reactive state management, provider caching & dependency injection |
+| **Routing** | [GoRouter](https://pub.dev/packages/go_router) | Declarative URL-based route management & animated transitions |
+| **Telemetry Transport** | [MQTT Client](https://pub.dev/packages/mqtt_client) | WSS & TLS 8883 connection to HiveMQ Cloud broker for live GPS feeds |
+| **Backend & Database** | [Supabase](https://supabase.com) | Relational PostgreSQL backend, Row-Level Security & Auth sessions |
+| **Mapping Engine** | [Flutter Map](https://pub.dev/packages/flutter_map) | OpenStreetMap vector tile rendering, geospatial markers & polylines |
+| **Typography** | [Google Fonts](https://pub.dev/packages/google_fonts) | Poppins & Inter font family loaded dynamically |
 
 ---
 
-## Repository Architecture
+## 🚀 Getting Started
 
-```
+### Prerequisites
+
+Before building and running the project, ensure you have the following installed on your machine:
+- **Flutter SDK**: `v3.19.0` or higher ([Installation Guide](https://docs.flutter.dev/get-started/install))
+- **Dart SDK**: Included with Flutter (`^3.3.0`)
+- **Android Studio** / **Xcode** (for device simulators & native builds)
+- **Git**
+
+### Installation
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/your-org/Vahan_Mitra.git
+   cd Vahan_Mitra
+   ```
+
+2. **Install Flutter Dependencies**:
+   ```bash
+   flutter pub get
+   ```
+
+3. **Configure Environment Variables**:
+   Create a `.env` file in the root of the project (or copy `.env.example` if available):
+   ```env
+   SUPABASE_URL=https://your-supabase-project.supabase.co
+   SUPABASE_PUBLISHABLE_KEY=your-supabase-anon-key
+
+   MQTT_BROKER=your-hivemq-broker.hivemq.cloud
+   MQTT_USER=your_mqtt_username
+   MQTT_PASSWORD=your_mqtt_password
+   MQTT_TOPIC=vahan_mitra/buses/+/location
+   ```
+
+4. **Run the Application**:
+   Pass the environment file via `--dart-define-from-file`:
+   ```bash
+   flutter run --dart-define-from-file=.env
+   ```
+
+5. **Build Release Artifacts**:
+   - **Android APK**:
+     ```bash
+     flutter build apk --release --dart-define-from-file=.env
+     ```
+   - **Android App Bundle (AAB)**:
+     ```bash
+     flutter build appbundle --release --dart-define-from-file=.env
+     ```
+
+---
+
+## ⚙️ Environment Variables Reference
+
+| Variable | Required | Description |
+| :--- | :---: | :--- |
+| `SUPABASE_URL` | Yes | Your Supabase project endpoint URL |
+| `SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase publishable/anon API key |
+| `MQTT_BROKER` | Yes | HiveMQ Cloud broker hostname (e.g. `xyz.s1.eu.hivemq.cloud`) |
+| `MQTT_USER` | Yes | Authenticated MQTT client username |
+| `MQTT_PASSWORD` | Yes | Authenticated MQTT client password |
+| `MQTT_TOPIC` | Yes | Topic wildcard path for bus location streaming (e.g. `vahan_mitra/buses/+/location`) |
+
+---
+
+## 📁 Repository Architecture
+
+```text
 lib/
-├── main.dart                   # Application entry point & SystemChrome initialization
+├── main.dart                   # Entry point, SystemChrome setup & ProviderScope initialization
 ├── core/
-│   ├── routes.dart             # GoRouter configuration & screen transitions
-│   └── theme.dart              # Neumorphic design tokens, color palette & AppBarTheme
+│   ├── routes.dart             # GoRouter path definitions & page route builders
+│   └── theme.dart              # Neumorphic design tokens, color palette & AppTheme helpers
 ├── controllers/
-│   ├── mock_data_provider.dart # Static & merged bus location Riverpod providers
-│   └── mqtt_service.dart       # HiveMQ Cloud MQTT client & telemetry stream parser
+│   ├── mock_data_provider.dart # Live bus status providers & state merge logic
+│   └── mqtt_service.dart       # HiveMQ Cloud MQTT client, WSS listener & payload parsing
 └── ui/
-    ├── components/             # Reusable UI widgets
+    ├── components/             # Reusable UI primitives (buttons, neu-cards, badges)
     └── screens/
-        ├── splash_screen.dart  # Optimized high-performance animated splash screen
-        ├── login_screen.dart   # Neumorphic authentication interface
-        ├── main_layout.dart    # Bottom navigation bar container
-        ├── home_screen.dart    # Dashboard overview, quick actions & status cards
-        ├── buses_screen.dart   # Bus fleet directory & live operational status
-        ├── map_screen.dart     # Real-time interactive map, speed pill & floating panel
-        ├── routes_screen.dart  # Swappable campus route cards & serpentine timeline
+        ├── splash_screen.dart  # High-performance animated logo entrance view
+        ├── login_screen.dart   # Neumorphic Google OAuth authentication screen
+        ├── main_layout.dart    # Bottom navigation container & persistent tab state
+        ├── home_screen.dart    # Dashboard overview, fleet stats & operational cards
+        ├── buses_screen.dart   # Bus directory, active run status & vehicle specs
+        ├── map_screen.dart     # Live map view, speed indicator & floating focus controls
+        ├── routes_screen.dart  # Swappable route cards & serpentine timeline canvas
         ├── notifications_screen.dart # System notifications feed with pull-to-refresh
-        └── profile_screen.dart # User profile settings & account details
+        └── profile_screen.dart # User account preferences & profile management
 ```
+
+---
+
+## 🔒 Security & Best Practices
+
+- **Row-Level Security (RLS):** Backend queries strictly adhere to Supabase Postgres RLS policies.
+- **Environment Isolation:** Sensitive tokens and MQTT credentials are never hardcoded in source files; they are compiled securely via `--dart-define-from-file=.env`.
+- **TLS Encryption:** MQTT telemetry communicates over secure WebSockets (WSS) and TLS Port 8883.
 
 ---
 
 <p align="center">
-  Developed with care by <b>Vahan Mitra Engineering Team</b>
+  Crafted with ❤️ by the <b>Vahan Mitra Engineering Team</b>
 </p>
