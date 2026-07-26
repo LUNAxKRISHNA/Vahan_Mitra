@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:bus/controllers/mqtt_service.dart';
+import 'package:vahan_mitra/controllers/mqtt_service.dart';
 
 // ─── SUPABASE CLIENT ────────────────────────────────────────────────────────
 final _supabase = Supabase.instance.client;

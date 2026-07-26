@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:bus/main.dart';
+import 'package:vahan_mitra/main.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
