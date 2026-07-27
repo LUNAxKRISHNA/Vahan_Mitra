@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:vahan_mitra/controllers/mqtt_service.dart';
 
 // ─── SUPABASE CLIENT ────────────────────────────────────────────────────────
-final _supabase = Supabase.instance.client;
+SupabaseClient get _supabase => Supabase.instance.client;
 
 Future<Map<String, dynamic>> _loadMockUser() async {
   final user = _supabase.auth.currentUser;
@@ -49,6 +49,36 @@ class UserNotifier extends AsyncNotifier<Map<String, dynamic>> {
 final userProvider = AsyncNotifierProvider<UserNotifier, Map<String, dynamic>>(() {
   return UserNotifier();
 });
+
+// ─── DEFAULT ROUTE PROVIDER ───────────────────────────────────────────────
+class DefaultRouteNotifier extends AsyncNotifier<Map<String, dynamic>?> {
+  @override
+  Future<Map<String, dynamic>?> build() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedRoute = prefs.getString('user_default_route');
+    if (savedRoute != null) {
+      return jsonDecode(savedRoute) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  Future<void> setDefaultRoute(Map<String, dynamic> routeData) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_default_route', jsonEncode(routeData));
+    state = AsyncValue.data(routeData);
+  }
+
+  Future<void> clearDefaultRoute() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_default_route');
+    state = const AsyncValue.data(null);
+  }
+}
+
+final defaultRouteProvider = AsyncNotifierProvider<DefaultRouteNotifier, Map<String, dynamic>?>(() {
+  return DefaultRouteNotifier();
+});
+
 
 // ─── NOTIFICATIONS PROVIDER (live Supabase) ───────────────────────────────
 class NotificationsNotifier extends AsyncNotifier<List<dynamic>> {
@@ -247,10 +277,11 @@ final busesProvider = Provider<AsyncValue<List<dynamic>>>((ref) {
       String calculatedStatus = 'Offline';
 
       if (lastUpdatedStr != null) {
-        final lastUpdated = DateTime.tryParse(lastUpdatedStr);
+        final lastUpdated = DateTime.tryParse(lastUpdatedStr)?.toLocal();
         if (lastUpdated != null) {
-          final diff = now.difference(lastUpdated);
-          if (diff.inMinutes < 15 && !diff.isNegative) {
+          final diffSeconds = now.difference(lastUpdated).inSeconds;
+          // Allow up to 5 mins of future clock skew, expire after 15 mins
+          if (diffSeconds > -300 && diffSeconds < 900) {
             calculatedStatus = 'In Transit';
           }
         }
@@ -295,5 +326,5 @@ final routesProvider = FutureProvider<List<dynamic>>((ref) async {
 
 // ─── CURRENT TIME PROVIDER ───────────────────────────────────────────────────
 final currentTimeProvider = StreamProvider<DateTime>((ref) {
-  return Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now());
+  return Stream.periodic(const Duration(seconds: 60), (_) => DateTime.now());
 });

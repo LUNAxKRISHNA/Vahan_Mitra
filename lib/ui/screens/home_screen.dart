@@ -4,16 +4,36 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import '../../controllers/mock_data_provider.dart';
+import '../components/route_selection_sheet.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _hasPromptedRoute = false;
+
+  @override
+  Widget build(BuildContext context) {
     final userAsync = ref.watch(userProvider);
+    final defaultRouteAsync = ref.watch(defaultRouteProvider);
     final nowAsync = ref.watch(currentTimeProvider);
     final now = nowAsync.asData?.value ?? DateTime.now();
     final hasUnseen = ref.watch(unseenNotificationsProvider).value ?? false;
+
+    // Trigger onboarding bottom sheet if no default route
+    if (!defaultRouteAsync.isLoading && !_hasPromptedRoute) {
+      final defaultRoute = defaultRouteAsync.asData?.value;
+      if (defaultRoute == null) {
+        _hasPromptedRoute = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) showRouteSelectionSheet(context);
+        });
+      }
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 160),
@@ -113,9 +133,9 @@ class HomeScreen extends ConsumerWidget {
                     Expanded(
                       child: _ActionCard(
                         icon: Icons.directions_bus_rounded,
-                        title: 'Track Buses',
-                        subtitle: 'Live locations of all buses.',
-                        onTap: () => context.push('/map'),
+                        title: 'All Buses',
+                        subtitle: 'View list of all buses.',
+                        onTap: () => context.push('/buses'),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -281,229 +301,245 @@ class _LiveTransportCardState extends ConsumerState<_LiveTransportCard>
 
   @override
   Widget build(BuildContext context) {
+    final defaultRouteAsync = ref.watch(defaultRouteProvider);
     final busesAsync = ref.watch(busesProvider);
-    final routesAsync = ref.watch(routesProvider);
 
+    final defaultRoute = defaultRouteAsync.asData?.value;
     final buses = busesAsync.asData?.value ?? [];
-    final busCount = buses.length;
-    final routeCount = routesAsync.asData?.value.length ?? 0;
 
-    // Only show LIVE badge if at least one bus is actively running
-    final anyBusLive = buses.any((bus) {
-      final status = (bus['status'] as String? ?? '').toLowerCase();
-      return status == 'running' || status == 'in transit';
-    });
-
-    return Container(
-      decoration: AppTheme.neuBoxDecoration(radius: 28),
-      padding: const EdgeInsets.all(24),
-      child: Stack(
-        children: [
-          // Graphic Background (Right Side)
-          Positioned(
-            right: -20,
-            top: 0,
-            bottom: 0,
-            width: 120,
-            child: AnimatedBuilder(
-              animation: _animController,
-              builder: (context, child) {
-                return CustomPaint(
-                  painter: _RouteLinePainter(progress: _animController.value),
-                );
-              },
-            ),
-          ),
-
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // LIVE Badge — only shown when buses are actively running
-              if (anyBusLive)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.redAccent,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'LIVE',
-                        style: GoogleFonts.inter(
-                          color: AppTheme.redAccent,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                const SizedBox(height: 16),
-
-              Text(
-                'Transport Services',
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Stats dynamically fetched from Supabase
-              Row(
-                children: [
-                  _StatItem(
-                    icon: Icons.directions_bus_rounded,
-                    count: busesAsync.isLoading ? '…' : '$busCount',
-                    label: 'College Buses\nOperating',
-                  ),
-                  const SizedBox(width: 32),
-                  _StatItem(
-                    icon: Icons.route_rounded,
-                    count: routesAsync.isLoading ? '…' : '$routeCount',
-                    label: 'Active\nRoutes',
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RouteLinePainter extends CustomPainter {
-  final double progress;
-
-  _RouteLinePainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = AppTheme.redAccent.withValues(alpha: 0.6)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2
-          ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    path.moveTo(size.width * 0.8, 10);
-    path.quadraticBezierTo(
-      size.width * 0.2,
-      size.height * 0.5,
-      size.width * 0.5,
-      size.height - 10,
-    );
-
-    // Draw dashed path
-    final dashWidth = 5.0;
-    final dashSpace = 5.0;
-    var distance = 0.0;
-    for (var pathMetric in path.computeMetrics()) {
-      while (distance < pathMetric.length) {
-        canvas.drawPath(
-          pathMetric.extractPath(distance, distance + dashWidth),
-          paint,
-        );
-        distance += dashWidth + dashSpace;
+    Map<String, dynamic>? assignedBus;
+    if (defaultRoute != null) {
+      final selRoute =
+          (defaultRoute['name'] ?? '').toString().trim().toLowerCase();
+      for (var item in buses) {
+        final b = Map<String, dynamic>.from(item as Map);
+        final bRoute = (b['route'] ?? '').toString().trim().toLowerCase();
+        if (bRoute == selRoute ||
+            bRoute.contains(selRoute) ||
+            selRoute.contains(bRoute)) {
+          assignedBus = b;
+          break;
+        }
       }
     }
 
-    // Bus position indicator
-    final busPosition =
-        path
-            .computeMetrics()
-            .first
-            .extractPath(
-              0,
-              path.computeMetrics().first.length * (0.3 + (progress * 0.4)),
-            )
-            .computeMetrics()
-            .last
-            .getTangentForOffset(
-              path.computeMetrics().first.length * (0.3 + (progress * 0.4)),
-            )
-            ?.position;
+    final bool hasDefaultRoute = defaultRoute != null;
+    final bool isLive =
+        assignedBus != null &&
+        ((assignedBus['status'] as String? ?? '').toLowerCase() == 'running' ||
+            (assignedBus['status'] as String? ?? '').toLowerCase() ==
+                'in transit');
 
-    if (busPosition != null) {
-      final busPaint =
-          Paint()
-            ..color = AppTheme.textPrimary
-            ..style = PaintingStyle.fill;
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: busPosition, width: 14, height: 14),
-          const Radius.circular(4),
+    final String cardTitle =
+        assignedBus != null
+            ? (assignedBus['name']?.toString() ??
+                'Bus ${assignedBus['bus_no'] ?? ''}')
+            : (hasDefaultRoute
+                ? (defaultRoute['name']?.toString() ?? 'Default Route')
+                : 'Setup Default Route');
+
+    final String cardSubtitle =
+        assignedBus != null
+            ? (assignedBus['route']?.toString() ??
+                defaultRoute?['name']?.toString() ??
+                'Assigned Route')
+            : (hasDefaultRoute
+                ? 'Assigned Daily Route'
+                : 'Tap here to select your daily route.');
+
+    return GestureDetector(
+      onTap: () {
+        if (assignedBus != null) {
+          context.push('/map', extra: assignedBus);
+        } else if (hasDefaultRoute) {
+          context.push('/map');
+        } else {
+          showRouteSelectionSheet(context);
+        }
+      },
+      child: Container(
+        decoration: AppTheme.neuBoxDecoration(radius: 28),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+        child: Stack(
+          alignment: Alignment.centerLeft,
+          children: [
+            // Semi-transparent side-filled Bus Number Watermark (Top Right)
+            if (assignedBus != null)
+              Positioned(
+                right: -1,
+                top: -10,
+                child: Text(
+                  '${assignedBus['bus_no'] ?? ''}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 100,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary.withValues(alpha: 0.08),
+                    height: 1.1,
+                    letterSpacing: -2,
+                  ),
+                ),
+              ),
+
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Top Status Row: Live Status (Left)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (hasDefaultRoute)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Live Status Indicator
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color:
+                                  isLive
+                                      ? const Color(0xFF2B8A3E)
+                                      : Colors.grey,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            isLive
+                                ? 'In Transit'
+                                : (assignedBus != null
+                                    ? 'Offline'
+                                    : 'Assigned'),
+                            style: GoogleFonts.inter(
+                              color:
+                                  isLive
+                                      ? const Color(0xFF2B8A3E)
+                                      : Colors.grey,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      const SizedBox(),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // Real Bus Name as Title
+                Text(
+                  cardTitle,
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+
+                // Route Name as Subtitle
+                Text(
+                  cardSubtitle,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                const SizedBox(height: 22),
+
+                // Driver Info & Bottom "Track Bus" Pill
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (assignedBus != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: AppTheme.neuBoxDecoration(
+                          radius: 12,
+                          inset: true,
+                        ),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          size: 16,
+                          color: AppTheme.redAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Driver',
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            assignedBus['driver_name']?.toString() ?? 'Unknown',
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const Spacer(),
+
+                    // Bottom "Track Bus" Black Pill Button
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF111111),
+                        borderRadius: BorderRadius.circular(22),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Track Bus',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
-        busPaint,
-      );
-    }
-
-    // Pins
-    canvas.drawCircle(
-      Offset(size.width * 0.8, 10),
-      6,
-      Paint()..color = AppTheme.textPrimary,
-    );
-    canvas.drawCircle(
-      Offset(size.width * 0.5, size.height - 10),
-      6,
-      Paint()..color = AppTheme.redAccent,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _RouteLinePainter oldDelegate) {
-    return oldDelegate.progress != progress;
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String count;
-  final String label;
-
-  const _StatItem({
-    required this.icon,
-    required this.count,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: AppTheme.neuBoxDecoration(radius: 12, inset: true),
-          child: Icon(icon, color: AppTheme.textPrimary, size: 20),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          count,
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textPrimary,
-          ),
-        ),
-        Text(
-          label,
-          style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary),
-        ),
-      ],
+      ),
     );
   }
 }

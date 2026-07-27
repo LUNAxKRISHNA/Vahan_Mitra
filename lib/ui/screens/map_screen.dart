@@ -23,6 +23,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
 
   LatLng? _currentLocation;
+  double _currentZoom = 15.0;
 
   @override
   void initState() {
@@ -75,11 +76,13 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
-
-
   int _calculateEffectiveSpeed(Map<String, dynamic> busData) {
-    final rawSpeed = ((busData['speed'] ?? busData['current_location']?['speed'] ?? 0) as num).toDouble();
-    final rawTs = busData['last_updated'] ?? busData['ts'] ?? busData['timestamp'];
+    final rawSpeed =
+        ((busData['speed'] ?? busData['current_location']?['speed'] ?? 0)
+                as num)
+            .toDouble();
+    final rawTs =
+        busData['last_updated'] ?? busData['ts'] ?? busData['timestamp'];
 
     if (rawTs == null) return 0;
 
@@ -92,9 +95,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
 
     if (dt == null) return 0;
 
-    // If timestamp hasn't updated for > 15 seconds, treat speed as 0 km/h
-    final ageInSeconds = DateTime.now().difference(dt.toLocal()).inSeconds.abs();
-    if (ageInSeconds > 15) {
+    final diffSeconds = DateTime.now().difference(dt.toLocal()).inSeconds;
+    // Allow up to 5 mins of future clock skew, treat as 0 if stale for > 15s
+    if (diffSeconds < -300 || diffSeconds > 15) {
       return 0;
     }
 
@@ -104,240 +107,325 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final busesAsync = ref.watch(busesProvider);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final styleId = isDarkMode ? 'dataviz-dark' : 'dataviz-light';
+    const mapTilerKey = String.fromEnvironment(
+      'MAPTILER_API_KEY',
+      defaultValue: 'your_maptiler_api_key_here',
+    );
+    final tileUrl =
+        'https://api.maptiler.com/maps/$styleId/{z}/{x}/{y}@2x.png?key=$mapTilerKey';
+
+    final southIndiaBounds = LatLngBounds(
+      const LatLng(8.0, 74.0), // South-West
+      const LatLng(16.0, 81.0), // North-East
+    );
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       extendBodyBehindAppBar: true,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: const SystemUiOverlayStyle(
+        value: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
+          statusBarIconBrightness:
+              isDarkMode ? Brightness.light : Brightness.dark,
+          statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
         ),
         child: busesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
-        error: (err, stack) => Center(child: Text('Error: $err')),
-        data: (buses) {
-          Map<String, dynamic>? activeBus;
-          if (widget.busData != null) {
-            final id = widget.busData!['id'];
-            activeBus = buses.firstWhere(
-              (b) => b['id'] == id,
-              orElse: () => widget.busData!,
-            );
-          }
+          loading:
+              () => const Center(
+                child: CircularProgressIndicator(color: AppTheme.primary),
+              ),
+          error: (err, stack) => Center(child: Text('Error: $err')),
+          data: (buses) {
+            Map<String, dynamic>? activeBus;
+            if (widget.busData != null) {
+              final id = widget.busData!['id'];
+              activeBus = buses.firstWhere(
+                (b) => b['id'] == id,
+                orElse: () => widget.busData!,
+              );
+            }
 
-          final List<Marker> markers = [];
-          final List<Polyline> polylines = [];
+            // Calculate scale factor relative to default zoom 15.0 (clamped between 0.5 and 1.5)
+            final scale = (_currentZoom / 15.0).clamp(0.5, 1.5);
 
-          if (activeBus != null) {
-            final lat = activeBus['current_location']['lat'];
-            final lng = activeBus['current_location']['lng'];
-            final busLoc = LatLng(lat, lng);
-            markers.add(Marker(
-              point: busLoc,
-              width: 120,
-              height: 80,
-              child: _BusMarker(busName: activeBus['name']),
-            ));
+            final List<Marker> markers = [];
+            final List<Polyline> polylines = [];
 
-            // Polyline for specific bus
-            final stops = activeBus['route_stops'] as List<dynamic>? ?? [];
-            final points = stops.map((s) {
-              if (s['lat'] != null && s['long'] != null) {
-                return LatLng((s['lat'] as num).toDouble(), (s['long'] as num).toDouble());
+            if (activeBus != null) {
+              final lat = activeBus['current_location']['lat'];
+              final lng = activeBus['current_location']['lng'];
+              final busLoc = LatLng(lat, lng);
+              markers.add(
+                Marker(
+                  point: busLoc,
+                  width: 70 * scale,
+                  height: 50 * scale,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: _BusMarker(busName: activeBus['name']),
+                  ),
+                ),
+              );
+
+              // Polyline for specific bus
+              final stops = activeBus['route_stops'] as List<dynamic>? ?? [];
+              final points =
+                  stops
+                      .map((s) {
+                        if (s['lat'] != null && s['long'] != null) {
+                          return LatLng(
+                            (s['lat'] as num).toDouble(),
+                            (s['long'] as num).toDouble(),
+                          );
+                        }
+                        return null;
+                      })
+                      .whereType<LatLng>()
+                      .toList();
+
+              if (points.length > 1) {
+                polylines.add(
+                  Polyline(
+                    points: points,
+                    color: AppTheme.primary,
+                    strokeWidth: 4.0,
+                  ),
+                );
               }
-              return null;
-            }).whereType<LatLng>().toList();
+            } else {
+              // All buses view
+              for (var b in buses) {
+                final lat = b['current_location']['lat'];
+                final lng = b['current_location']['lng'];
+                markers.add(
+                  Marker(
+                    point: LatLng(lat, lng),
+                    width: 70 * scale,
+                    height: 50 * scale,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: _BusMarker(busName: b['name']),
+                    ),
+                  ),
+                );
+              }
+            }
 
-            if (points.length > 1) {
-              polylines.add(
-                Polyline(
-                  points: points,
-                  color: AppTheme.primary,
-                  strokeWidth: 4.0,
+            if (_currentLocation != null) {
+              markers.add(
+                Marker(
+                  point: _currentLocation!,
+                  width: 42 * scale,
+                  height: 42 * scale,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: _CurrentLocationMarker(),
+                  ),
                 ),
               );
             }
-          } else {
-            // All buses view
-            for (var b in buses) {
-              final lat = b['current_location']['lat'];
-              final lng = b['current_location']['lng'];
-              markers.add(Marker(
-                point: LatLng(lat, lng),
-                width: 120,
-                height: 80,
-                child: _BusMarker(busName: b['name']),
-              ));
-            }
-          }
 
-          if (_currentLocation != null) {
-            markers.add(Marker(
-              point: _currentLocation!,
-              width: 50,
-              height: 50,
-              child: _CurrentLocationMarker(),
-            ));
-          }
+            LatLng center =
+                activeBus != null
+                    ? LatLng(
+                      activeBus['current_location']['lat'],
+                      activeBus['current_location']['lng'],
+                    )
+                    : (buses.isNotEmpty
+                        ? LatLng(
+                          buses.first['current_location']['lat'],
+                          buses.first['current_location']['lng'],
+                        )
+                        : const LatLng(9.882134, 76.525878));
 
-          LatLng center = activeBus != null
-              ? LatLng(activeBus['current_location']['lat'], activeBus['current_location']['lng'])
-              : (buses.isNotEmpty
-                  ? LatLng(buses.first['current_location']['lat'], buses.first['current_location']['lng'])
-                  : const LatLng(9.882134, 76.525878));
-
-          return Stack(
-            children: [
-              // ── Map ──────────────────────────────────────────────────
-              FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(initialCenter: center, initialZoom: 15.0),
-                children: [
-                  TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.vahan_mitra',
+            return Stack(
+              children: [
+                // ── Map ──────────────────────────────────────────────────
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: center,
+                    initialZoom: 15.0,
+                    minZoom: 7.0,
+                    maxZoom: 18,
+                    onPositionChanged: (camera, hasGesture) {
+                      if (camera.zoom != _currentZoom) {
+                        setState(() {
+                          _currentZoom = camera.zoom;
+                        });
+                      }
+                    },
+                    cameraConstraint: CameraConstraint.contain(
+                      bounds: southIndiaBounds,
+                    ),
                   ),
-                  PolylineLayer(polylines: polylines),
-                  MarkerLayer(markers: markers),
-                ],
-              ),
-
-              // ── Top bar ──────────────────────────────────────────────
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => context.pop(),
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: AppTheme.neuBoxDecoration(radius: 14),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            color: AppTheme.textPrimary,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: AppTheme.neuBoxDecoration(radius: 18),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.directions_bus_rounded,
-                                color: AppTheme.redAccent,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                activeBus != null ? (activeBus['name'] ?? 'Bus Tracker') : 'All Buses',
-                                style: GoogleFonts.poppins(
-                                  color: AppTheme.textPrimary,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Spacer(),
-                              if (activeBus != null)
-                                Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.black,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    activeBus['bus_no']?.toString() ?? activeBus['id']?.toString() ?? '1',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: tileUrl,
+                      userAgentPackageName: 'com.vahanmitra.app',
+                      maxZoom: 19,
+                      retinaMode: true, // Use retina mode for high-DPI mapping
+                    ),
+                    PolylineLayer(polylines: polylines),
+                    MarkerLayer(markers: markers),
+                  ],
                 ),
-              ),
 
-              // ── Floating Bottom Info Panel & Speed Badge ─────────────────────
-              if (activeBus != null)
-                Positioned(
-                  bottom: 24,
-                  left: 16,
-                  right: 16,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Floating Speed Pill on Top-Left of Panel
-                      Builder(
-                        builder: (context) {
-                          final speed = _calculateEffectiveSpeed(activeBus!);
-                          final isMoving = speed > 0;
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                            decoration: AppTheme.neuBoxDecoration(radius: 20),
+                // ── Top bar ──────────────────────────────────────────────
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => context.pop(),
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: AppTheme.neuBoxDecoration(radius: 14),
+                            child: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: AppTheme.textPrimary,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: AppTheme.neuBoxDecoration(radius: 18),
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  Icons.speed_rounded,
-                                  color: isMoving ? AppTheme.redAccent : AppTheme.textSecondary,
-                                  size: 18,
+                                const Icon(
+                                  Icons.directions_bus_rounded,
+                                  color: AppTheme.redAccent,
+                                  size: 20,
                                 ),
-                                const SizedBox(width: 6),
+                                const SizedBox(width: 10),
                                 Text(
-                                  '$speed km/h',
+                                  activeBus != null
+                                      ? (activeBus['name'] ?? 'Bus Tracker')
+                                      : 'All Buses',
                                   style: GoogleFonts.poppins(
-                                    color: isMoving ? AppTheme.textPrimary : AppTheme.textSecondary,
-                                    fontSize: 13,
+                                    color: AppTheme.textPrimary,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
+                                const Spacer(),
+                                if (activeBus != null)
+                                  Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.black,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      activeBus['bus_no']?.toString() ??
+                                          activeBus['id']?.toString() ??
+                                          '1',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 10),
-                      _FloatingBusPanel(
-                        busData: activeBus,
-                        onFocusBus: () {
-                          final loc = LatLng(activeBus!['current_location']['lat'], activeBus['current_location']['lng']);
-                          _mapController.move(loc, 15.0);
-                        },
-                        onMyLocation: _goToCurrentLocation,
-                        onCall: () => _callDriver(activeBus!),
-                      ),
-                    ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-            ],
-          );
-        },
+
+                // ── Floating Bottom Info Panel & Speed Badge ─────────────────────
+                if (activeBus != null)
+                  Positioned(
+                    bottom: 24,
+                    left: 16,
+                    right: 16,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Floating Speed Pill on Top-Left of Panel
+                        Builder(
+                          builder: (context) {
+                            final speed = _calculateEffectiveSpeed(activeBus!);
+                            final isMoving = speed > 0;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              decoration: AppTheme.neuBoxDecoration(radius: 20),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.speed_rounded,
+                                    color:
+                                        isMoving
+                                            ? AppTheme.redAccent
+                                            : AppTheme.textSecondary,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '$speed km/h',
+                                    style: GoogleFonts.poppins(
+                                      color:
+                                          isMoving
+                                              ? AppTheme.textPrimary
+                                              : AppTheme.textSecondary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        _FloatingBusPanel(
+                          busData: activeBus,
+                          onFocusBus: () {
+                            final loc = LatLng(
+                              activeBus!['current_location']['lat'],
+                              activeBus['current_location']['lng'],
+                            );
+                            _mapController.move(loc, 15.0);
+                          },
+                          onMyLocation: _goToCurrentLocation,
+                          onCall: () => _callDriver(activeBus!),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
-// ── Widgets ─────────────────────────────────────────────────────────────────
+// ── Widgets ──────────────────────────────────────────────────
 
 class _BusMarker extends StatefulWidget {
   final String? busName;
@@ -371,68 +459,71 @@ class _BusMarkerState extends State<_BusMarker>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (widget.busName != null) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(6),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Text(
-              widget.busName!,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimary,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(height: 4),
-        ],
-        AnimatedBuilder(
-          animation: _pulse,
-          builder:
-              (_, _) => Stack(
-                alignment: Alignment.center,
-                children: [
-                  Transform.scale(
-                    scale: _pulse.value,
-                    child: Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: AppTheme.redAccent.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: AppTheme.neuBoxDecoration(radius: 20),
-                    child: const Icon(
-                      Icons.directions_bus_rounded,
-                      color: AppTheme.redAccent,
-                      size: 20,
-                    ),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (widget.busName != null) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 3,
+                    offset: const Offset(0, 1.5),
                   ),
                 ],
               ),
-        ),
-      ],
+              child: Text(
+                widget.busName!,
+                style: GoogleFonts.inter(
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 2),
+          ],
+          AnimatedBuilder(
+            animation: _pulse,
+            builder:
+                (_, _) => Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Transform.scale(
+                      scale: _pulse.value,
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppTheme.redAccent.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: AppTheme.neuBoxDecoration(radius: 14),
+                      child: const Icon(
+                        Icons.directions_bus_rounded,
+                        color: AppTheme.redAccent,
+                        size: 15,
+                      ),
+                    ),
+                  ],
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -506,10 +597,6 @@ class _CurrentLocationMarkerState extends State<_CurrentLocationMarker>
   }
 }
 
-
-
-
-
 class _FloatingBusPanel extends StatelessWidget {
   final Map<String, dynamic> busData;
   final VoidCallback onFocusBus;
@@ -545,12 +632,18 @@ class _FloatingBusPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final routeName = busData['route']?.toString() ?? 'College Route';
-    final regNo = busData['reg_number']?.toString() ?? busData['bus_no']?.toString() ?? 'KL 07 BD 2345';
+    final regNo =
+        busData['reg_number']?.toString() ??
+        busData['bus_no']?.toString() ??
+        'KL 07 BD 2345';
     final status = busData['status']?.toString() ?? 'Offline';
     final driverName = busData['driver_name']?.toString() ?? 'Driver';
-    final lastUpdatedRaw = busData['last_updated'] ?? busData['ts'] ?? busData['timestamp'];
+    final lastUpdatedRaw =
+        busData['last_updated'] ?? busData['ts'] ?? busData['timestamp'];
     final formattedTime = _formatLastUpdated(lastUpdatedRaw);
-    final bool isLive = status.toLowerCase() == 'in transit' || status.toLowerCase() == 'running';
+    final bool isLive =
+        status.toLowerCase() == 'in transit' ||
+        status.toLowerCase() == 'running';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -616,12 +709,18 @@ class _FloatingBusPanel extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: AppTheme.neuBoxDecoration(radius: 12, inset: true),
                 child: Text(
                   status.toUpperCase(),
                   style: GoogleFonts.inter(
-                    color: isLive ? const Color(0xFF2B8A3E) : AppTheme.textSecondary,
+                    color:
+                        isLive
+                            ? const Color(0xFF2B8A3E)
+                            : AppTheme.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
@@ -782,5 +881,3 @@ class _FloatingBusPanel extends StatelessWidget {
     );
   }
 }
-
-

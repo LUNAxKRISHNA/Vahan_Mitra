@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "195240791425",
+    "project_id": "vahan-mitra-97cae",
+    "storage_bucket": "vahan-mitra-97cae.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:195240791425:android:1cfc8c5558faeb57c5ec80",
+        "android_client_info": {
+          "package_name": "com.vahanmitra.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "195240791425-3a80mf9oa3hmn167fip96ee6jf7sn1lc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vahanmitra.app",
+            "certificate_hash": "111f634d5bb3565acbc2cb3bbb3be6b686931e18"
+          }
+        },
+        {
+          "client_id": "195240791425-edt1eq7i1imr5qcs5f0pp1kqh7556nfd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDW6QtrHNiQ65N76brk0o6ctH0EPzlCTlo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "195240791425-edt1eq7i1imr5qcs5f0pp1kqh7556nfd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

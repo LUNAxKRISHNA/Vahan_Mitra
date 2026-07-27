@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme.dart';
+import '../../controllers/auth_service.dart';
 import '../components/route_background_painter.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -43,15 +44,27 @@ class _LoginScreenState extends State<LoginScreen>
     _animController.forward();
   }
 
-  void _handleGoogleLogin() {
+  void _handleGoogleLogin() async {
     setState(() => _isLoading = true);
-    // Simulate login network delay
-    Future.delayed(const Duration(seconds: 2), () {
+    try {
+      final response = await AuthService.instance.signInWithGoogle();
       if (mounted) {
         setState(() => _isLoading = false);
-        context.go('/main');
+        if (response != null) {
+          context.go('/main');
+        }
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In failed: $e'),
+            backgroundColor: AppTheme.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   @override

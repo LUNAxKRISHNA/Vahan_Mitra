@@ -1,8 +1,11 @@
 import 'dart:ui';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme.dart';
+import '../../controllers/notification_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -31,13 +34,54 @@ class _SplashScreenState extends State<SplashScreen>
 
     _animController.repeat(reverse: true);
 
-    // Navigate to login quickly, stopping heavy animation first
-    Future.delayed(const Duration(milliseconds: 1800), () {
-      if (mounted) {
-        _animController.stop(); // CRITICAL: Stop CPU/GPU work before page transition
-        context.go('/login');
+    // Initialize all services asynchronously while displaying the splash screen
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    final startTime = DateTime.now();
+
+    // 1. Initialize Supabase
+    try {
+      if (!Supabase.instance.isInitialized) {
+        await Supabase.initialize(
+          url: const String.fromEnvironment('SUPABASE_URL'),
+          publishableKey: const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY'),
+        );
       }
-    });
+    } catch (e) {
+      debugPrint('Supabase init error: $e');
+    }
+
+    // 2. Initialize Firebase & FCM Push Notification Service
+    try {
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp();
+      }
+      await NotificationService.instance.initialize();
+    } catch (e) {
+      debugPrint('Firebase / Notification init warning: $e');
+    }
+
+    // Enforce smooth minimum splash duration (1.2 seconds) for UX polish
+    final elapsed = DateTime.now().difference(startTime);
+    if (elapsed < const Duration(milliseconds: 1200)) {
+      await Future.delayed(const Duration(milliseconds: 1200) - elapsed);
+    }
+
+    if (!mounted) return;
+    _animController.stop(); // Stop animation work before page transition
+
+    // 3. Smart Authentication Routing
+    try {
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      if (currentUser != null) {
+        context.go('/main');
+        return;
+      }
+    } catch (_) {}
+
+    context.go('/login');
   }
 
   @override
@@ -59,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Dark Shadow Layer (Static, so Flutter caches the raster layer)
+                // Dark Shadow Layer
                 Transform.translate(
                   offset: const Offset(6, 6),
                   child: ImageFiltered(
@@ -71,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                   ),
                 ),
-                // Light Shadow Layer (Static cacheable layer)
+                // Light Shadow Layer
                 Transform.translate(
                   offset: const Offset(-6, -6),
                   child: ImageFiltered(

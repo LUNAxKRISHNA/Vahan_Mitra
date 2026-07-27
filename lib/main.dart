@@ -20,7 +20,7 @@ Future<void> main() async {
     ),
   );
 
-  // Initialize Supabase
+  // Fast local initialization for Supabase before UI renders
   await Supabase.initialize(
     url: const String.fromEnvironment('SUPABASE_URL'),
     publishableKey: const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY'),
