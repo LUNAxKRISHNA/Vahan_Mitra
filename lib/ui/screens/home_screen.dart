@@ -17,14 +17,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _hasPromptedRoute = false;
 
   @override
-  Widget build(BuildContext context) {
-    final userAsync = ref.watch(userProvider);
-    final defaultRouteAsync = ref.watch(defaultRouteProvider);
-    final nowAsync = ref.watch(currentTimeProvider);
-    final now = nowAsync.asData?.value ?? DateTime.now();
-    final hasUnseen = ref.watch(unseenNotificationsProvider).value ?? false;
-
-    // Trigger onboarding bottom sheet if no default route
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Safe place to trigger side-effects based on provider state.
+    // This runs after build is complete, avoiding setState-in-build issues.
+    final defaultRouteAsync = ref.read(defaultRouteProvider);
     if (!defaultRouteAsync.isLoading && !_hasPromptedRoute) {
       final defaultRoute = defaultRouteAsync.asData?.value;
       if (defaultRoute == null) {
@@ -32,8 +29,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) showRouteSelectionSheet(context);
         });
+      } else {
+        _hasPromptedRoute = true;
       }
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final userAsync = ref.watch(userProvider);
+    final hasUnseen = ref.watch(unseenNotificationsProvider).value ?? false;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 160),
@@ -53,14 +58,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         (user) => Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              '${_getGreeting(now)},',
-                              style: GoogleFonts.inter(
-                                color: AppTheme.textSecondary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                            // Greeting is isolated so only it rebuilds on time tick
+                            const _GreetingText(),
                             const SizedBox(height: 4),
                             Text(
                               '${user['name'].split(' ')[0]}',
@@ -132,10 +131,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Expanded(
                       child: _ActionCard(
-                        icon: Icons.directions_bus_rounded,
-                        title: 'All Buses',
-                        subtitle: 'View list of all buses.',
-                        onTap: () => context.push('/buses'),
+                        icon: Icons.campaign_rounded,
+                        title: 'Alerts',
+                        subtitle: 'Latest transport updates.',
+                        hasBadge: hasUnseen,
+                        onTap: () => context.push('/notifications'),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -242,11 +242,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _ActionCard(
-                        icon: Icons.campaign_rounded,
-                        title: 'Alerts',
-                        subtitle: 'Latest transport updates.',
-                        hasBadge: hasUnseen,
-                        onTap: () => context.push('/notifications'),
+                        icon: Icons.directions_bus_rounded,
+                        title: 'Track All Buses',
+                        subtitle: 'Live map of all buses.',
+                        onTap: () => context.push('/buses'),
                       ),
                     ),
                   ],
@@ -255,6 +254,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Isolated widget that only rebuilds when time changes (every 60s).
+/// Prevents the entire HomeScreen from rebuilding just for the greeting.
+class _GreetingText extends ConsumerWidget {
+  const _GreetingText();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final now = ref.watch(currentTimeProvider).asData?.value ?? DateTime.now();
+    return Text(
+      '${_getGreeting(now)},',
+      style: GoogleFonts.inter(
+        color: AppTheme.textSecondary,
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
       ),
     );
   }
@@ -273,34 +291,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-class _LiveTransportCard extends ConsumerStatefulWidget {
+class _LiveTransportCard extends ConsumerWidget {
   const _LiveTransportCard();
 
   @override
-  ConsumerState<_LiveTransportCard> createState() => _LiveTransportCardState();
-}
-
-class _LiveTransportCardState extends ConsumerState<_LiveTransportCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animController;
-
-  @override
-  void initState() {
-    super.initState();
-    _animController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 4),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _animController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final defaultRouteAsync = ref.watch(defaultRouteProvider);
     final busesAsync = ref.watch(busesProvider);
 
@@ -309,18 +304,7 @@ class _LiveTransportCardState extends ConsumerState<_LiveTransportCard>
 
     Map<String, dynamic>? assignedBus;
     if (defaultRoute != null) {
-      final selRoute =
-          (defaultRoute['name'] ?? '').toString().trim().toLowerCase();
-      for (var item in buses) {
-        final b = Map<String, dynamic>.from(item as Map);
-        final bRoute = (b['route'] ?? '').toString().trim().toLowerCase();
-        if (bRoute == selRoute ||
-            bRoute.contains(selRoute) ||
-            selRoute.contains(bRoute)) {
-          assignedBus = b;
-          break;
-        }
-      }
+      assignedBus = findBusForRoute(buses, defaultRoute['name']?.toString() ?? '');
     }
 
     final bool hasDefaultRoute = defaultRoute != null;

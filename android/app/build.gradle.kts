@@ -1,4 +1,6 @@
 import java.util.Base64
+import java.util.Properties
+import java.io.FileInputStream
 
 val dartEnvironmentVariables = mutableMapOf<String, String>()
 if (project.hasProperty("dart-defines")) {
@@ -12,6 +14,12 @@ if (project.hasProperty("dart-defines")) {
             }
         } catch (e: Exception) {}
     }
+}
+
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 plugins {
@@ -44,11 +52,23 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        val mapsKey = dartEnvironmentVariables["GOOGLE_MAPS_API_KEY"] ?: "placeholder"
+        manifestPlaceholders["googleMapsApiKey"] = mapsKey
+    }
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String? ?: ""
+            keyPassword = keystoreProperties["keyPassword"] as String? ?: ""
+            storeFile = keystoreProperties["storeFile"]?.let { path -> file("../$path") }
+            storePassword = keystoreProperties["storePassword"] as String? ?: ""
+        }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

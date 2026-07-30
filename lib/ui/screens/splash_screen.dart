@@ -41,19 +41,8 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _initializeApp() async {
     final startTime = DateTime.now();
 
-    // 1. Initialize Supabase
-    try {
-      if (!Supabase.instance.isInitialized) {
-        await Supabase.initialize(
-          url: const String.fromEnvironment('SUPABASE_URL'),
-          publishableKey: const String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY'),
-        );
-      }
-    } catch (e) {
-      debugPrint('Supabase init error: $e');
-    }
-
-    // 2. Initialize Firebase & FCM Push Notification Service
+    // Supabase is already initialised in main() before runApp — skip here.
+    // Only initialise Firebase & notification service (they can't run in main).
     try {
       if (Firebase.apps.isEmpty) {
         await Firebase.initializeApp();
@@ -72,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
     _animController.stop(); // Stop animation work before page transition
 
-    // 3. Smart Authentication Routing
+    // Smart Authentication Routing
     try {
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser != null) {

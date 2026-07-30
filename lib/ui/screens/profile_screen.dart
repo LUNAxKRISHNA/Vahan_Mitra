@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme.dart';
 import '../../controllers/mock_data_provider.dart';
+import '../../controllers/auth_service.dart';
 import '../components/route_selection_sheet.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -77,9 +79,18 @@ class ProfileScreen extends ConsumerWidget {
                       const SizedBox(width: 14),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () {
+                          onTap: () async {
                             Navigator.of(ctx).pop();
-                            context.go('/login');
+                            // Properly sign out from Supabase & Google
+                            try {
+                              await AuthService.instance.signOut();
+                            } catch (_) {}
+                            // Clear locally stored user profile
+                            try {
+                              final prefs = await SharedPreferences.getInstance();
+                              await prefs.remove('user_profile');
+                            } catch (_) {}
+                            if (ctx.mounted) ctx.go('/login');
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -126,21 +137,10 @@ class ProfileScreen extends ConsumerWidget {
     final defaultRoute = defaultRouteAsync.asData?.value;
     final buses = busesAsync.asData?.value ?? [];
 
-    Map<String, dynamic>? assignedBus;
-    if (defaultRoute != null) {
-      final selRoute =
-          (defaultRoute['name'] ?? '').toString().trim().toLowerCase();
-      for (var item in buses) {
-        final b = Map<String, dynamic>.from(item as Map);
-        final bRoute = (b['route'] ?? '').toString().trim().toLowerCase();
-        if (bRoute == selRoute ||
-            bRoute.contains(selRoute) ||
-            selRoute.contains(bRoute)) {
-          assignedBus = b;
-          break;
-        }
-      }
-    }
+    final Map<String, dynamic>? assignedBus =
+        defaultRoute != null
+            ? findBusForRoute(buses, defaultRoute['name']?.toString() ?? '')
+            : null;
 
     return userAsync.when(
       data: (user) {

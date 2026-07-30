@@ -6,18 +6,17 @@ class AuthService {
   AuthService._();
   static final AuthService instance = AuthService._();
 
-  static const String _defaultWebClientId =
-      '195240791425-edt1eq7i1imr5qcs5f0pp1kqh7556nfd.apps.googleusercontent.com';
-
   Future<AuthResponse?> signInWithGoogle() async {
     try {
-      final String envClientId = const String.fromEnvironment(
+      final String clientId = const String.fromEnvironment(
         'GOOGLE_WEB_CLIENT_ID',
         defaultValue: '',
       );
-      final String clientId = (envClientId.isNotEmpty && !envClientId.contains('googleclientid'))
-          ? envClientId
-          : _defaultWebClientId;
+
+      if (clientId.isEmpty) {
+        throw 'Google Sign-In is not configured. '  
+              'Set GOOGLE_WEB_CLIENT_ID in your .env file.';
+      }
 
       final GoogleSignIn googleSignIn = GoogleSignIn(
         serverClientId: clientId,

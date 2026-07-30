@@ -4,21 +4,22 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Custom Color Palette
-  static const Color primary = Color(0xFF1656B9); 
-  static const Color primaryDark = Color(0xFF0F3D83); 
-  static const Color background = Color(0xFFF0F5F9); 
-  static const Color surface = Color(0xFF9CB7C7);
-  static const Color accent = Color(0xFF4ACFC0); 
+  static const Color primary = Color(0xFF1656B9);
+  static const Color primaryDark = Color(0xFF0F3D83);
+  static const Color background = Color(0xFFF0F5F9);
   static const Color textPrimary = Color(0xFF1F2D33);
   static const Color textSecondary = Color(0xFF5A7381);
-  
-  // Neumorphic Additions
+
+  // Neumorphic
   static const Color neuBg = Color(0xFFF2F4F8);
   static const Color neuShadowLight = Colors.white;
   static const Color neuShadowDark = Color(0xFFC8D0E7);
   static const Color redAccent = Color(0xFFEE3838);
 
-  static BoxDecoration neuBoxDecoration({double radius = 20, bool inset = false}) {
+  static BoxDecoration neuBoxDecoration({
+    double radius = 20,
+    bool inset = false,
+  }) {
     if (inset) {
       return BoxDecoration(
         color: neuBg,
@@ -54,20 +55,6 @@ class AppTheme {
       ],
     );
   }
-  
-  // Custom Gradient Colors for Wave Header
-  static const Color gradientDark = primary;
-  static const Color gradientLight = accent;
-  
-  // Background Colors for Quick Actions
-  static const Color actionBlueBg = Color(0xFFE5EDFC);
-  static const Color actionBlueIcon = Color(0xFF2C6ECB);
-  
-  static const Color actionGreenBg = Color(0xFFE4F6F1);
-  static const Color actionGreenIcon = Color(0xFF1A936F);
-  
-  static const Color actionOrangeBg = Color(0xFFFDF0E1);
-  static const Color actionOrangeIcon = Color(0xFFD47C1F);
 
   static ThemeData get lightTheme {
     return ThemeData(
@@ -76,8 +63,8 @@ class AppTheme {
       scaffoldBackgroundColor: neuBg,
       colorScheme: const ColorScheme.light(
         primary: primary,
-        secondary: accent,
-        surface: surface,
+        secondary: Color(0xFF4ACFC0),
+        surface: Color(0xFF9CB7C7),
         surfaceBright: background,
         onSurface: textPrimary,
       ),

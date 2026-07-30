@@ -53,7 +53,54 @@ class _SubtleRouteBackgroundState extends State<SubtleRouteBackground>
 class _RoutePainter extends CustomPainter {
   final double animationValue;
 
+  // Cached path metrics — computed once per unique size, not every frame
+  static Size? _cachedSize;
+  static List<PathMetric>? _cachedMetrics;
+
   _RoutePainter({required this.animationValue});
+
+  List<PathMetric> _getPathMetrics(Size size) {
+    // Only recompute when the canvas size changes (e.g., orientation change)
+    if (_cachedSize == size && _cachedMetrics != null) {
+      return _cachedMetrics!;
+    }
+
+    final path1 = Path()
+      ..moveTo(0, size.height * 0.2)
+      ..quadraticBezierTo(
+        size.width * 0.5,
+        size.height * 0.4,
+        size.width,
+        size.height * 0.1,
+      );
+
+    final path2 = Path()
+      ..moveTo(size.width * 0.2, size.height)
+      ..quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.6,
+        size.width,
+        size.height * 0.8,
+      );
+
+    final path3 = Path()
+      ..moveTo(0, size.height * 0.7)
+      ..quadraticBezierTo(
+        size.width * 0.4,
+        size.height * 0.9,
+        size.width * 0.9,
+        size.height,
+      );
+
+    final combined = Path()
+      ..addPath(path1, Offset.zero)
+      ..addPath(path2, Offset.zero)
+      ..addPath(path3, Offset.zero);
+
+    _cachedSize = size;
+    _cachedMetrics = combined.computeMetrics().toList();
+    return _cachedMetrics!;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -68,44 +115,24 @@ class _RoutePainter extends CustomPainter {
     final double totalDashLength = dashWidth + dashSpace;
     final double startOffset = animationValue * totalDashLength;
 
-    void drawDashedPath(Path path) {
-      PathMetrics pathMetrics = path.computeMetrics();
-      for (PathMetric pathMetric in pathMetrics) {
-        double distance = -startOffset;
-        bool draw = true;
-        while (distance < pathMetric.length) {
-          double length = draw ? dashWidth : dashSpace;
-          if (distance + length > 0) {
-            double start = math.max(0.0, distance);
-            double end = math.min(pathMetric.length, distance + length);
-            canvas.drawPath(pathMetric.extractPath(start, end), paint);
-          }
-          distance += length;
-          draw = !draw;
+    // Use cached metrics — no computeMetrics() call on every frame
+    final metrics = _getPathMetrics(size);
+
+    for (final pathMetric in metrics) {
+      double distance = -startOffset;
+      bool draw = true;
+      while (distance < pathMetric.length) {
+        final double length = draw ? dashWidth : dashSpace;
+        if (distance + length > 0) {
+          final double start = math.max(0.0, distance);
+          final double end =
+              math.min(pathMetric.length, distance + length);
+          canvas.drawPath(pathMetric.extractPath(start, end), paint);
         }
+        distance += length;
+        draw = !draw;
       }
     }
-
-    // Path 1
-    Path path1 = Path();
-    path1.moveTo(0, size.height * 0.2);
-    path1.quadraticBezierTo(
-        size.width * 0.5, size.height * 0.4, size.width, size.height * 0.1);
-    drawDashedPath(path1);
-
-    // Path 2
-    Path path2 = Path();
-    path2.moveTo(size.width * 0.2, size.height);
-    path2.quadraticBezierTo(
-        size.width * 0.8, size.height * 0.6, size.width, size.height * 0.8);
-    drawDashedPath(path2);
-
-    // Path 3
-    Path path3 = Path();
-    path3.moveTo(0, size.height * 0.7);
-    path3.quadraticBezierTo(
-        size.width * 0.4, size.height * 0.9, size.width * 0.9, size.height);
-    drawDashedPath(path3);
   }
 
   @override

@@ -7,6 +7,7 @@ import '../ui/screens/main_layout.dart';
 import '../ui/screens/map_screen.dart';
 import '../ui/screens/notifications_screen.dart';
 import '../ui/screens/routes_screen.dart';
+import '../ui/screens/track_all_buses_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -48,6 +49,10 @@ class AppRouter {
       GoRoute(
         path: '/routes',
         builder: (context, state) => const RoutesScreen(),
+      ),
+      GoRoute(
+        path: '/buses',
+        builder: (context, state) => const TrackAllBusesScreen(),
       ),
     ],
   );

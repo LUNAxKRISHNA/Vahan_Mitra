@@ -23,7 +23,7 @@ Whether you are a student tracking your morning shuttle, a commuter checking bus
 ## ✨ Key Features
 
 ### 🗺️ Real-Time Interactive Live Map
-- **Live Vehicle Telemetry:** Tracks dynamic bus positions over OpenStreetMap (`flutter_map`) with animated pulse location markers.
+- **Live Vehicle Telemetry:** Tracks dynamic bus positions over Google Maps (`google_maps_flutter`) with default pins and hue differentiation.
 - **Floating Speed Pill:** Calculates live speed in real time (`km/h`) and intelligently resets to `0 km/h` when stationary or when payload telemetry pings pause.
 - **Top Bus Badge:** High-contrast round black unit indicator displaying the specific vehicle ID.
 - **1-Tap Focus Controls:** Floating action pills ("Bus Location" & "My Location") to instantly center and zoom the map view.
@@ -56,7 +56,7 @@ Whether you are a student tracking your morning shuttle, a commuter checking bus
 | **Routing** | [GoRouter](https://pub.dev/packages/go_router) | Declarative URL-based route management & animated transitions |
 | **Telemetry Transport** | [MQTT Client](https://pub.dev/packages/mqtt_client) | WSS & TLS 8883 connection to HiveMQ Cloud broker for live GPS feeds |
 | **Backend & Database** | [Supabase](https://supabase.com) | Relational PostgreSQL backend, Row-Level Security & Auth sessions |
-| **Mapping Engine** | [Flutter Map](https://pub.dev/packages/flutter_map) | OpenStreetMap vector tile rendering, geospatial markers & polylines |
+| **Mapping Engine** | [Google Maps Flutter](https://pub.dev/packages/google_maps_flutter) | Native Google Maps SDK integration for rendering tiles, markers & polylines |
 | **Typography** | [Google Fonts](https://pub.dev/packages/google_fonts) | Poppins & Inter font family loaded dynamically |
 
 ---

@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "195240791425-luhs7i7uj967foipg3mu2v6g0on726sg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.vahanmitra.app",
+            "certificate_hash": "8906a680025289d313c1f1f38fad13135be25cf2"
+          }
+        },
+        {
           "client_id": "195240791425-edt1eq7i1imr5qcs5f0pp1kqh7556nfd.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../controllers/mock_data_provider.dart';
+import '../../core/utils/map_marker_generator.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic>? busData;
@@ -20,10 +21,14 @@ class MapScreen extends ConsumerStatefulWidget {
 }
 
 class _MapScreenState extends ConsumerState<MapScreen> {
-  final MapController _mapController = MapController();
+  final Completer<GoogleMapController> _controller = Completer();
+  GoogleMapController? _mapController;
 
   LatLng? _currentLocation;
-  double _currentZoom = 15.0;
+
+  bool _mapReady = false;
+
+  final Map<String, BitmapDescriptor> _busMarkers = {};
 
   @override
   void initState() {
@@ -31,8 +36,38 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     _getCurrentLocation();
   }
 
+  Future<void> _loadBusMarkers(List<dynamic> buses) async {
+    bool hasNew = false;
+    int idx = 0;
+    for (var b in buses) {
+      final bMap = b as Map<String, dynamic>;
+      final busId = bMap['id']?.toString() ?? idx.toString();
+      final name = bMap['name']?.toString() ?? 'Bus';
+      if (!_busMarkers.containsKey(busId)) {
+        hasNew = true;
+        Color c = Colors.red;
+        if (idx % 3 == 0) {
+          c = Colors.blue;
+        } else if (idx % 3 == 1) {
+          c = Colors.green;
+        } else {
+          c = Colors.orange;
+        }
+        _busMarkers[busId] = await MapMarkerGenerator.createBusMarker(
+          color: c,
+          label: name,
+        );
+      }
+      idx++;
+    }
+    if (hasNew && mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    _mapController?.dispose();
     super.dispose();
   }
 
@@ -59,12 +94,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   void _goToCurrentLocation() async {
+    if (!_mapReady) return;
     if (_currentLocation != null) {
-      _mapController.move(_currentLocation!, 16.0);
+      _mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(_currentLocation!, 16.0),
+      );
     } else {
       await _getCurrentLocation();
-      if (_currentLocation != null) {
-        _mapController.move(_currentLocation!, 16.0);
+      if (_currentLocation != null && _mapReady) {
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(_currentLocation!, 16.0),
+        );
       }
     }
   }
@@ -74,6 +114,195 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       final url = Uri.parse('tel:${activeBus['driver_contact']}');
       if (await canLaunchUrl(url)) await launchUrl(url);
     }
+  }
+
+  void _showDriverDetailsDialog(Map<String, dynamic> activeBus) {
+    final driverName = activeBus['driver_name']?.toString() ?? 'Unknown Driver';
+    final driverContact =
+        activeBus['driver_contact']?.toString() ?? 'Not Available';
+    final busName = activeBus['name']?.toString() ?? 'Bus';
+    final busNo = activeBus['bus_no']?.toString() ?? '';
+
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => Dialog(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            elevation: 0,
+            child: Container(
+              padding: const EdgeInsets.all(22),
+              decoration: AppTheme.neuBoxDecoration(radius: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: AppTheme.neuBoxDecoration(
+                      radius: 20,
+                      inset: true,
+                    ),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      color: AppTheme.redAccent,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    driverName,
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Bus Driver • $busName ${busNo.isNotEmpty ? "(#$busNo)" : ""}',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: AppTheme.neuBoxDecoration(
+                      radius: 12,
+                      inset: true,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.phone_rounded,
+                          size: 14,
+                          color: AppTheme.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          driverContact,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.redAccent.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppTheme.redAccent.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          color: AppTheme.redAccent,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Safety Disclaimer: The driver may be actively driving. Taking phone calls while driving poses a safety risk. Please refrain from calling unless it is an emergency or urgent query.',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              height: 1.35,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => Navigator.of(ctx).pop(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: AppTheme.neuBoxDecoration(radius: 14),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.poppins(
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.of(ctx).pop();
+                            _callDriver(activeBus);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.redAccent,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.redAccent.withValues(
+                                    alpha: 0.3,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.call_rounded,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Call Driver',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
   }
 
   int _calculateEffectiveSpeed(Map<String, dynamic> busData) {
@@ -96,7 +325,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     if (dt == null) return 0;
 
     final diffSeconds = DateTime.now().difference(dt.toLocal()).inSeconds;
-    // Allow up to 5 mins of future clock skew, treat as 0 if stale for > 15s
     if (diffSeconds < -300 || diffSeconds > 15) {
       return 0;
     }
@@ -108,17 +336,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Widget build(BuildContext context) {
     final busesAsync = ref.watch(busesProvider);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final styleId = isDarkMode ? 'dataviz-dark' : 'dataviz-light';
-    const mapTilerKey = String.fromEnvironment(
-      'MAPTILER_API_KEY',
-      defaultValue: 'your_maptiler_api_key_here',
-    );
-    final tileUrl =
-        'https://api.maptiler.com/maps/$styleId/{z}/{x}/{y}@2x.png?key=$mapTilerKey';
 
-    final southIndiaBounds = LatLngBounds(
-      const LatLng(8.0, 74.0), // South-West
-      const LatLng(16.0, 81.0), // North-East
+    final keralaBounds = LatLngBounds(
+      southwest: const LatLng(8.15, 74.85),
+      northeast: const LatLng(12.85, 77.55),
     );
 
     return Scaffold(
@@ -136,144 +357,149 @@ class _MapScreenState extends ConsumerState<MapScreen> {
               () => const Center(
                 child: CircularProgressIndicator(color: AppTheme.primary),
               ),
-          error: (err, stack) => Center(child: Text('Error: $err')),
+          error: (err, stack) => _buildErrorState(err),
           data: (buses) {
+            _loadBusMarkers(buses);
             Map<String, dynamic>? activeBus;
             if (widget.busData != null) {
               final id = widget.busData!['id'];
-              activeBus = buses.firstWhere(
-                (b) => b['id'] == id,
-                orElse: () => widget.busData!,
-              );
+              activeBus =
+                  buses.firstWhere(
+                        (b) => b['id'] == id,
+                        orElse: () => widget.busData!,
+                      )
+                      as Map<String, dynamic>?;
             }
 
-            // Calculate scale factor relative to default zoom 15.0 (clamped between 0.5 and 1.5)
-            final scale = (_currentZoom / 15.0).clamp(0.5, 1.5);
+            final activeBusLocation =
+                activeBus != null
+                    ? (activeBus['current_location'] as Map?)
+                    : null;
 
-            final List<Marker> markers = [];
-            final List<Polyline> polylines = [];
+            final Set<Marker> markers = {};
+            final Set<Polyline> polylines = {};
 
-            if (activeBus != null) {
-              final lat = activeBus['current_location']['lat'];
-              final lng = activeBus['current_location']['lng'];
-              final busLoc = LatLng(lat, lng);
-              markers.add(
-                Marker(
-                  point: busLoc,
-                  width: 70 * scale,
-                  height: 50 * scale,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: _BusMarker(busName: activeBus['name']),
-                  ),
-                ),
-              );
-
-              // Polyline for specific bus
-              final stops = activeBus['route_stops'] as List<dynamic>? ?? [];
-              final points =
-                  stops
-                      .map((s) {
-                        if (s['lat'] != null && s['long'] != null) {
-                          return LatLng(
-                            (s['lat'] as num).toDouble(),
-                            (s['long'] as num).toDouble(),
-                          );
-                        }
-                        return null;
-                      })
-                      .whereType<LatLng>()
-                      .toList();
-
-              if (points.length > 1) {
-                polylines.add(
-                  Polyline(
-                    points: points,
-                    color: AppTheme.primary,
-                    strokeWidth: 4.0,
-                  ),
+            if (activeBus != null && activeBusLocation != null) {
+              final lat = activeBusLocation['lat'];
+              final lng = activeBusLocation['lng'];
+              if (lat != null && lng != null) {
+                final busLoc = LatLng(
+                  (lat as num).toDouble(),
+                  (lng as num).toDouble(),
                 );
-              }
-            } else {
-              // All buses view
-              for (var b in buses) {
-                final lat = b['current_location']['lat'];
-                final lng = b['current_location']['lng'];
                 markers.add(
                   Marker(
-                    point: LatLng(lat, lng),
-                    width: 70 * scale,
-                    height: 50 * scale,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: _BusMarker(busName: b['name']),
+                    markerId: MarkerId(activeBus['id'].toString()),
+                    position: busLoc,
+                    icon: _busMarkers[activeBus['id'].toString()] ?? BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueRed,
+                    ),
+                    infoWindow: InfoWindow(
+                      title: activeBus['name']?.toString() ?? 'Bus',
+                    ),
+                  ),
+                );
+
+                final stops = activeBus['route_stops'] as List<dynamic>? ?? [];
+                final points =
+                    stops
+                        .map((s) {
+                          if (s['lat'] != null && s['long'] != null) {
+                            return LatLng(
+                              (s['lat'] as num).toDouble(),
+                              (s['long'] as num).toDouble(),
+                            );
+                          }
+                          return null;
+                        })
+                        .whereType<LatLng>()
+                        .toList();
+
+                if (points.length > 1) {
+                  polylines.add(
+                    Polyline(
+                      polylineId: PolylineId(activeBus['id'].toString()),
+                      points: points,
+                      color: AppTheme.primary,
+                      width: 4,
+                    ),
+                  );
+                }
+              }
+            } else if (activeBus == null) {
+              for (var b in buses) {
+                final bMap = b as Map<String, dynamic>;
+                final loc = bMap['current_location'] as Map?;
+                if (loc == null) { continue; }
+                final lat = loc['lat'];
+                final lng = loc['lng'];
+                if (lat == null || lng == null) { continue; }
+
+                // Color code by index to make them distinct
+                BitmapDescriptor icon = _busMarkers[bMap['id'].toString()] ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+
+                markers.add(
+                  Marker(
+                    markerId: MarkerId(bMap['id'].toString()),
+                    position: LatLng(
+                      (lat as num).toDouble(),
+                      (lng as num).toDouble(),
+                    ),
+                    icon: icon,
+                    infoWindow: InfoWindow(
+                      title: bMap['name']?.toString() ?? 'Bus',
                     ),
                   ),
                 );
               }
             }
 
-            if (_currentLocation != null) {
-              markers.add(
-                Marker(
-                  point: _currentLocation!,
-                  width: 42 * scale,
-                  height: 42 * scale,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: _CurrentLocationMarker(),
-                  ),
-                ),
-              );
+            LatLng center = const LatLng(9.882134, 76.525878);
+            if (activeBus != null && activeBusLocation != null) {
+              final lat = activeBusLocation['lat'];
+              final lng = activeBusLocation['lng'];
+              if (lat != null && lng != null) {
+                center = LatLng(
+                  (lat as num).toDouble(),
+                  (lng as num).toDouble(),
+                );
+              }
+            } else if (buses.isNotEmpty) {
+              final firstLoc = (buses.first as Map)['current_location'] as Map?;
+              if (firstLoc != null &&
+                  firstLoc['lat'] != null &&
+                  firstLoc['lng'] != null) {
+                center = LatLng(
+                  (firstLoc['lat'] as num).toDouble(),
+                  (firstLoc['lng'] as num).toDouble(),
+                );
+              }
             }
-
-            LatLng center =
-                activeBus != null
-                    ? LatLng(
-                      activeBus['current_location']['lat'],
-                      activeBus['current_location']['lng'],
-                    )
-                    : (buses.isNotEmpty
-                        ? LatLng(
-                          buses.first['current_location']['lat'],
-                          buses.first['current_location']['lng'],
-                        )
-                        : const LatLng(9.882134, 76.525878));
 
             return Stack(
               children: [
-                // ── Map ──────────────────────────────────────────────────
-                FlutterMap(
-                  mapController: _mapController,
-                  options: MapOptions(
-                    initialCenter: center,
-                    initialZoom: 15.0,
-                    minZoom: 7.0,
-                    maxZoom: 18,
-                    onPositionChanged: (camera, hasGesture) {
-                      if (camera.zoom != _currentZoom) {
-                        setState(() {
-                          _currentZoom = camera.zoom;
-                        });
-                      }
-                    },
-                    cameraConstraint: CameraConstraint.contain(
-                      bounds: southIndiaBounds,
-                    ),
+                GoogleMap(
+                  mapType: MapType.normal,
+                  initialCameraPosition: CameraPosition(
+                    target: center,
+                    zoom: 16.0,
                   ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: tileUrl,
-                      userAgentPackageName: 'com.vahanmitra.app',
-                      maxZoom: 19,
-                      retinaMode: true, // Use retina mode for high-DPI mapping
-                    ),
-                    PolylineLayer(polylines: polylines),
-                    MarkerLayer(markers: markers),
-                  ],
+                  onMapCreated: (GoogleMapController controller) {
+                    _controller.complete(controller);
+                    _mapController = controller;
+                    _mapReady = true;
+                  },
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  compassEnabled: false,
+                  mapToolbarEnabled: false,
+                  zoomControlsEnabled: false,
+                  markers: markers,
+                  polylines: polylines,
+                  cameraTargetBounds: CameraTargetBounds(keralaBounds),
+                  minMaxZoomPreference: const MinMaxZoomPreference(8.0, 19.0),
                 ),
 
-                // ── Top bar ──────────────────────────────────────────────
                 SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -351,8 +577,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   ),
                 ),
 
-                // ── Floating Bottom Info Panel & Speed Badge ─────────────────────
-                if (activeBus != null)
+                if (activeBus != null && activeBusLocation != null)
                   Positioned(
                     bottom: 24,
                     left: 16,
@@ -361,7 +586,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Floating Speed Pill on Top-Left of Panel
                         Builder(
                           builder: (context) {
                             final speed = _calculateEffectiveSpeed(activeBus!);
@@ -404,14 +628,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                         _FloatingBusPanel(
                           busData: activeBus,
                           onFocusBus: () {
-                            final loc = LatLng(
-                              activeBus!['current_location']['lat'],
-                              activeBus['current_location']['lng'],
-                            );
-                            _mapController.move(loc, 15.0);
+                            if (!_mapReady) return;
+                            final loc = activeBusLocation;
+                            final lat = loc['lat'];
+                            final lng = loc['lng'];
+                            if (lat != null && lng != null) {
+                              _mapController?.animateCamera(
+                                CameraUpdate.newLatLngZoom(
+                                  LatLng(
+                                    (lat as num).toDouble(),
+                                    (lng as num).toDouble(),
+                                  ),
+                                  15.0,
+                                ),
+                              );
+                            }
                           },
                           onMyLocation: _goToCurrentLocation,
-                          onCall: () => _callDriver(activeBus!),
+                          onCall: () => _showDriverDetailsDialog(activeBus!),
                         ),
                       ],
                     ),
@@ -423,176 +657,69 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       ),
     );
   }
-}
 
-// ── Widgets ──────────────────────────────────────────────────
-
-class _BusMarker extends StatefulWidget {
-  final String? busName;
-
-  const _BusMarker({this.busName});
-
-  @override
-  State<_BusMarker> createState() => _BusMarkerState();
-}
-
-class _BusMarkerState extends State<_BusMarker>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-    _pulse = Tween<double>(begin: 0.8, end: 1.2).animate(_ctrl);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (widget.busName != null) ...[
+  Widget _buildErrorState(Object err) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 3,
-                    offset: const Offset(0, 1.5),
-                  ),
-                ],
+                color: AppTheme.redAccent.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
               ),
-              child: Text(
-                widget.busName!,
-                style: GoogleFonts.inter(
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: const Icon(
+                Icons.wifi_off_rounded,
+                color: AppTheme.redAccent,
+                size: 40,
               ),
             ),
-            const SizedBox(height: 2),
-          ],
-          AnimatedBuilder(
-            animation: _pulse,
-            builder:
-                (_, _) => Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Transform.scale(
-                      scale: _pulse.value,
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppTheme.redAccent.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: AppTheme.neuBoxDecoration(radius: 14),
-                      child: const Icon(
-                        Icons.directions_bus_rounded,
-                        color: AppTheme.redAccent,
-                        size: 15,
-                      ),
-                    ),
-                  ],
+            const SizedBox(height: 20),
+            Text(
+              'Could not load bus data',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Check your connection and try again.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () => ref.invalidate(staticBusesProvider),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 12,
                 ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CurrentLocationMarker extends StatefulWidget {
-  @override
-  State<_CurrentLocationMarker> createState() => _CurrentLocationMarkerState();
-}
-
-class _CurrentLocationMarkerState extends State<_CurrentLocationMarker>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _ring;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-    _ring = Tween<double>(begin: 0, end: 1).animate(_ctrl);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _ring,
-      builder:
-          (_, _) => Stack(
-            alignment: Alignment.center,
-            children: [
-              Opacity(
-                opacity: (1 - _ring.value).clamp(0.0, 1.0),
-                child: Transform.scale(
-                  scale: 1 + _ring.value,
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.3),
-                      shape: BoxShape.circle,
-                    ),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Try Again',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
               ),
-              Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: Colors.blue,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withValues(alpha: 0.5),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -652,7 +779,6 @@ class _FloatingBusPanel extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Route Title & Bus Status Header
           Row(
             children: [
               Expanded(
@@ -732,7 +858,6 @@ class _FloatingBusPanel extends StatelessWidget {
 
           const SizedBox(height: 16),
 
-          // Driver Call Card
           Container(
             padding: const EdgeInsets.all(12),
             decoration: AppTheme.neuBoxDecoration(radius: 16, inset: true),
@@ -773,12 +898,29 @@ class _FloatingBusPanel extends StatelessWidget {
                 GestureDetector(
                   onTap: onCall,
                   child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: AppTheme.neuBoxDecoration(radius: 12),
-                    child: const Icon(
-                      Icons.call_rounded,
-                      color: AppTheme.redAccent,
-                      size: 20,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: AppTheme.neuBoxDecoration(radius: 14),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.info_outline_rounded,
+                          color: AppTheme.redAccent,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'More Details',
+                          style: GoogleFonts.poppins(
+                            color: AppTheme.textPrimary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -790,10 +932,8 @@ class _FloatingBusPanel extends StatelessWidget {
           Divider(color: Colors.grey.withValues(alpha: 0.2)),
           const SizedBox(height: 12),
 
-          // Bottom Action Row with 2 black pills distributed equally from the center
           Row(
             children: [
-              // Bus Location Black Pill
               Expanded(
                 child: GestureDetector(
                   onTap: onFocusBus,
@@ -835,7 +975,6 @@ class _FloatingBusPanel extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              // My Location Black Pill
               Expanded(
                 child: GestureDetector(
                   onTap: onMyLocation,

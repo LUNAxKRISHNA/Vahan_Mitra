@@ -8,6 +8,37 @@ import 'package:vahan_mitra/controllers/mqtt_service.dart';
 // ─── SUPABASE CLIENT ────────────────────────────────────────────────────────
 SupabaseClient get _supabase => Supabase.instance.client;
 
+// ─── SHARED PREFERENCES PROVIDER (initialised once, shared across notifiers) ─
+/// Centralises SharedPreferences access so we avoid repeated platform
+/// channel round-trips from multiple providers calling getInstance().
+final sharedPrefsProvider = FutureProvider<SharedPreferences>((ref) async {
+  return SharedPreferences.getInstance();
+});
+
+// ─── BUS–ROUTE MATCHING UTILITY ─────────────────────────────────────────────
+/// Finds the first bus whose route name matches [routeName].
+/// Uses exact match first, falls back to substring only when no exact hit.
+Map<String, dynamic>? findBusForRoute(
+  List<dynamic> buses,
+  String routeName,
+) {
+  if (routeName.isEmpty) return null;
+  final sel = routeName.trim().toLowerCase();
+
+  // 1. Exact match
+  for (final item in buses) {
+    final b = Map<String, dynamic>.from(item as Map);
+    if ((b['route'] ?? '').toString().trim().toLowerCase() == sel) return b;
+  }
+  // 2. Fallback: substring match
+  for (final item in buses) {
+    final b = Map<String, dynamic>.from(item as Map);
+    final bRoute = (b['route'] ?? '').toString().trim().toLowerCase();
+    if (bRoute.contains(sel) || sel.contains(bRoute)) return b;
+  }
+  return null;
+}
+
 Future<Map<String, dynamic>> _loadMockUser() async {
   final user = _supabase.auth.currentUser;
   if (user != null) {
@@ -28,19 +59,19 @@ Future<Map<String, dynamic>> _loadMockUser() async {
 class UserNotifier extends AsyncNotifier<Map<String, dynamic>> {
   @override
   Future<Map<String, dynamic>> build() async {
-    final prefs = await SharedPreferences.getInstance();
+    // Use shared prefs provider to avoid a separate platform channel round-trip
+    final prefs = await ref.watch(sharedPrefsProvider.future);
     final savedUser = prefs.getString('user_profile');
     if (savedUser != null) {
       return jsonDecode(savedUser) as Map<String, dynamic>;
     }
-    // Fallback to bundled mock user profile
     return _loadMockUser();
   }
 
   Future<void> updateProfile(Map<String, dynamic> updatedData) async {
     final current = state.asData?.value ?? {};
     final newData = {...current, ...updatedData};
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await ref.read(sharedPrefsProvider.future);
     await prefs.setString('user_profile', jsonEncode(newData));
     state = AsyncValue.data(newData);
   }
@@ -54,7 +85,7 @@ final userProvider = AsyncNotifierProvider<UserNotifier, Map<String, dynamic>>((
 class DefaultRouteNotifier extends AsyncNotifier<Map<String, dynamic>?> {
   @override
   Future<Map<String, dynamic>?> build() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await ref.watch(sharedPrefsProvider.future);
     final savedRoute = prefs.getString('user_default_route');
     if (savedRoute != null) {
       return jsonDecode(savedRoute) as Map<String, dynamic>;
@@ -63,13 +94,13 @@ class DefaultRouteNotifier extends AsyncNotifier<Map<String, dynamic>?> {
   }
 
   Future<void> setDefaultRoute(Map<String, dynamic> routeData) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await ref.read(sharedPrefsProvider.future);
     await prefs.setString('user_default_route', jsonEncode(routeData));
     state = AsyncValue.data(routeData);
   }
 
   Future<void> clearDefaultRoute() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await ref.read(sharedPrefsProvider.future);
     await prefs.remove('user_default_route');
     state = const AsyncValue.data(null);
   }
@@ -95,14 +126,8 @@ class NotificationsNotifier extends AsyncNotifier<List<dynamic>> {
         final response = await _supabase
             .from('notifications')
             .select('*');
-        final fallbackList = (response as List<dynamic>?) ?? [];
-        if (fallbackList.isNotEmpty) {
-          fallbackList[0] = {
-            ...fallbackList[0] as Map<String, dynamic>,
-            'msg_content': '${fallbackList[0]['msg_content']}\n\n[System Error Details: $e]'
-          };
-        }
-        return fallbackList;
+        // Return plain fallback list — do NOT inject error details into content
+        return (response as List<dynamic>?) ?? [];
       } catch (e2) {
         debugPrint('Fallback error fetching notifications: $e2');
         return [];
@@ -114,10 +139,10 @@ class NotificationsNotifier extends AsyncNotifier<List<dynamic>> {
     final currentNotifications = state.asData?.value ?? [];
     if (currentNotifications.isEmpty) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await ref.read(sharedPrefsProvider.future);
     final allIds = currentNotifications.map((n) => n['id'].toString()).toList();
     await prefs.setStringList('seen_notification_ids', allIds);
-    
+
     // Invalidate the unread state so UI updates immediately
     ref.invalidate(unseenNotificationsProvider);
   }
@@ -135,17 +160,18 @@ final notificationsProvider = AsyncNotifierProvider<NotificationsNotifier, List<
 
 final unseenNotificationsProvider = FutureProvider<bool>((ref) async {
   final notificationsAsync = ref.watch(notificationsProvider);
-  
+
   if (notificationsAsync.isLoading || notificationsAsync.hasError) {
     return false;
   }
-  
+
   final notifications = notificationsAsync.asData?.value ?? [];
   if (notifications.isEmpty) return false;
-  
-  final prefs = await SharedPreferences.getInstance();
+
+  // Use shared prefs provider to avoid repeated getInstance() calls
+  final prefs = await ref.watch(sharedPrefsProvider.future);
   final seenIds = prefs.getStringList('seen_notification_ids') ?? [];
-  
+
   return notifications.any((n) => !seenIds.contains(n['id'].toString()));
 });
 

@@ -133,16 +133,10 @@ class _RouteSelectionSheetContentState extends ConsumerState<_RouteSelectionShee
                       loading: () => const Center(child: CircularProgressIndicator()),
                       error: (e, st) => const SizedBox(),
                       data: (buses) {
-                        Map<String, dynamic>? assignedBus;
-                        for (var item in buses) {
-                          final b = Map<String, dynamic>.from(item as Map);
-                          final bRoute = (b['route'] ?? '').toString().trim().toLowerCase();
-                          final selRoute = (_selectedRouteName ?? '').toString().trim().toLowerCase();
-                          if (bRoute == selRoute || bRoute.contains(selRoute) || selRoute.contains(bRoute)) {
-                            assignedBus = b;
-                            break;
-                          }
-                        }
+                        final assignedBus = findBusForRoute(
+                          buses,
+                          _selectedRouteName ?? '',
+                        );
 
                         if (assignedBus == null) {
                           return Container(
